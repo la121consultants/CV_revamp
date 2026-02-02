@@ -1,0 +1,257 @@
+import { useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, Sparkles, RotateCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CVUploader } from "./CVUploader";
+import { JobDetailsForm } from "./JobDetailsForm";
+import { OutputTypeSelector } from "./OutputTypeSelector";
+import { OutputDisplay } from "./OutputDisplay";
+import { AIChatBox } from "./AIChatBox";
+import { ProcessingStatus } from "./ProcessingStatus";
+import type { CVData, JobDescription, TailoredOutput, OutputType, Message } from "@/types";
+import { toast } from "@/hooks/use-toast";
+
+interface MainAppViewProps {
+  onBack: () => void;
+}
+
+export const MainAppView = ({ onBack }: MainAppViewProps) => {
+  const [cvData, setCvData] = useState<CVData | null>(null);
+  const [jobDetails, setJobDetails] = useState<JobDescription>({ 
+    title: '', 
+    description: '', 
+    personSpec: '' 
+  });
+  const [outputType, setOutputType] = useState<OutputType>('both');
+  const [output, setOutput] = useState<TailoredOutput | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingStage, setProcessingStage] = useState<'analyzing' | 'processing' | 'generating'>('analyzing');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isChatLoading, setIsChatLoading] = useState(false);
+
+  const isReadyToProcess = cvData && jobDetails.title && jobDetails.description;
+
+  const simulateProcessing = useCallback(async () => {
+    // This would be replaced with actual AI API calls
+    // For now, we simulate the processing stages
+    setIsProcessing(true);
+    
+    setProcessingStage('analyzing');
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    setProcessingStage('processing');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    setProcessingStage('generating');
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // Simulated output - in production, this would come from the AI
+    const simulatedOutput: TailoredOutput = {
+      cv: `# ${jobDetails.title}
+
+## Professional Summary
+Experienced professional with a proven track record in delivering results. Skilled in adapting to new challenges and driving innovation.
+
+## Key Skills
+- **Leadership**: Demonstrated ability to lead cross-functional teams
+- **Communication**: Excellent written and verbal communication skills
+- **Problem Solving**: Strong analytical and critical thinking abilities
+- **Technical Expertise**: Proficient in industry-standard tools and methodologies
+
+## Professional Experience
+
+### Current Position
+*Tailored based on job requirements*
+
+Successfully implemented strategic initiatives that align with the role's requirements. Key achievements include:
+- Delivered projects on time and within budget
+- Collaborated with stakeholders to achieve business objectives
+- Drove continuous improvement initiatives
+
+## Education
+Relevant qualifications aligned with position requirements.
+
+---
+*This CV has been tailored for the ${jobDetails.title} position*`,
+      
+      coverLetter: `Dear Hiring Manager,
+
+I am writing to express my strong interest in the **${jobDetails.title}** position. After carefully reviewing the job description, I am confident that my skills and experience make me an excellent candidate for this role.
+
+## Why I'm a Great Fit
+
+Throughout my career, I have developed a comprehensive skill set that directly aligns with your requirements. My experience has equipped me with:
+
+- **Relevant Industry Experience**: I bring hands-on experience that matches the core responsibilities outlined in your job description.
+- **Proven Track Record**: I have consistently delivered results and exceeded expectations in similar roles.
+- **Adaptability**: I thrive in dynamic environments and quickly adapt to new challenges.
+
+## What I Can Bring to Your Team
+
+I am particularly excited about this opportunity because it aligns perfectly with my career goals and expertise. I am eager to contribute to your organization's success by:
+
+- Applying my skills to drive meaningful results
+- Collaborating effectively with team members
+- Bringing fresh perspectives and innovative solutions
+
+I would welcome the opportunity to discuss how my background and skills would benefit your team. Thank you for considering my application.
+
+Best regards,
+[Your Name]
+
+---
+*This cover letter has been tailored for the ${jobDetails.title} position*`
+    };
+
+    setOutput(simulatedOutput);
+    setIsProcessing(false);
+    
+    toast({
+      title: "Success!",
+      description: "Your tailored documents are ready.",
+    });
+  }, [jobDetails.title]);
+
+  const handleSendMessage = async (message: string) => {
+    setMessages(prev => [...prev, { role: 'user', content: message }]);
+    setIsChatLoading(true);
+
+    // Simulate AI response - in production, this would be a real API call
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    const response: Message = {
+      role: 'assistant',
+      content: `I've noted your request to "${message}". In the full version, I would update your CV/cover letter accordingly. For now, here are some tips:\n\n- Focus on quantifiable achievements\n- Use action verbs at the start of bullet points\n- Tailor keywords to match the job description\n\nWould you like me to help with anything else?`
+    };
+
+    setMessages(prev => [...prev, response]);
+    setIsChatLoading(false);
+  };
+
+  const handleReset = () => {
+    setCvData(null);
+    setJobDetails({ title: '', description: '', personSpec: '' });
+    setOutput(null);
+    setMessages([]);
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between mb-8"
+        >
+          <Button variant="ghost" onClick={onBack} className="gap-2">
+            <ArrowLeft className="w-4 h-4" />
+            Back to Home
+          </Button>
+          
+          {output && (
+            <Button variant="outline" onClick={handleReset} className="gap-2">
+              <RotateCcw className="w-4 h-4" />
+              Start Over
+            </Button>
+          )}
+        </motion.div>
+
+        <AnimatePresence mode="wait">
+          {isProcessing ? (
+            <motion.div
+              key="processing"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="max-w-md mx-auto"
+            >
+              <ProcessingStatus stage={processingStage} />
+            </motion.div>
+          ) : output ? (
+            <motion.div
+              key="output"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="grid lg:grid-cols-2 gap-8"
+            >
+              <OutputDisplay output={output} outputType={outputType} />
+              <AIChatBox 
+                output={output}
+                onUpdateOutput={setOutput}
+                messages={messages}
+                onSendMessage={handleSendMessage}
+                isLoading={isChatLoading}
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="input"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="max-w-3xl mx-auto"
+            >
+              <div className="text-center mb-8">
+                <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+                  Let's Tailor Your CV
+                </h2>
+                <p className="text-muted-foreground">
+                  Upload your CV, add the job details, and let AI do the rest.
+                </p>
+              </div>
+
+              <div className="space-y-8">
+                <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
+                  <h3 className="text-lg font-semibold text-foreground mb-4">Step 1: Upload Your CV</h3>
+                  <CVUploader 
+                    onUpload={setCvData} 
+                    cvData={cvData} 
+                    onClear={() => setCvData(null)} 
+                  />
+                </div>
+
+                <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
+                  <h3 className="text-lg font-semibold text-foreground mb-4">Step 2: Add Job Details</h3>
+                  <JobDetailsForm 
+                    jobDetails={jobDetails} 
+                    onChange={setJobDetails} 
+                  />
+                </div>
+
+                <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
+                  <h3 className="text-lg font-semibold text-foreground mb-4">Step 3: Choose Output</h3>
+                  <OutputTypeSelector 
+                    selected={outputType} 
+                    onChange={setOutputType} 
+                  />
+                </div>
+
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: isReadyToProcess ? 1 : 0.5 }}
+                  className="pt-4"
+                >
+                  <Button
+                    size="lg"
+                    onClick={simulateProcessing}
+                    disabled={!isReadyToProcess}
+                    className="w-full gradient-primary shadow-primary hover:opacity-90 transition-opacity h-14 text-lg"
+                  >
+                    <Sparkles className="w-5 h-5 mr-2" />
+                    Generate Tailored Documents
+                  </Button>
+                  {!isReadyToProcess && (
+                    <p className="text-center text-sm text-muted-foreground mt-3">
+                      Please upload your CV and fill in the job details to continue
+                    </p>
+                  )}
+                </motion.div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+};
