@@ -1,0 +1,31 @@
+.switcher {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+}
+
+.label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+}
+
+.button {
+  border: 1px solid #cbd5f5;
+  background: #ffffff;
+  color: #1f2937;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.buttonActive {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #ffffff;
+}

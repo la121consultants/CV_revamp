@@ -1,0 +1,126 @@
+.page {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  padding: 16mm;
+  background: #ffffff;
+  color: #0f172a;
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.08);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 34% 1fr;
+  gap: 18px;
+}
+
+.sidebar {
+  background: #f1f5ff;
+  padding: 16px;
+  border-radius: 16px;
+}
+
+.photo {
+  width: 120px;
+  height: 120px;
+  border-radius: 16px;
+  object-fit: cover;
+  margin-bottom: 14px;
+  border: 3px solid #1d4ed8;
+}
+
+.name {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+  color: #1d4ed8;
+}
+
+.title {
+  font-size: 13px;
+  margin: 6px 0 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.contactList {
+  font-size: 12px;
+  display: grid;
+  gap: 6px;
+}
+
+.section {
+  margin-bottom: 16px;
+}
+
+.sectionTitle {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #1d4ed8;
+  border-bottom: 1px solid #c7d2fe;
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+}
+
+.summary {
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.skillRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.dots {
+  display: flex;
+  gap: 4px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #c7d2fe;
+}
+
+.dotActive {
+  background: #1d4ed8;
+}
+
+.main {
+  padding: 8px 6px;
+}
+
+.itemHeader {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.itemSub {
+  font-size: 12px;
+  color: #475569;
+  margin-top: 2px;
+}
+
+.bullets {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+@media print {
+  .page {
+    box-shadow: none;
+    margin: 0;
+  }
+}
