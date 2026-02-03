@@ -60,6 +60,29 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Document rendering & downloads
+
+The app builds a structured document model from AI output (headings, paragraphs, bullets) and renders that model into:
+
+- **Word (.docx)**: a minimal OpenXML document packaged as a `.docx` file with professional typography, margins, and bullet styling.
+- **PDF (.pdf)**: a standards-compliant PDF with consistent typography, section headings, and spacing.
+
+Document rendering happens in the browser through a lightweight API wrapper in `src/lib/documentApi.ts`, which mimics:
+
+- `POST /api/documents/render` for rendering
+- `GET /api/documents/:id/download?format=pdf|docx` for downloads
+
+The renderer validates payload size, avoids arbitrary file paths, and caches rendered output for repeat downloads. CVs can be rendered in **Standard**, **Aesthetic**, or **Boujee** styles while keeping an ATS-friendly layout. See `src/lib/documentModel.ts`, `src/lib/documentRenderer.ts`, and `src/lib/documents.ts` for the parsing, formatting, and caching logic.
+
+## AI chat confirm mode
+
+The AI chat now supports two modes:
+
+- **Improve instantly** (default): applies improvements immediately after a request.
+- **Confirm before applying**: summarizes proposed changes, asks for confirmation, and only applies updates after the user clicks **Proceed**. Pending actions expire after a few minutes or when a new message arrives.
+
+The chat mode selection persists for the current session. Implementation details live in `src/components/AIChatBox.tsx` and `src/components/MainAppView.tsx`.
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.

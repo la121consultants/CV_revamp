@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Bot, User, Sparkles, Loader2 } from "lucide-react";
+import { Send, Bot, User, Sparkles, Loader2, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import ReactMarkdown from "react-markdown";
-import type { Message, TailoredOutput } from "@/types";
+import type { ChatMode, Message, PendingChatAction, TailoredOutput } from "@/types";
 
 interface AIChatBoxProps {
   output: TailoredOutput;
@@ -12,6 +13,12 @@ interface AIChatBoxProps {
   messages: Message[];
   onSendMessage: (message: string) => Promise<void>;
   isLoading: boolean;
+  chatMode: ChatMode;
+  onModeChange: (mode: ChatMode) => void;
+  pendingAction: PendingChatAction | null;
+  onProceed: () => void;
+  onCancel: () => void;
+  onEditRequest: () => void;
 }
 
 export const AIChatBox = ({ 
@@ -19,7 +26,13 @@ export const AIChatBox = ({
   onUpdateOutput, 
   messages, 
   onSendMessage,
-  isLoading 
+  isLoading,
+  chatMode,
+  onModeChange,
+  pendingAction,
+  onProceed,
+  onCancel,
+  onEditRequest
 }: AIChatBoxProps) => {
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -41,6 +54,12 @@ export const AIChatBox = ({
     await onSendMessage(message);
   };
 
+  const handleEditRequest = () => {
+    if (!pendingAction) return;
+    setInput(pendingAction.message);
+    onEditRequest();
+  };
+
   const suggestions = [
     "Make the CV more concise",
     "Add more action verbs",
@@ -56,13 +75,35 @@ export const AIChatBox = ({
       className="bg-card rounded-2xl border border-border shadow-lg overflow-hidden"
     >
       <div className="p-4 border-b border-border bg-muted/30">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
-            <Sparkles className="w-5 h-5 text-primary-foreground" />
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground">AI Assistant</h3>
+              <p className="text-xs text-muted-foreground">Refine your CV and cover letter</p>
+            </div>
           </div>
-          <div>
-            <h3 className="font-semibold text-foreground">AI Assistant</h3>
-            <p className="text-xs text-muted-foreground">Refine your CV and cover letter</p>
+          <div className="flex flex-col items-start gap-1">
+            <span className="text-xs font-medium text-muted-foreground">Mode</span>
+            <ToggleGroup
+              type="single"
+              value={chatMode}
+              onValueChange={(value) => {
+                if (value === "instant" || value === "confirm") {
+                  onModeChange(value);
+                }
+              }}
+              className="bg-background border border-border rounded-full p-1"
+            >
+              <ToggleGroupItem value="instant" className="text-xs px-3">
+                Improve instantly
+              </ToggleGroupItem>
+              <ToggleGroupItem value="confirm" className="text-xs px-3">
+                Confirm before applying
+              </ToggleGroupItem>
+            </ToggleGroup>
           </div>
         </div>
       </div>
@@ -133,6 +174,32 @@ export const AIChatBox = ({
               </motion.div>
             )}
           </AnimatePresence>
+        )}
+        {pendingAction && (
+          <div className="border border-dashed border-primary/40 rounded-xl p-4 bg-background/60 space-y-3">
+            <div>
+              <p className="text-sm font-medium text-foreground">Proposed updates</p>
+              <ul className="mt-2 space-y-1 text-sm text-muted-foreground list-disc list-inside">
+                {pendingAction.summary.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
+            <p className="text-sm text-foreground">Proceed with these changes?</p>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" onClick={onProceed} className="gap-2">
+                <Check className="w-4 h-4" />
+                Proceed
+              </Button>
+              <Button size="sm" variant="outline" onClick={onCancel} className="gap-2">
+                <X className="w-4 h-4" />
+                Cancel
+              </Button>
+              <Button size="sm" variant="ghost" onClick={handleEditRequest}>
+                Edit request
+              </Button>
+            </div>
+          </div>
         )}
         <div ref={messagesEndRef} />
       </div>
