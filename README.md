@@ -72,7 +72,7 @@ Document rendering happens in the browser through a lightweight API wrapper in `
 - `POST /api/documents/render` for rendering
 - `GET /api/documents/:id/download?format=pdf|docx` for downloads
 
-The renderer validates payload size, avoids arbitrary file paths, and caches rendered output for repeat downloads. CVs can be rendered in **Standard**, **Aesthetic**, or **Boujee** styles while keeping an ATS-friendly layout. See `src/lib/documentModel.ts`, `src/lib/documentRenderer.ts`, and `src/lib/documents.ts` for the parsing, formatting, and caching logic.
+The renderer validates payload size, avoids arbitrary file paths, and caches rendered output for repeat downloads. See `src/lib/documentModel.ts`, `src/lib/documentRenderer.ts`, and `src/lib/documents.ts` for the parsing, formatting, and caching logic.
 
 ## AI chat confirm mode
 

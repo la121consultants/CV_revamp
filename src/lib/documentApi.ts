@@ -1,16 +1,14 @@
 import { renderDocument, getCachedDocument } from "@/lib/documents";
 import { getSessionId } from "@/lib/session";
-import type { CVStyle, DocumentHeader, DocumentKind, DocumentRenderFormat } from "@/types";
+import type { DocumentKind, DocumentRenderFormat } from "@/types";
 
 export const renderDocumentRequest = async (
   rawText: string,
   kind: DocumentKind,
-  format: DocumentRenderFormat,
-  header?: DocumentHeader,
-  style?: CVStyle
+  format: DocumentRenderFormat
 ) => {
   const ownerId = getSessionId();
-  return renderDocument(ownerId, rawText, kind, format, header, style);
+  return renderDocument(ownerId, rawText, kind, format);
 };
 
 export const downloadDocumentRequest = (
