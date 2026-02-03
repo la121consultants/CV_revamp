@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ReactMarkdown from "react-markdown";
 import type { TailoredOutput, OutputType } from "@/types";
+import { renderDocumentRequest, downloadDocumentRequest } from "@/lib/documentApi";
+import { toast } from "@/hooks/use-toast";
 
 interface OutputDisplayProps {
   output: TailoredOutput;
@@ -14,10 +16,14 @@ interface OutputDisplayProps {
 export const OutputDisplay = ({ output, outputType }: OutputDisplayProps) => {
   const [copiedCV, setCopiedCV] = useState(false);
   const [copiedLetter, setCopiedLetter] = useState(false);
+  const [isDownloading, setIsDownloading] = useState<{ cv: boolean; letter: boolean }>({
+    cv: false,
+    letter: false,
+  });
 
-  const handleCopy = async (text: string, type: 'cv' | 'letter') => {
+  const handleCopy = async (text: string, type: "cv" | "letter") => {
     await navigator.clipboard.writeText(text);
-    if (type === 'cv') {
+    if (type === "cv") {
       setCopiedCV(true);
       setTimeout(() => setCopiedCV(false), 2000);
     } else {
@@ -26,20 +32,42 @@ export const OutputDisplay = ({ output, outputType }: OutputDisplayProps) => {
     }
   };
 
-  const handleDownload = (content: string, filename: string) => {
-    const blob = new Blob([content], { type: 'text/plain' });
+  const triggerDownload = (blob: Blob, filename: string) => {
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
   };
 
-  const showCV = outputType === 'cv' || outputType === 'both';
-  const showLetter = outputType === 'coverLetter' || outputType === 'both';
+  const handleDownload = async (
+    content: string,
+    kind: "cv" | "coverLetter",
+    format: "docx" | "pdf"
+  ) => {
+    const target = kind === "cv" ? "cv" : "letter";
+    try {
+      setIsDownloading((prev) => ({ ...prev, [target]: true }));
+      const rendered = await renderDocumentRequest(content, kind, format);
+      const cached = downloadDocumentRequest(rendered.id, format);
+      triggerDownload(cached.blob, cached.fileName);
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Download failed",
+        description: "Unable to generate the document. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloading((prev) => ({ ...prev, [target]: false }));
+    }
+  };
 
-  const defaultTab = showCV ? 'cv' : 'coverLetter';
+  const showCV = outputType === "cv" || outputType === "both";
+  const showLetter = outputType === "coverLetter" || outputType === "both";
+
+  const defaultTab = showCV ? "cv" : "coverLetter";
 
   return (
     <motion.div
@@ -88,10 +116,20 @@ export const OutputDisplay = ({ output, outputType }: OutputDisplayProps) => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleDownload(output.cv, 'tailored-cv.txt')}
+                      onClick={() => handleDownload(output.cv, "cv", "docx")}
+                      disabled={isDownloading.cv}
                     >
                       <Download className="w-4 h-4 mr-1" />
-                      Download
+                      Download as Word
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDownload(output.cv, "cv", "pdf")}
+                      disabled={isDownloading.cv}
+                    >
+                      <Download className="w-4 h-4 mr-1" />
+                      Download as PDF
                     </Button>
                   </div>
                 </div>
@@ -122,10 +160,20 @@ export const OutputDisplay = ({ output, outputType }: OutputDisplayProps) => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleDownload(output.coverLetter, 'cover-letter.txt')}
+                      onClick={() => handleDownload(output.coverLetter, "coverLetter", "docx")}
+                      disabled={isDownloading.letter}
                     >
                       <Download className="w-4 h-4 mr-1" />
-                      Download
+                      Download as Word
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDownload(output.coverLetter, "coverLetter", "pdf")}
+                      disabled={isDownloading.letter}
+                    >
+                      <Download className="w-4 h-4 mr-1" />
+                      Download as PDF
                     </Button>
                   </div>
                 </div>
