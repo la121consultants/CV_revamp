@@ -62,6 +62,48 @@ export type Database = {
         }
         Relationships: []
       }
+      user_submissions: {
+        Row: {
+          created_at: string
+          cv_filename: string | null
+          email: string
+          full_name: string
+          id: string
+          job_description: string
+          job_title: string
+          linkedin_url: string | null
+          output_type: string
+          person_spec: string | null
+          phone: string | null
+        }
+        Insert: {
+          created_at?: string
+          cv_filename?: string | null
+          email: string
+          full_name: string
+          id?: string
+          job_description: string
+          job_title: string
+          linkedin_url?: string | null
+          output_type?: string
+          person_spec?: string | null
+          phone?: string | null
+        }
+        Update: {
+          created_at?: string
+          cv_filename?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          job_description?: string
+          job_title?: string
+          linkedin_url?: string | null
+          output_type?: string
+          person_spec?: string | null
+          phone?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
