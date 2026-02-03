@@ -33,6 +33,15 @@ export type DocumentKind = 'cv' | 'coverLetter';
 
 export type DocumentRenderFormat = 'docx' | 'pdf';
 
+export type CVStyle = 'standard' | 'aesthetic' | 'boujee';
+
+export interface DocumentHeader {
+  name: string;
+  phone: string;
+  email: string;
+  role: string;
+}
+
 export interface DocumentSection {
   title: string;
   paragraphs: string[];

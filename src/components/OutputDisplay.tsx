@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import ReactMarkdown from "react-markdown";
-import type { TailoredOutput, OutputType } from "@/types";
+import type { CVStyle, DocumentHeader, TailoredOutput, OutputType } from "@/types";
 import { renderDocumentRequest, downloadDocumentRequest } from "@/lib/documentApi";
 import { toast } from "@/hooks/use-toast";
 

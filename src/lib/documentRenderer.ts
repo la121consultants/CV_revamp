@@ -24,6 +24,16 @@ const wrapText = (text: string, maxChars: number) => {
   return lines;
 };
 
+const formatHeading = (text: string, style?: string) => {
+  if (style === "boujee") {
+    return text.toUpperCase();
+  }
+  if (style === "aesthetic") {
+    return text.replace(/\b\w/g, (char) => char.toUpperCase());
+  }
+  return text.toUpperCase();
+};
+
 const createDocumentXml = (model: DocumentModel) => {
   const paragraphs: string[] = [];
   const pushParagraph = (text: string) => {
@@ -38,14 +48,25 @@ const createDocumentXml = (model: DocumentModel) => {
     );
   };
 
-  pushParagraph(model.title);
+  if (model.kind === "cv" && model.header) {
+    const nameLine = model.header.name;
+    const phoneLine = model.header.phone;
+    const emailLine = model.header.email;
+    const roleLine = model.header.role;
+    pushParagraph(model.style === "boujee" ? nameLine.toUpperCase() : nameLine);
+    pushParagraph(phoneLine);
+    pushParagraph(emailLine);
+    pushParagraph(roleLine);
+  } else {
+    pushParagraph(model.title);
+  }
 
   if (model.kind === "coverLetter" && model.coverLetter) {
     const { dateLine, greeting, paragraphs: body, signOff, signature } = model.coverLetter;
     [dateLine, greeting, ...body, signOff, signature].filter(Boolean).forEach(pushParagraph);
   } else {
     model.sections.forEach((section) => {
-      pushHeading(section.title);
+      pushHeading(formatHeading(section.title, model.style));
       section.paragraphs.forEach(pushParagraph);
       section.bullets.forEach((bullet) => pushParagraph(`• ${bullet}`));
     });
@@ -191,6 +212,12 @@ export const renderPdf = (model: DocumentModel): Blob => {
   const pageHeight = 792;
   const margin = 54;
   const maxChars = 90;
+  const style = model.style ?? "standard";
+  const styleConfig = {
+    standard: { nameSize: 18, roleSize: 12, headingSize: 12, bodySize: 11, lineSpacing: 15 },
+    aesthetic: { nameSize: 20, roleSize: 12, headingSize: 13, bodySize: 11, lineSpacing: 16 },
+    boujee: { nameSize: 22, roleSize: 13, headingSize: 13, bodySize: 11, lineSpacing: 16 },
+  }[style];
 
   type PdfLine = { text: string; size: number; spacing: number };
   const lines: PdfLine[] = [];
@@ -207,9 +234,6 @@ export const renderPdf = (model: DocumentModel): Blob => {
     pushLine(model.header.phone, styleConfig.bodySize, styleConfig.lineSpacing);
     pushLine(model.header.email, styleConfig.bodySize, styleConfig.lineSpacing);
     pushLine(model.header.role, styleConfig.roleSize, styleConfig.lineSpacing);
-    if (style !== "standard") {
-      pushLine("--------------------------------------------------", styleConfig.bodySize, styleConfig.lineSpacing);
-    }
   } else {
     pushLine(model.title, 18, 22);
   }
