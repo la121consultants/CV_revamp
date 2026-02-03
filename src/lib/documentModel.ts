@@ -1,12 +1,5 @@
 import { format } from "date-fns";
-import type {
-  CVStyle,
-  DocumentHeader,
-  DocumentKind,
-  DocumentModel,
-  DocumentSection,
-  CoverLetterModel,
-} from "@/types";
+import type { DocumentKind, DocumentModel, DocumentSection, CoverLetterModel } from "@/types";
 
 const headingRegex = /^#{1,6}\s+(.*)$/;
 const bulletRegex = /^[-*•]\s+(.*)$/;
@@ -99,141 +92,6 @@ const parseSections = (rawText: string): DocumentSection[] => {
   return sections;
 };
 
-const sectionOrder = [
-  "professional summary",
-  "key skills",
-  "key achievements",
-  "work experience",
-  "education",
-  "projects",
-  "hobbies",
-  "references",
-];
-
-const normalizeTitle = (title: string) =>
-  title
-    .toLowerCase()
-    .replace(/&/g, "and")
-    .replace(/[^a-z0-9 ]/g, "")
-    .trim();
-
-const orderSections = (sections: DocumentSection[], header?: DocumentHeader) => {
-  const sectionMap = new Map<string, DocumentSection>();
-  sections.forEach((section) => {
-    sectionMap.set(normalizeTitle(section.title), section);
-  });
-
-  const ordered: DocumentSection[] = [];
-  sectionOrder.forEach((key) => {
-    if (key === "references") {
-      const existing = sectionMap.get(key);
-      if (existing) {
-        if (existing.paragraphs.length === 0 && existing.bullets.length === 0) {
-          ordered.push({
-            ...existing,
-            paragraphs: ["Available on request."],
-          });
-        } else {
-          ordered.push(existing);
-        }
-      } else {
-        ordered.push({
-          title: "References",
-          paragraphs: ["Available on request."],
-          bullets: [],
-        });
-      }
-      return;
-    }
-    const found = sectionMap.get(key);
-    if (found) {
-      ordered.push(found);
-    }
-  });
-
-  const usedTitles = new Set(ordered.map((section) => normalizeTitle(section.title)));
-  sections.forEach((section) => {
-    const normalized = normalizeTitle(section.title);
-    if (!usedTitles.has(normalized)) {
-      ordered.push(section);
-    }
-  });
-
-  return ordered;
-};
-
-const wordCount = (text: string) => text.split(/\s+/).filter(Boolean).length;
-
-const extractSectionText = (sections: DocumentSection[], title: string) => {
-  const normalized = normalizeTitle(title);
-  const section = sections.find((item) => normalizeTitle(item.title) === normalized);
-  if (!section) return "";
-  return [...section.paragraphs, ...section.bullets].join(" ");
-};
-
-const buildSummaryAddendum = (sections: DocumentSection[], header?: DocumentHeader) => {
-  const role = header?.role ?? "professional roles";
-  const skillsText = extractSectionText(sections, "key skills");
-  const achievementsText = extractSectionText(sections, "key achievements");
-  const experienceText = extractSectionText(sections, "work experience");
-
-  const skills = skillsText
-    .split(/[,•]/)
-    .map((item) => cleanText(item))
-    .filter(Boolean)
-    .slice(0, 6);
-
-  const achievements = achievementsText
-    .split(/[.;]/)
-    .map((item) => cleanText(item))
-    .filter(Boolean)
-    .slice(0, 3);
-
-  const experience = experienceText
-    .split(/[.;]/)
-    .map((item) => cleanText(item))
-    .filter(Boolean)
-    .slice(0, 3);
-
-  const skillPhrase = skills.length > 0 ? skills.join(", ") : "core delivery, stakeholder alignment, and quality execution";
-  const achievementPhrase =
-    achievements.length > 0 ? achievements.join(", ") : "driving measurable improvements and reliable outcomes";
-  const experiencePhrase =
-    experience.length > 0 ? experience.join(", ") : "end-to-end project delivery and cross-functional collaboration";
-
-  return [
-    `A highly proactive individual with extensive experience in ${role}, focused on ${skillPhrase}.`,
-    `Known for ${achievementPhrase} and a disciplined approach to continuous improvement.`,
-    `Hands-on background in ${experiencePhrase}, with a commitment to clear communication and consistent results.`,
-  ].join(" ");
-};
-
-const ensureProfessionalSummary = (sections: DocumentSection[], header?: DocumentHeader) => {
-  const normalized = "professional summary";
-  let summarySection = sections.find((section) => normalizeTitle(section.title) === normalized);
-
-  if (!summarySection) {
-    summarySection = {
-      title: "Professional Summary",
-      paragraphs: [],
-      bullets: [],
-    };
-    sections.unshift(summarySection);
-  }
-
-  const existingText = summarySection.paragraphs.join(" ");
-  const addendum = buildSummaryAddendum(sections, header);
-  let combined = [existingText, addendum].filter(Boolean).join(" ").trim();
-  const role = header?.role ?? "the target role";
-
-  while (wordCount(combined) < 100) {
-    combined = `${combined} Focused on delivering reliable outcomes in ${role} with strong attention to detail and stakeholder needs.`.trim();
-  }
-
-  summarySection.paragraphs = [combined];
-
-  return sections.map((section) => (section === summarySection ? summarySection : section));
-};
 const parseCoverLetter = (rawText: string): CoverLetterModel => {
   const rawSections = rawText
     .split(/\n\s*\n/)
@@ -304,7 +162,7 @@ export const buildDocumentModel = (
     id: "",
     kind,
     title: "Tailored CV",
-    sections: ensureProfessionalSummary(orderSections(parsedSections, header), header),
+    sections: orderSections(parsedSections, header),
     header,
     style,
     rawText: sanitized,
