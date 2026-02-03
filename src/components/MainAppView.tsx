@@ -4,11 +4,13 @@ import { ArrowLeft, Sparkles, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CVUploader } from "./CVUploader";
 import { JobDetailsForm } from "./JobDetailsForm";
+import { UserDetailsForm } from "./UserDetailsForm";
 import { OutputTypeSelector } from "./OutputTypeSelector";
 import { OutputDisplay } from "./OutputDisplay";
 import { AIChatBox } from "./AIChatBox";
 import { ProcessingStatus } from "./ProcessingStatus";
-import type { CVData, JobDescription, TailoredOutput, OutputType, Message } from "@/types";
+import { supabase } from "@/integrations/supabase/client";
+import type { CVData, JobDescription, UserDetails, TailoredOutput, OutputType, Message } from "@/types";
 import { toast } from "@/hooks/use-toast";
 
 interface MainAppViewProps {
@@ -20,7 +22,13 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
   const [jobDetails, setJobDetails] = useState<JobDescription>({ 
     title: '', 
     description: '', 
-    personSpec: '' 
+    personSpec: '',
+    linkedinUrl: ''
+  });
+  const [userDetails, setUserDetails] = useState<UserDetails>({
+    fullName: '',
+    email: '',
+    phone: ''
   });
   const [outputType, setOutputType] = useState<OutputType>('both');
   const [output, setOutput] = useState<TailoredOutput | null>(null);
@@ -29,12 +37,42 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isChatLoading, setIsChatLoading] = useState(false);
 
-  const isReadyToProcess = cvData && jobDetails.title && jobDetails.description;
+  const isLinkedInMethod = !!jobDetails.linkedinUrl && jobDetails.linkedinUrl.includes('linkedin.com');
+  const isReadyToProcess = cvData && 
+    jobDetails.title && 
+    (jobDetails.description || isLinkedInMethod) && 
+    userDetails.fullName && 
+    userDetails.email;
+
+  const saveSubmission = async () => {
+    try {
+      const { error } = await supabase
+        .from('user_submissions')
+        .insert({
+          full_name: userDetails.fullName,
+          email: userDetails.email,
+          phone: userDetails.phone || null,
+          job_title: jobDetails.title,
+          job_description: jobDetails.description || 'Via LinkedIn URL',
+          person_spec: jobDetails.personSpec || null,
+          linkedin_url: jobDetails.linkedinUrl || null,
+          cv_filename: cvData?.fileName || null,
+          output_type: outputType
+        });
+
+      if (error) {
+        console.error('Error saving submission:', error);
+      }
+    } catch (err) {
+      console.error('Error saving submission:', err);
+    }
+  };
 
   const simulateProcessing = useCallback(async () => {
-    // This would be replaced with actual AI API calls
-    // For now, we simulate the processing stages
     setIsProcessing(true);
+    
+    // Save user submission to database
+    await saveSubmission();
     
     setProcessingStage('analyzing');
     await new Promise(resolve => setTimeout(resolve, 1500));
@@ -45,7 +83,6 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
     setProcessingStage('generating');
     await new Promise(resolve => setTimeout(resolve, 1500));
 
-    // Simulated output - in production, this would come from the AI
     const simulatedOutput: TailoredOutput = {
       cv: `# ${jobDetails.title}
 
@@ -97,7 +134,7 @@ I am particularly excited about this opportunity because it aligns perfectly wit
 I would welcome the opportunity to discuss how my background and skills would benefit your team. Thank you for considering my application.
 
 Best regards,
-[Your Name]
+${userDetails.fullName}
 
 ---
 *This cover letter has been tailored for the ${jobDetails.title} position*`
@@ -110,13 +147,12 @@ Best regards,
       title: "Success!",
       description: "Your tailored documents are ready.",
     });
-  }, [jobDetails.title]);
+  }, [jobDetails.title, jobDetails.description, jobDetails.personSpec, jobDetails.linkedinUrl, userDetails, cvData, outputType]);
 
   const handleSendMessage = async (message: string) => {
     setMessages(prev => [...prev, { role: 'user', content: message }]);
     setIsChatLoading(true);
 
-    // Simulate AI response - in production, this would be a real API call
     await new Promise(resolve => setTimeout(resolve, 1500));
     
     const response: Message = {
@@ -130,7 +166,8 @@ Best regards,
 
   const handleReset = () => {
     setCvData(null);
-    setJobDetails({ title: '', description: '', personSpec: '' });
+    setJobDetails({ title: '', description: '', personSpec: '', linkedinUrl: '' });
+    setUserDetails({ fullName: '', email: '', phone: '' });
     setOutput(null);
     setMessages([]);
   };
@@ -202,8 +239,18 @@ Best regards,
               </div>
 
               <div className="space-y-8">
+                {/* Step 1: Your Details */}
                 <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
-                  <h3 className="text-lg font-semibold text-foreground mb-4">Step 1: Upload Your CV</h3>
+                  <h3 className="text-lg font-semibold text-foreground mb-4">Step 1: Your Details</h3>
+                  <UserDetailsForm 
+                    userDetails={userDetails}
+                    onChange={setUserDetails}
+                  />
+                </div>
+
+                {/* Step 2: Upload CV */}
+                <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
+                  <h3 className="text-lg font-semibold text-foreground mb-4">Step 2: Upload Your CV</h3>
                   <CVUploader 
                     onUpload={setCvData} 
                     cvData={cvData} 
@@ -211,16 +258,18 @@ Best regards,
                   />
                 </div>
 
+                {/* Step 3: Job Details */}
                 <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
-                  <h3 className="text-lg font-semibold text-foreground mb-4">Step 2: Add Job Details</h3>
+                  <h3 className="text-lg font-semibold text-foreground mb-4">Step 3: Add Job Details</h3>
                   <JobDetailsForm 
                     jobDetails={jobDetails} 
                     onChange={setJobDetails} 
                   />
                 </div>
 
+                {/* Step 4: Output Type */}
                 <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
-                  <h3 className="text-lg font-semibold text-foreground mb-4">Step 3: Choose Output</h3>
+                  <h3 className="text-lg font-semibold text-foreground mb-4">Step 4: Choose Output</h3>
                   <OutputTypeSelector 
                     selected={outputType} 
                     onChange={setOutputType} 
@@ -243,7 +292,7 @@ Best regards,
                   </Button>
                   {!isReadyToProcess && (
                     <p className="text-center text-sm text-muted-foreground mt-3">
-                      Please upload your CV and fill in the job details to continue
+                      Please fill in your details, upload your CV, and add the job information to continue
                     </p>
                   )}
                 </motion.div>
