@@ -329,7 +329,13 @@ ${userDetails.fullName}
               exit={{ opacity: 0 }}
               className="grid lg:grid-cols-2 gap-8"
             >
-              <OutputDisplay output={output} outputType={outputType} />
+              <OutputDisplay
+                output={output}
+                outputType={outputType}
+                header={documentHeader}
+                cvStyle={cvStyle}
+                onStyleChange={setCvStyle}
+              />
               <AIChatBox 
                 output={output}
                 onUpdateOutput={setOutput}

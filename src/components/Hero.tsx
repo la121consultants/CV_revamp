@@ -47,9 +47,29 @@ export const Hero = ({ onGetStarted }: HeroProps) => {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto text-balance"
           >
-            Upload your CV and job description. Our AI analyzes both and creates
-            a tailored CV and cover letter that highlights your most relevant experience.
+            Paste any job posting URL or description. Our AI analyzes the role and creates
+            a tailored CV and cover letter that highlight your most relevant experience with ATS-ready keywords.
           </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
+            className="flex flex-wrap justify-center gap-3 mb-8"
+          >
+            {[
+              "Job URL auto-extraction",
+              "ATS keyword optimization",
+              "Bulk tailoring via Chrome extension",
+            ].map((item) => (
+              <span
+                key={item}
+                className="px-3 py-1.5 text-xs font-medium rounded-full bg-primary-light text-primary"
+              >
+                {item}
+              </span>
+            ))}
+          </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -82,7 +102,7 @@ export const Hero = ({ onGetStarted }: HeroProps) => {
               {
                 icon: Target,
                 title: "Add Job Details",
-                description: "Paste the job description & person spec",
+                description: "Paste a job posting URL or description",
               },
               {
                 icon: Sparkles,

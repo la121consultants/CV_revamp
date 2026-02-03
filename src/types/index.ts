@@ -52,6 +52,8 @@ export interface DocumentModel {
   kind: DocumentKind;
   title: string;
   sections: DocumentSection[];
+  header?: DocumentHeader;
+  style?: CVStyle;
   coverLetter?: CoverLetterModel;
   rawText: string;
 }

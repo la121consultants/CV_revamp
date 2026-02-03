@@ -138,7 +138,12 @@ const parseCoverLetter = (rawText: string): CoverLetterModel => {
   };
 };
 
-export const buildDocumentModel = (rawText: string, kind: DocumentKind): DocumentModel => {
+export const buildDocumentModel = (
+  rawText: string,
+  kind: DocumentKind,
+  header?: DocumentHeader,
+  style?: CVStyle
+): DocumentModel => {
   const sanitized = rawText.trim();
   if (kind === "coverLetter") {
     return {
@@ -151,11 +156,15 @@ export const buildDocumentModel = (rawText: string, kind: DocumentKind): Documen
     };
   }
 
+  const parsedSections = parseSections(sanitized);
+
   return {
     id: "",
     kind,
     title: "Tailored CV",
-    sections: parseSections(sanitized),
+    sections: orderSections(parsedSections, header),
+    header,
+    style,
     rawText: sanitized,
   };
 };

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FileText, Mail, Copy, Check, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import ReactMarkdown from "react-markdown";
 import type { TailoredOutput, OutputType } from "@/types";
 import { renderDocumentRequest, downloadDocumentRequest } from "@/lib/documentApi";
@@ -11,9 +12,18 @@ import { toast } from "@/hooks/use-toast";
 interface OutputDisplayProps {
   output: TailoredOutput;
   outputType: OutputType;
+  header: DocumentHeader;
+  cvStyle: CVStyle;
+  onStyleChange: (style: CVStyle) => void;
 }
 
-export const OutputDisplay = ({ output, outputType }: OutputDisplayProps) => {
+export const OutputDisplay = ({
+  output,
+  outputType,
+  header,
+  cvStyle,
+  onStyleChange,
+}: OutputDisplayProps) => {
   const [copiedCV, setCopiedCV] = useState(false);
   const [copiedLetter, setCopiedLetter] = useState(false);
   const [isDownloading, setIsDownloading] = useState<{ cv: boolean; letter: boolean }>({
@@ -49,7 +59,13 @@ export const OutputDisplay = ({ output, outputType }: OutputDisplayProps) => {
     const target = kind === "cv" ? "cv" : "letter";
     try {
       setIsDownloading((prev) => ({ ...prev, [target]: true }));
-      const rendered = await renderDocumentRequest(content, kind, format);
+      const rendered = await renderDocumentRequest(
+        content,
+        kind,
+        format,
+        kind === "cv" ? header : undefined,
+        kind === "cv" ? cvStyle : undefined
+      );
       const cached = downloadDocumentRequest(rendered.id, format);
       triggerDownload(cached.blob, cached.fileName);
     } catch (error) {
@@ -100,10 +116,35 @@ export const OutputDisplay = ({ output, outputType }: OutputDisplayProps) => {
             <TabsContent value="cv" className="m-0">
               <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-primary" />
-                    Your Tailored CV
-                  </h3>
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                      <FileText className="w-5 h-5 text-primary" />
+                      Your Tailored CV
+                    </h3>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs font-medium text-muted-foreground">CV style</span>
+                      <ToggleGroup
+                        type="single"
+                        value={cvStyle}
+                        onValueChange={(value) => {
+                          if (value === "standard" || value === "aesthetic" || value === "boujee") {
+                            onStyleChange(value);
+                          }
+                        }}
+                        className="bg-background border border-border rounded-full p-1"
+                      >
+                        <ToggleGroupItem value="standard" className="text-xs px-3">
+                          Standard
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="aesthetic" className="text-xs px-3">
+                          Aesthetic
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="boujee" className="text-xs px-3">
+                          Boujee
+                        </ToggleGroupItem>
+                      </ToggleGroup>
+                    </div>
+                  </div>
                   <div className="flex gap-2">
                     <Button
                       variant="outline"

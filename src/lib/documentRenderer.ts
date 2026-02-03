@@ -201,7 +201,18 @@ export const renderPdf = (model: DocumentModel): Blob => {
     });
   };
 
-  pushLine(model.title, 18, 22);
+  if (model.kind === "cv" && model.header) {
+    const nameLine = style === "boujee" ? model.header.name.toUpperCase() : model.header.name;
+    pushLine(nameLine, styleConfig.nameSize, styleConfig.lineSpacing + 4);
+    pushLine(model.header.phone, styleConfig.bodySize, styleConfig.lineSpacing);
+    pushLine(model.header.email, styleConfig.bodySize, styleConfig.lineSpacing);
+    pushLine(model.header.role, styleConfig.roleSize, styleConfig.lineSpacing);
+    if (style !== "standard") {
+      pushLine("--------------------------------------------------", styleConfig.bodySize, styleConfig.lineSpacing);
+    }
+  } else {
+    pushLine(model.title, 18, 22);
+  }
 
   if (model.kind === "coverLetter" && model.coverLetter) {
     const { dateLine, greeting, paragraphs, signOff, signature } = model.coverLetter;
@@ -211,9 +222,14 @@ export const renderPdf = (model: DocumentModel): Blob => {
     if (signature) pushLine(signature, 12, 16);
   } else {
     model.sections.forEach((section) => {
-      pushLine(section.title.toUpperCase(), 12, 18);
-      section.paragraphs.forEach((paragraph) => pushLine(paragraph, 11, 15));
-      section.bullets.forEach((bullet) => pushLine(`• ${bullet}`, 11, 15));
+      const headingText = formatHeading(section.title, style);
+      pushLine(headingText, styleConfig.headingSize, styleConfig.lineSpacing + 3);
+      section.paragraphs.forEach((paragraph) =>
+        pushLine(paragraph, styleConfig.bodySize, styleConfig.lineSpacing)
+      );
+      section.bullets.forEach((bullet) =>
+        pushLine(`• ${bullet}`, styleConfig.bodySize, styleConfig.lineSpacing)
+      );
     });
   }
 

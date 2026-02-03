@@ -1,6 +1,8 @@
 import { buildDocumentModel } from "@/lib/documentModel";
 import { renderDocx, renderPdf } from "@/lib/documentRenderer";
 import type {
+  CVStyle,
+  DocumentHeader,
   DocumentKind,
   DocumentModel,
   DocumentRenderFormat,
@@ -13,8 +15,14 @@ const MAX_CACHE_ENTRIES = 12;
 
 const documentCache = new Map<string, RenderedDocument>();
 
-const toCacheKey = (ownerId: string, kind: DocumentKind, format: DocumentRenderFormat, rawText: string) =>
-  `${ownerId}:${kind}:${format}:${rawText}`;
+const toCacheKey = (
+  ownerId: string,
+  kind: DocumentKind,
+  format: DocumentRenderFormat,
+  rawText: string,
+  header?: DocumentHeader,
+  style?: CVStyle
+) => `${ownerId}:${kind}:${format}:${rawText}:${JSON.stringify(header)}:${style ?? "standard"}`;
 
 const purgeCache = () => {
   const now = Date.now();
@@ -41,18 +49,20 @@ export const renderDocument = async (
   ownerId: string,
   rawText: string,
   kind: DocumentKind,
-  format: DocumentRenderFormat
+  format: DocumentRenderFormat,
+  header?: DocumentHeader,
+  style?: CVStyle
 ): Promise<RenderedDocument> => {
   ensureSafeText(rawText);
   purgeCache();
 
-  const cacheKey = toCacheKey(ownerId, kind, format, rawText);
+  const cacheKey = toCacheKey(ownerId, kind, format, rawText, header, style);
   const existing = documentCache.get(cacheKey);
   if (existing) {
     return existing;
   }
 
-  const model: DocumentModel = buildDocumentModel(rawText, kind);
+  const model: DocumentModel = buildDocumentModel(rawText, kind, header, style);
   model.id = crypto.randomUUID();
 
   const blob = format === "docx" ? await renderDocx(model) : renderPdf(model);
