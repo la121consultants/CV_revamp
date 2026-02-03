@@ -1,5 +1,5 @@
-import { FileText, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
+import logo from "@/assets/logo.png";
 
 export const Header = () => {
   return (
@@ -10,12 +10,7 @@ export const Header = () => {
     >
       <div className="container mx-auto flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-primary">
-              <FileText className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <Sparkles className="w-4 h-4 text-secondary absolute -top-1 -right-1" />
-          </div>
+          <img src={logo} alt="LA121 Consultants" className="h-12 w-auto" />
           <div>
             <h1 className="text-xl font-bold text-foreground">LA121</h1>
             <p className="text-xs text-muted-foreground">AI CV Review</p>
