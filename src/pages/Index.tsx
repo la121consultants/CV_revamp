@@ -44,12 +44,12 @@ const Index = () => {
                     {[
                       {
                         title: "Smart Matching",
-                        description: "Our AI analyzes job descriptions and identifies the key requirements to highlight your most relevant experience.",
+                        description: "Paste a job posting URL or description to auto-extract requirements and tailor your resume.",
                         color: "primary",
                       },
                       {
-                        title: "Professional Formatting",
-                        description: "Get a beautifully formatted CV that's ATS-friendly and catches the recruiter's eye.",
+                        title: "ATS Keyword Optimization",
+                        description: "Optimize keywords and structure to increase your ATS match rate without sacrificing readability.",
                         color: "secondary",
                       },
                       {
@@ -63,13 +63,13 @@ const Index = () => {
                         color: "secondary",
                       },
                       {
-                        title: "Multiple Formats",
-                        description: "Download your documents in PDF, Word, or plain text formats.",
+                        title: "Bulk Tailoring Extension",
+                        description: "Power users can tailor resumes for every open job tab with our Chrome extension.",
                         color: "primary",
                       },
                       {
-                        title: "Privacy First",
-                        description: "Your documents are processed securely and never stored permanently.",
+                        title: "Job URL Auto-Extraction",
+                        description: "Drop a job URL and let the tool capture role details instantly.",
                         color: "secondary",
                       },
                     ].map((feature, index) => (
@@ -123,7 +123,7 @@ const Index = () => {
                       {
                         step: "02",
                         title: "Add Job Details",
-                        description: "Paste the job description and person specification. The more details you provide, the better the results.",
+                        description: "Paste a job posting URL or description. The more details you provide, the better the results.",
                       },
                       {
                         step: "03",
