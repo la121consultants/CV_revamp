@@ -1,12 +1,5 @@
 import { format } from "date-fns";
-import type {
-  CVStyle,
-  DocumentHeader,
-  DocumentKind,
-  DocumentModel,
-  DocumentSection,
-  CoverLetterModel,
-} from "@/types";
+import type { DocumentKind, DocumentModel, DocumentSection, CoverLetterModel } from "@/types";
 
 const headingRegex = /^#{1,6}\s+(.*)$/;
 const bulletRegex = /^[-*•]\s+(.*)$/;
@@ -99,68 +92,6 @@ const parseSections = (rawText: string): DocumentSection[] => {
   return sections;
 };
 
-const sectionOrder = [
-  "professional summary",
-  "key skills",
-  "key achievements",
-  "work experience",
-  "education",
-  "projects",
-  "hobbies",
-  "references",
-];
-
-const normalizeTitle = (title: string) =>
-  title
-    .toLowerCase()
-    .replace(/&/g, "and")
-    .replace(/[^a-z0-9 ]/g, "")
-    .trim();
-
-const orderSections = (sections: DocumentSection[], header?: DocumentHeader) => {
-  const sectionMap = new Map<string, DocumentSection>();
-  sections.forEach((section) => {
-    sectionMap.set(normalizeTitle(section.title), section);
-  });
-
-  const ordered: DocumentSection[] = [];
-  sectionOrder.forEach((key) => {
-    if (key === "references") {
-      const existing = sectionMap.get(key);
-      if (existing) {
-        if (existing.paragraphs.length === 0 && existing.bullets.length === 0) {
-          ordered.push({
-            ...existing,
-            paragraphs: ["Available on request."],
-          });
-        } else {
-          ordered.push(existing);
-        }
-      } else {
-        ordered.push({
-          title: "References",
-          paragraphs: ["Available on request."],
-          bullets: [],
-        });
-      }
-      return;
-    }
-    const found = sectionMap.get(key);
-    if (found) {
-      ordered.push(found);
-    }
-  });
-
-  const usedTitles = new Set(ordered.map((section) => normalizeTitle(section.title)));
-  sections.forEach((section) => {
-    const normalized = normalizeTitle(section.title);
-    if (!usedTitles.has(normalized)) {
-      ordered.push(section);
-    }
-  });
-
-  return ordered;
-};
 const parseCoverLetter = (rawText: string): CoverLetterModel => {
   const rawSections = rawText
     .split(/\n\s*\n/)

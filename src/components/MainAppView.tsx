@@ -19,8 +19,6 @@ import type {
   Message,
   ChatMode,
   PendingChatAction,
-  CVStyle,
-  DocumentHeader,
 } from "@/types";
 import { toast } from "@/hooks/use-toast";
 
@@ -47,7 +45,6 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
   const [processingStage, setProcessingStage] = useState<'analyzing' | 'processing' | 'generating'>('analyzing');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isChatLoading, setIsChatLoading] = useState(false);
-  const [cvStyle, setCvStyle] = useState<CVStyle>("standard");
   const [chatMode, setChatMode] = useState<ChatMode>(() => {
     if (typeof window === "undefined") return "instant";
     return (sessionStorage.getItem("cv-chat-mode") as ChatMode) || "instant";
@@ -215,7 +212,6 @@ ${userDetails.fullName}
     setOutput(null);
     setMessages([]);
     setPendingAction(null);
-    setCvStyle("standard");
   };
 
   const applyChatChanges = (message: string) => {
@@ -292,13 +288,6 @@ ${userDetails.fullName}
     }, delay);
     return () => window.clearTimeout(timeout);
   }, [pendingAction]);
-
-  const documentHeader: DocumentHeader = {
-    name: userDetails.fullName || "Your Name",
-    phone: userDetails.phone || "Phone Number",
-    email: userDetails.email || "Email Address",
-    role: jobDetails.title || "Target Role",
-  };
 
   return (
     <div className="min-h-screen bg-background">

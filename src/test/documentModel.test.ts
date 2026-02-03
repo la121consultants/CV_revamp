@@ -9,7 +9,6 @@ describe("documentModel", () => {
     expect(model.sections.length).toBeGreaterThan(1);
     expect(model.sections[0].title).toBe("Professional Summary");
     expect(model.sections[1].bullets).toEqual(["Roadmapping", "Analytics"]);
-    expect(model.sections[model.sections.length - 1].title).toBe("References");
   });
 
   it("parses a cover letter with greeting and sign-off", () => {
