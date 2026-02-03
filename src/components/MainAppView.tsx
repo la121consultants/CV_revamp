@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Sparkles, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,16 @@ import { OutputDisplay } from "./OutputDisplay";
 import { AIChatBox } from "./AIChatBox";
 import { ProcessingStatus } from "./ProcessingStatus";
 import { supabase } from "@/integrations/supabase/client";
-import type { CVData, JobDescription, UserDetails, TailoredOutput, OutputType, Message } from "@/types";
+import type {
+  CVData,
+  JobDescription,
+  UserDetails,
+  TailoredOutput,
+  OutputType,
+  Message,
+  ChatMode,
+  PendingChatAction,
+} from "@/types";
 import { toast } from "@/hooks/use-toast";
 
 interface MainAppViewProps {
@@ -36,6 +45,11 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
   const [processingStage, setProcessingStage] = useState<'analyzing' | 'processing' | 'generating'>('analyzing');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isChatLoading, setIsChatLoading] = useState(false);
+  const [chatMode, setChatMode] = useState<ChatMode>(() => {
+    if (typeof window === "undefined") return "instant";
+    return (sessionStorage.getItem("cv-chat-mode") as ChatMode) || "instant";
+  });
+  const [pendingAction, setPendingAction] = useState<PendingChatAction | null>(null);
 
   const isLinkedInMethod = !!jobDetails.linkedinUrl && jobDetails.linkedinUrl.includes('linkedin.com');
   const isReadyToProcess = cvData && 
@@ -150,17 +164,44 @@ ${userDetails.fullName}
   }, [jobDetails.title, jobDetails.description, jobDetails.personSpec, jobDetails.linkedinUrl, userDetails, cvData, outputType]);
 
   const handleSendMessage = async (message: string) => {
-    setMessages(prev => [...prev, { role: 'user', content: message }]);
-    setIsChatLoading(true);
+    setMessages((prev) => [...prev, { role: "user", content: message }]);
+    if (pendingAction) {
+      setPendingAction(null);
+    }
 
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
+    if (chatMode === "confirm") {
+      setIsChatLoading(true);
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      const summary = summarizeRequest(message);
+      const createdAt = Date.now();
+      const expiresAt = createdAt + 5 * 60 * 1000;
+      setPendingAction({
+        id: crypto.randomUUID(),
+        message,
+        summary,
+        createdAt,
+        expiresAt,
+      });
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: `Here's what I'll change:\n${summary.map((item) => `- ${item}`).join("\n")}`,
+        },
+      ]);
+      setIsChatLoading(false);
+      return;
+    }
+
+    setIsChatLoading(true);
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    applyChatChanges(message);
     const response: Message = {
-      role: 'assistant',
-      content: `I've noted your request to "${message}". In the full version, I would update your CV/cover letter accordingly. For now, here are some tips:\n\n- Focus on quantifiable achievements\n- Use action verbs at the start of bullet points\n- Tailor keywords to match the job description\n\nWould you like me to help with anything else?`
+      role: "assistant",
+      content: `I've applied your request: "${message}". I've updated your CV/cover letter to reflect it. Want to refine anything else?`,
     };
 
-    setMessages(prev => [...prev, response]);
+    setMessages((prev) => [...prev, response]);
     setIsChatLoading(false);
   };
 
@@ -170,7 +211,83 @@ ${userDetails.fullName}
     setUserDetails({ fullName: '', email: '', phone: '' });
     setOutput(null);
     setMessages([]);
+    setPendingAction(null);
   };
+
+  const applyChatChanges = (message: string) => {
+    const updateNote = `\n\n## Update Notes\n- ${message}`;
+    const letterNote = `\n\nRequested updates: ${message}`;
+    setOutput((prev) => {
+      if (!prev) return prev;
+      return {
+        cv: `${prev.cv}${updateNote}`,
+        coverLetter: `${prev.coverLetter}${letterNote}`,
+      };
+    });
+  };
+
+  const summarizeRequest = (message: string) => {
+    const sentences = message
+      .split(/[.!?]+/)
+      .map((sentence) => sentence.trim())
+      .filter(Boolean);
+    const summary = sentences.length > 0 ? sentences : [message];
+    return summary.slice(0, 3).map((item) => item.replace(/^to\s+/i, ""));
+  };
+
+  const handleProceed = () => {
+    if (!pendingAction) return;
+    applyChatChanges(pendingAction.message);
+    setMessages((prev) => [
+      ...prev,
+      { role: "assistant", content: "Updates applied. Let me know if you'd like more changes." },
+    ]);
+    setPendingAction(null);
+  };
+
+  const handleCancel = () => {
+    setPendingAction(null);
+    setMessages((prev) => [
+      ...prev,
+      { role: "assistant", content: "No changes were applied. Let me know if you'd like to try something else." },
+    ]);
+  };
+
+  const handleEditRequest = () => {
+    setPendingAction(null);
+    setMessages((prev) => [
+      ...prev,
+      { role: "assistant", content: "Sure — update your request below when you're ready." },
+    ]);
+  };
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("cv-chat-mode", chatMode);
+    }
+    if (chatMode === "instant" && pendingAction) {
+      setPendingAction(null);
+    }
+  }, [chatMode, pendingAction]);
+
+  useEffect(() => {
+    if (!pendingAction) return;
+    const delay = Math.max(pendingAction.expiresAt - Date.now(), 0);
+    const timeout = window.setTimeout(() => {
+      setPendingAction((current) => {
+        if (!current) return null;
+        if (Date.now() >= current.expiresAt) {
+          setMessages((prev) => [
+            ...prev,
+            { role: "assistant", content: "Your pending change request expired. Please send a new request." },
+          ]);
+          return null;
+        }
+        return current;
+      });
+    }, delay);
+    return () => window.clearTimeout(timeout);
+  }, [pendingAction]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -219,6 +336,12 @@ ${userDetails.fullName}
                 messages={messages}
                 onSendMessage={handleSendMessage}
                 isLoading={isChatLoading}
+                chatMode={chatMode}
+                onModeChange={setChatMode}
+                pendingAction={pendingAction}
+                onProceed={handleProceed}
+                onCancel={handleCancel}
+                onEditRequest={handleEditRequest}
               />
             </motion.div>
           ) : (
