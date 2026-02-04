@@ -1,17 +1,16 @@
 import styles from "./TemplateSwitcher.module.css";
-
-export type TemplateName = "standard" | "aesthetic" | "boujee";
+import type { CVStyle } from "@/types";
 
 interface TemplateSwitcherProps {
-  value: TemplateName;
-  onChange: (value: TemplateName) => void;
+  value: CVStyle;
+  onChange: (value: CVStyle) => void;
 }
 
 export const TemplateSwitcher = ({ value, onChange }: TemplateSwitcherProps) => {
-  const options: { label: string; value: TemplateName }[] = [
+  const options: { label: string; value: CVStyle }[] = [
     { label: "Standard", value: "standard" },
     { label: "Aesthetic", value: "aesthetic" },
-    { label: "Boujee", value: "boujee" },
+    { label: "Signature", value: "signature" },
   ];
 
   return (

@@ -25,7 +25,7 @@ const wrapText = (text: string, maxChars: number) => {
 };
 
 const formatHeading = (text: string, style?: string) => {
-  if (style === "boujee") {
+  if (style === "signature") {
     return text.toUpperCase();
   }
   if (style === "aesthetic") {
@@ -53,7 +53,7 @@ const createDocumentXml = (model: DocumentModel) => {
     const phoneLine = model.header.phone;
     const emailLine = model.header.email;
     const roleLine = model.header.role;
-    pushParagraph(model.style === "boujee" ? nameLine.toUpperCase() : nameLine);
+    pushParagraph(model.style === "signature" ? nameLine.toUpperCase() : nameLine);
     pushParagraph(phoneLine);
     pushParagraph(emailLine);
     pushParagraph(roleLine);
@@ -217,7 +217,7 @@ export const renderPdf = (model: DocumentModel): Blob => {
   const styleConfig = {
     standard: { nameSize: 18, roleSize: 12, headingSize: 12, bodySize: 11, lineSpacing: 15 },
     aesthetic: { nameSize: 20, roleSize: 12, headingSize: 13, bodySize: 11, lineSpacing: 16 },
-    boujee: { nameSize: 22, roleSize: 13, headingSize: 13, bodySize: 11, lineSpacing: 16 },
+    signature: { nameSize: 22, roleSize: 13, headingSize: 13, bodySize: 11, lineSpacing: 16 },
   }[style];
 
   type PdfLine = { text: string; size: number; spacing: number };
@@ -230,7 +230,7 @@ export const renderPdf = (model: DocumentModel): Blob => {
   };
 
   if (model.kind === "cv" && model.header) {
-    const nameLine = style === "boujee" ? model.header.name.toUpperCase() : model.header.name;
+    const nameLine = style === "signature" ? model.header.name.toUpperCase() : model.header.name;
     pushLine(nameLine, styleConfig.nameSize, styleConfig.lineSpacing + 4);
     pushLine(model.header.phone, styleConfig.bodySize, styleConfig.lineSpacing);
     pushLine(model.header.email, styleConfig.bodySize, styleConfig.lineSpacing);

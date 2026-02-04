@@ -30,9 +30,17 @@ const bullet = (text: string) =>
   });
 
 export const exportToDOCX = async (data: CVData, templateName: string) => {
-  const { personal, skills, experience, education, certifications, projects, languages, hobbies } = data;
+  const { personal, skills, experience, education } = data;
 
   const title = `${personal.firstName} ${personal.lastName}`.trim();
+  
+  const contactParts = [
+    personal.location,
+    personal.phone,
+    personal.email,
+    personal.linkedin,
+    personal.portfolio,
+  ].filter(Boolean);
 
   const doc = new Document({
     sections: [
@@ -61,7 +69,7 @@ export const exportToDOCX = async (data: CVData, templateName: string) => {
             alignment: AlignmentType.CENTER,
             children: [
               new TextRun({
-                text: `${personal.location} | ${personal.phone} | ${personal.email} | ${personal.linkedin} | ${personal.portfolio}`,
+                text: contactParts.join(" | "),
                 size: 20,
               }),
             ],
@@ -76,7 +84,7 @@ export const exportToDOCX = async (data: CVData, templateName: string) => {
             new Paragraph({
               children: [
                 new TextRun({ text: item.role, bold: true }),
-                new TextRun({ text: ` — ${item.company} (${item.location})` }),
+                new TextRun({ text: ` — ${item.company}${item.location ? ` (${item.location})` : ''}` }),
               ],
               spacing: { after: 60 },
             }),
@@ -99,43 +107,13 @@ export const exportToDOCX = async (data: CVData, templateName: string) => {
               children: [new TextRun({ text: `${item.startDate} - ${item.endDate}` })],
               spacing: { after: 60 },
             }),
-            ...item.details.map((detail) => bullet(detail)),
+            ...(item.details?.map((detail) => bullet(detail)) || []),
           ]),
-          ...(projects?.length
-            ? [
-                headingStyle("Projects"),
-                ...projects.flatMap((project) => [
-                  new Paragraph({
-                    children: [
-                      new TextRun({ text: project.name, bold: true }),
-                      ...(project.link ? [new TextRun({ text: ` — ${project.link}` })] : []),
-                    ],
-                    spacing: { after: 60 },
-                  }),
-                  ...project.bullets.map((detail) => bullet(detail)),
-                ]),
-              ]
-            : []),
-          ...(certifications?.length
-            ? [
-                headingStyle("Certifications"),
-                ...certifications.map((cert) =>
-                  detailText(`${cert.name} — ${cert.issuer} (${cert.year})`)
-                ),
-              ]
-            : []),
-          ...(languages?.length
-            ? [
-                headingStyle("Languages"),
-                ...languages.map((language) => detailText(`${language.name} — ${language.level}`)),
-              ]
-            : []),
-          ...(hobbies?.length
-            ? [
-                headingStyle("Interests"),
-                detailText(hobbies.join(", ")),
-              ]
-            : []),
+          new Paragraph({
+            text: "References available on request",
+            spacing: { before: 240 },
+            alignment: AlignmentType.CENTER,
+          }),
           new Paragraph({
             text: `Template: ${templateName}`,
             spacing: { before: 240 },
