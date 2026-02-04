@@ -1,15 +1,31 @@
-import type { CVData } from "@/types/cv";
+import type { CVData, CVTheme } from "@/types/cv";
 import styles from "./AestheticTemplate.module.css";
 
 interface AestheticTemplateProps {
   data: CVData;
+  theme?: CVTheme;
 }
 
-export const AestheticTemplate = ({ data }: AestheticTemplateProps) => {
+export const AestheticTemplate = ({ data, theme }: AestheticTemplateProps) => {
   const { personal, skills, experience, education } = data;
 
   return (
-    <section className={styles.page}>
+    <section
+      className={styles.page}
+      style={
+        theme
+          ? {
+              ["--cv-primary" as string]: theme.primary,
+              ["--cv-primary-contrast" as string]: theme.primaryContrast,
+              ["--cv-primary-light" as string]: theme.primaryLight,
+              ["--cv-sidebar" as string]: theme.sidebar,
+              ["--cv-sidebar-text" as string]: theme.sidebarText,
+              ["--cv-border" as string]: theme.border,
+              ["--cv-muted" as string]: theme.muted,
+            }
+          : undefined
+      }
+    >
       <div className={styles.layout}>
         {/* LEFT SIDEBAR - Contact, Skills, Links */}
         <aside className={styles.sidebar}>

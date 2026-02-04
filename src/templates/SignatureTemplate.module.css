@@ -15,6 +15,13 @@
   line-height: 1.5;
   box-sizing: border-box;
   overflow: hidden;
+  --cv-primary: #6b5c4c;
+  --cv-primary-contrast: #ffffff;
+  --cv-primary-light: #e7e5e4;
+  --cv-sidebar: #f5f5f4;
+  --cv-sidebar-text: #44403c;
+  --cv-border: #e7e5e4;
+  --cv-muted: #a8a29e;
 }
 
 .layout {
@@ -26,24 +33,24 @@
 
 /* LEFT SIDEBAR - 30% width */
 .sidebar {
-  background: #f5f5f4;
+  background: var(--cv-sidebar);
   padding: 18px;
   border-radius: 12px;
-  border: 1px solid #e7e5e4;
+  border: 1px solid var(--cv-border);
 }
 
 .name {
   font-size: 20px;
   font-weight: 700;
   margin: 0 0 4px 0;
-  color: #44403c;
+  color: var(--cv-sidebar-text);
   line-height: 1.2;
 }
 
 .title {
   font-size: 11px;
   margin: 0 0 16px 0;
-  color: #78716c;
+  color: var(--cv-primary);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -63,10 +70,10 @@
   font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: #78716c;
+  color: var(--cv-primary);
   padding: 6px 10px;
   margin-bottom: 10px;
-  background: #e7e5e4;
+  background: var(--cv-primary-light);
   border-radius: 6px;
   display: inline-block;
 }
@@ -77,13 +84,13 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  color: #44403c;
+  color: var(--cv-sidebar-text);
 }
 
 .contactList span {
   word-break: break-word;
   padding: 4px 0;
-  border-bottom: 1px solid #e7e5e4;
+  border-bottom: 1px solid var(--cv-border);
 }
 
 .contactList span:last-child {
@@ -99,8 +106,8 @@
 
 .skillBadge {
   background: #ffffff;
-  border: 1px solid #d6d3d1;
-  color: #44403c;
+  border: 1px solid var(--cv-border);
+  color: var(--cv-sidebar-text);
   padding: 4px 10px;
   border-radius: 20px;
   font-size: 9px;
@@ -115,12 +122,12 @@
 .summary {
   font-size: 11px;
   line-height: 1.7;
-  color: #44403c;
+  color: var(--cv-sidebar-text);
   text-align: justify;
   background: #ffffff;
   padding: 14px;
   border-radius: 8px;
-  border: 1px solid #e7e5e4;
+  border: 1px solid var(--cv-border);
 }
 
 /* Card-style sections */
@@ -128,7 +135,7 @@
   background: #ffffff;
   padding: 14px;
   border-radius: 8px;
-  border: 1px solid #e7e5e4;
+  border: 1px solid var(--cv-border);
   margin-bottom: 14px;
 }
 
@@ -140,7 +147,7 @@
 .experienceItem {
   margin-bottom: 12px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #f5f5f4;
+  border-bottom: 1px solid var(--cv-primary-light);
 }
 
 .experienceItem:last-child {
@@ -159,19 +166,19 @@
 
 .itemHeader > span:first-child {
   font-weight: 600;
-  color: #44403c;
+  color: var(--cv-sidebar-text);
 }
 
 .itemHeader > span:last-child {
   font-size: 10px;
-  color: #a8a29e;
+  color: var(--cv-muted);
   font-weight: 400;
   font-style: italic;
 }
 
 .itemSub {
   font-size: 10px;
-  color: #78716c;
+  color: var(--cv-primary);
 }
 
 .bullets {
@@ -179,7 +186,7 @@
   padding-left: 14px;
   font-size: 10px;
   line-height: 1.5;
-  color: #44403c;
+  color: var(--cv-sidebar-text);
 }
 
 .bullets li {
@@ -193,14 +200,14 @@
 /* References */
 .references {
   font-size: 10px;
-  color: #a8a29e;
+  color: var(--cv-muted);
   font-style: italic;
   text-align: center;
   margin-top: 16px;
   padding: 10px;
   background: #ffffff;
   border-radius: 8px;
-  border: 1px solid #e7e5e4;
+  border: 1px solid var(--cv-border);
 }
 
 @media print {

@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FileText, Mail, Copy, Check, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import ReactMarkdown from "react-markdown";
+import { CVPreview } from "@/components/CVPreview";
+import { sampleCVData } from "@/types/cv";
 import type { CVStyle, DocumentHeader, TailoredOutput, OutputType } from "@/types";
 import { renderDocumentRequest, downloadDocumentRequest } from "@/lib/documentApi";
 import { toast } from "@/hooks/use-toast";
@@ -24,7 +25,6 @@ export const OutputDisplay = ({
   cvStyle,
   onStyleChange,
 }: OutputDisplayProps) => {
-  const [copiedCV, setCopiedCV] = useState(false);
   const [copiedLetter, setCopiedLetter] = useState(false);
   const [isDownloading, setIsDownloading] = useState<{ cv: boolean; letter: boolean }>({
     cv: false,
@@ -34,8 +34,7 @@ export const OutputDisplay = ({
   const handleCopy = async (text: string, type: "cv" | "letter") => {
     await navigator.clipboard.writeText(text);
     if (type === "cv") {
-      setCopiedCV(true);
-      setTimeout(() => setCopiedCV(false), 2000);
+      return;
     } else {
       setCopiedLetter(true);
       setTimeout(() => setCopiedLetter(false), 2000);
@@ -85,6 +84,21 @@ export const OutputDisplay = ({
 
   const defaultTab = showCV ? "cv" : "coverLetter";
 
+  const previewData = useMemo(() => {
+    const [firstName = "Your", lastName = "Name"] = header.name.split(" ");
+    return {
+      ...sampleCVData,
+      personal: {
+        ...sampleCVData.personal,
+        firstName,
+        lastName: lastName || "",
+        title: header.role || sampleCVData.personal.title,
+        email: header.email || sampleCVData.personal.email,
+        phone: header.phone || sampleCVData.personal.phone,
+      },
+    };
+  }, [header]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -115,68 +129,19 @@ export const OutputDisplay = ({
           {showCV && (
             <TabsContent value="cv" className="m-0">
               <div className="p-6">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                   <div className="space-y-2">
                     <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                       <FileText className="w-5 h-5 text-primary" />
                       Your Tailored CV
                     </h3>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs font-medium text-muted-foreground">Template</span>
-                      <ToggleGroup
-                        type="single"
-                        value={cvStyle}
-                        onValueChange={(value) => {
-                          if (value === "standard" || value === "aesthetic" || value === "signature") {
-                            onStyleChange(value);
-                          }
-                        }}
-                        className="bg-background border border-border rounded-full p-1"
-                      >
-                        <ToggleGroupItem value="standard" className="text-xs px-3">
-                          Standard
-                        </ToggleGroupItem>
-                        <ToggleGroupItem value="aesthetic" className="text-xs px-3">
-                          Aesthetic
-                        </ToggleGroupItem>
-                        <ToggleGroupItem value="signature" className="text-xs px-3">
-                          Signature
-                        </ToggleGroupItem>
-                      </ToggleGroup>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleCopy(output.cv, 'cv')}
-                    >
-                      {copiedCV ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
-                      {copiedCV ? 'Copied!' : 'Copy'}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDownload(output.cv, "cv", "docx")}
-                      disabled={isDownloading.cv}
-                    >
-                      <Download className="w-4 h-4 mr-1" />
-                      Word
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDownload(output.cv, "cv", "pdf")}
-                      disabled={isDownloading.cv}
-                    >
-                      <Download className="w-4 h-4 mr-1" />
-                      PDF
-                    </Button>
                   </div>
                 </div>
-                <div className="prose prose-sm max-w-none bg-muted/30 rounded-xl p-6 max-h-[500px] overflow-y-auto">
-                  <ReactMarkdown>{output.cv}</ReactMarkdown>
-                </div>
+                <CVPreview
+                  data={previewData}
+                  selectedTemplate={cvStyle}
+                  onTemplateChange={onStyleChange}
+                />
               </div>
             </TabsContent>
           )}

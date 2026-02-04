@@ -38,6 +38,16 @@ export interface CVData {
   education: EducationItem[];
 }
 
+export interface CVTheme {
+  primary: string;
+  primaryContrast: string;
+  primaryLight: string;
+  sidebar: string;
+  sidebarText: string;
+  border: string;
+  muted: string;
+}
+
 // Sample CV data for template previews
 export const sampleCVData: CVData = {
   personal: {
