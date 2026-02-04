@@ -1,4 +1,4 @@
-import { Heart, Shield } from "lucide-react";
+import { Heart, Shield, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
 import logo from "@/assets/logo.png";
 
@@ -27,10 +27,17 @@ export const Footer = () => {
           </p>
         </div>
         
-        <div className="mt-6 pt-6 border-t border-border text-center">
+        <div className="mt-6 pt-6 border-t border-border flex flex-col items-center gap-4">
           <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} LA121 Consultants. All rights reserved.
           </p>
+          <Link 
+            to="/admin/login" 
+            className="text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors flex items-center gap-1"
+          >
+            <Lock className="w-3 h-3" />
+            Admin
+          </Link>
         </div>
       </div>
     </footer>
