@@ -172,11 +172,12 @@ const createZip = (files: { name: string; data: Uint8Array }[]): Blob => {
   endView.setUint32(16, centralOffset, true);
   endView.setUint16(20, 0, true);
 
-  const blobParts: Uint8Array[] = [];
+  const blobParts: BlobPart[] = [];
   fileEntries.forEach((entry) => {
-    blobParts.push(entry.localHeader, entry.data);
+    blobParts.push(entry.localHeader as BlobPart, entry.data as BlobPart);
   });
-  blobParts.push(...centralDirectory, endRecord);
+  centralDirectory.forEach((cd) => blobParts.push(cd as BlobPart));
+  blobParts.push(endRecord as BlobPart);
 
   return new Blob(blobParts, { type: "application/zip" });
 };
