@@ -33,7 +33,7 @@ export type DocumentKind = 'cv' | 'coverLetter';
 
 export type DocumentRenderFormat = 'docx' | 'pdf';
 
-export type CVStyle = 'standard' | 'aesthetic' | 'boujee';
+export type CVStyle = 'standard' | 'aesthetic' | 'signature';
 
 export interface DocumentHeader {
   name: string;

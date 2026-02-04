@@ -1,0 +1,115 @@
+import type { CVData } from "@/types/cv";
+import styles from "./SignatureTemplate.module.css";
+
+interface SignatureTemplateProps {
+  data: CVData;
+}
+
+export const SignatureTemplate = ({ data }: SignatureTemplateProps) => {
+  const { personal, skills, experience, education } = data;
+
+  return (
+    <section className={styles.page}>
+      <div className={styles.layout}>
+        {/* LEFT SIDEBAR - Contact, Skills, Links */}
+        <aside className={styles.sidebar}>
+          <h1 className={styles.name}>
+            {personal.firstName} {personal.lastName}
+          </h1>
+          <p className={styles.title}>{personal.title}</p>
+
+          {/* Contact Details */}
+          <div className={styles.section}>
+            <div className={styles.sectionTitle}>Contact</div>
+            <div className={styles.contactList}>
+              <span>{personal.location}</span>
+              <span>{personal.phone}</span>
+              <span>{personal.email}</span>
+              {personal.linkedin && <span>{personal.linkedin}</span>}
+              {personal.portfolio && <span>{personal.portfolio}</span>}
+            </div>
+          </div>
+
+          {/* Skills */}
+          <div className={styles.section}>
+            <div className={styles.sectionTitle}>Expertise</div>
+            <div className={styles.skillList}>
+              {skills.map((skill, index) => (
+                <span key={index} className={styles.skillBadge}>
+                  {skill.name}
+                </span>
+              ))}
+            </div>
+          </div>
+        </aside>
+
+        {/* RIGHT MAIN CONTENT */}
+        <main className={styles.main}>
+          {/* Profile Summary */}
+          <div className={styles.section}>
+            <div className={styles.sectionTitle}>Profile</div>
+            <p className={styles.summary}>{personal.summary}</p>
+          </div>
+
+          {/* Work Experience */}
+          <div className={styles.section}>
+            <div className={styles.sectionTitle}>Experience</div>
+            <div className={styles.card}>
+              {experience.map((item, index) => (
+                <div key={index} className={styles.experienceItem}>
+                  <div className={styles.itemHeader}>
+                    <span>{item.role}</span>
+                    <span>
+                      {item.startDate} – {item.endDate}
+                    </span>
+                  </div>
+                  <div className={styles.itemSub}>
+                    {item.company}
+                    {item.location && ` • ${item.location}`}
+                  </div>
+                  {item.bullets.length > 0 && (
+                    <ul className={styles.bullets}>
+                      {item.bullets.map((bullet, bulletIndex) => (
+                        <li key={bulletIndex}>{bullet}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Education */}
+          <div className={styles.section}>
+            <div className={styles.sectionTitle}>Education</div>
+            <div className={styles.card}>
+              {education.map((item, index) => (
+                <div key={index} className={styles.experienceItem}>
+                  <div className={styles.itemHeader}>
+                    <span>{item.qualification}</span>
+                    <span>
+                      {item.startDate} – {item.endDate}
+                    </span>
+                  </div>
+                  <div className={styles.itemSub}>{item.institution}</div>
+                  {item.details && item.details.length > 0 && (
+                    <ul className={styles.bullets}>
+                      {item.details.map((detail, detailIndex) => (
+                        <li key={detailIndex}>{detail}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* References */}
+          <div className={styles.references}>
+            References available on request
+          </div>
+        </main>
+      </div>
+    </section>
+  );
+};

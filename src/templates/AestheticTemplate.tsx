@@ -6,146 +6,104 @@ interface AestheticTemplateProps {
 }
 
 export const AestheticTemplate = ({ data }: AestheticTemplateProps) => {
-  const { personal, skills, experience, education, certifications, projects, languages, hobbies } = data;
+  const { personal, skills, experience, education } = data;
 
   return (
     <section className={styles.page}>
       <div className={styles.layout}>
+        {/* LEFT SIDEBAR - Contact, Skills, Links */}
         <aside className={styles.sidebar}>
-          {personal.photoUrl && (
-            <img src={personal.photoUrl} alt={`${personal.firstName} ${personal.lastName}`} className={styles.photo} />
-          )}
           <h1 className={styles.name}>
             {personal.firstName} {personal.lastName}
           </h1>
           <p className={styles.title}>{personal.title}</p>
-          <div className={styles.contactList}>
-            <span>{personal.location}</span>
-            <span>{personal.phone}</span>
-            <span>{personal.email}</span>
-            <span>{personal.linkedin}</span>
-            <span>{personal.portfolio}</span>
+
+          {/* Contact Details */}
+          <div className={styles.section}>
+            <div className={styles.sectionTitle}>Contact</div>
+            <div className={styles.contactList}>
+              <span>{personal.location}</span>
+              <span>{personal.phone}</span>
+              <span>{personal.email}</span>
+              {personal.linkedin && <span>{personal.linkedin}</span>}
+              {personal.portfolio && <span>{personal.portfolio}</span>}
+            </div>
           </div>
 
+          {/* Skills */}
           <div className={styles.section}>
             <div className={styles.sectionTitle}>Skills</div>
-            {skills.map((skill) => (
-              <div key={skill.name} className={styles.skillRow}>
-                <span>{skill.name}</span>
-                <span className={styles.dots}>
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <span
-                      key={`${skill.name}-${index}`}
-                      className={`${styles.dot} ${
-                        (skill.proficiency ?? 3) > index ? styles.dotActive : ""
-                      }`}
-                    />
-                  ))}
-                </span>
-              </div>
-            ))}
+            <div className={styles.skillList}>
+              {skills.map((skill, index) => (
+                <div key={index} className={styles.skillItem}>
+                  {skill.name}
+                </div>
+              ))}
+            </div>
           </div>
-
-          {(languages?.length ?? 0) > 0 && (
-            <div className={styles.section}>
-              <div className={styles.sectionTitle}>Languages</div>
-              {languages?.map((language) => (
-                <div key={language.name} className={styles.itemSub}>
-                  {language.name} • {language.level}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {(hobbies?.length ?? 0) > 0 && (
-            <div className={styles.section}>
-              <div className={styles.sectionTitle}>Interests</div>
-              {hobbies?.map((hobby) => (
-                <div key={hobby} className={styles.itemSub}>
-                  {hobby}
-                </div>
-              ))}
-            </div>
-          )}
         </aside>
 
+        {/* RIGHT MAIN CONTENT */}
         <main className={styles.main}>
+          {/* Professional Summary */}
           <div className={styles.section}>
             <div className={styles.sectionTitle}>Professional Summary</div>
             <p className={styles.summary}>{personal.summary}</p>
           </div>
 
+          {/* Work Experience */}
           <div className={styles.section}>
-            <div className={styles.sectionTitle}>Experience</div>
-            {experience.map((item) => (
-              <div key={`${item.company}-${item.role}`} className={styles.section}>
+            <div className={styles.sectionTitle}>Work Experience</div>
+            {experience.map((item, index) => (
+              <div key={index} className={styles.experienceItem}>
                 <div className={styles.itemHeader}>
                   <span>{item.role}</span>
                   <span>
-                    {item.startDate} - {item.endDate}
+                    {item.startDate} – {item.endDate}
                   </span>
                 </div>
                 <div className={styles.itemSub}>
-                  {item.company} • {item.location}
+                  {item.company}
+                  {item.location && ` • ${item.location}`}
                 </div>
-                <ul className={styles.bullets}>
-                  {item.bullets.map((bullet) => (
-                    <li key={bullet}>{bullet}</li>
-                  ))}
-                </ul>
+                {item.bullets.length > 0 && (
+                  <ul className={styles.bullets}>
+                    {item.bullets.map((bullet, bulletIndex) => (
+                      <li key={bulletIndex}>{bullet}</li>
+                    ))}
+                  </ul>
+                )}
               </div>
             ))}
           </div>
 
+          {/* Education */}
           <div className={styles.section}>
             <div className={styles.sectionTitle}>Education</div>
-            {education.map((item) => (
-              <div key={`${item.institution}-${item.qualification}`} className={styles.section}>
+            {education.map((item, index) => (
+              <div key={index} className={styles.experienceItem}>
                 <div className={styles.itemHeader}>
                   <span>{item.qualification}</span>
                   <span>
-                    {item.startDate} - {item.endDate}
+                    {item.startDate} – {item.endDate}
                   </span>
                 </div>
                 <div className={styles.itemSub}>{item.institution}</div>
-                <ul className={styles.bullets}>
-                  {item.details.map((detail) => (
-                    <li key={detail}>{detail}</li>
-                  ))}
-                </ul>
+                {item.details && item.details.length > 0 && (
+                  <ul className={styles.bullets}>
+                    {item.details.map((detail, detailIndex) => (
+                      <li key={detailIndex}>{detail}</li>
+                    ))}
+                  </ul>
+                )}
               </div>
             ))}
           </div>
 
-          {(projects?.length ?? 0) > 0 && (
-            <div className={styles.section}>
-              <div className={styles.sectionTitle}>Projects</div>
-              {projects?.map((project) => (
-                <div key={project.name} className={styles.section}>
-                  <div className={styles.itemHeader}>
-                    <span>{project.name}</span>
-                    {project.link && <span>{project.link}</span>}
-                  </div>
-                  <ul className={styles.bullets}>
-                    {project.bullets.map((bullet) => (
-                      <li key={bullet}>{bullet}</li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {(certifications?.length ?? 0) > 0 && (
-            <div className={styles.section}>
-              <div className={styles.sectionTitle}>Certifications</div>
-              {certifications?.map((cert) => (
-                <div key={cert.name} className={styles.itemSub}>
-                  {cert.name} • {cert.issuer} • {cert.year}
-                </div>
-              ))}
-            </div>
-          )}
+          {/* References */}
+          <div className={styles.references}>
+            References available on request
+          </div>
         </main>
       </div>
     </section>

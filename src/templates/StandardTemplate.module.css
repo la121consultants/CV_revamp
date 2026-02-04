@@ -1,100 +1,170 @@
+/* STANDARD TEMPLATE - Single column, ATS-friendly, traditional */
+/* A4: 210mm x 297mm, 20mm margins */
+
 .page {
   width: 210mm;
   min-height: 297mm;
+  max-height: 297mm;
   margin: 0 auto;
-  padding: 18mm;
+  padding: 20mm;
   background: #ffffff;
-  color: #0f172a;
-  font-family: "Arial", "Helvetica Neue", Helvetica, sans-serif;
-  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+  color: #1f2937;
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-size: 11px;
+  line-height: 1.5;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
+/* Header Section */
 .header {
-  border-bottom: 2px solid #0f172a;
+  text-align: center;
   padding-bottom: 12px;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #d1d5db;
 }
 
 .name {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
-  margin: 0;
+  margin: 0 0 4px 0;
+  color: #111827;
+  letter-spacing: -0.02em;
 }
 
 .title {
   font-size: 14px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  margin: 6px 0 0;
+  color: #4b5563;
+  margin: 0 0 8px 0;
+  font-weight: 500;
 }
 
 .contact {
-  margin-top: 10px;
-  font-size: 12px;
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  justify-content: center;
+  gap: 6px 16px;
+  font-size: 10px;
+  color: #6b7280;
 }
 
+.contact span:not(:empty) {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Section Styles */
 .section {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .sectionTitle {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  border-bottom: 1px solid #cbd5f5;
+  color: #374151;
   padding-bottom: 4px;
   margin-bottom: 8px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .summary {
-  font-size: 13px;
+  font-size: 11px;
   line-height: 1.6;
+  color: #374151;
+  text-align: justify;
 }
 
+/* Skills List */
 .skillList {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 12px;
-  font-size: 12px;
+  gap: 6px 12px;
+  font-size: 10px;
 }
 
+.skillList span {
+  color: #374151;
+}
+
+.skillList span::before {
+  content: '•';
+  margin-right: 4px;
+  color: #9ca3af;
+}
+
+/* Experience & Education Items */
 .gridItem {
   margin-bottom: 12px;
+}
+
+.gridItem:last-child {
+  margin-bottom: 0;
 }
 
 .itemHeader {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
+  align-items: baseline;
+  font-size: 11px;
+}
+
+.itemHeader > span:first-child {
   font-weight: 600;
+  color: #111827;
+}
+
+.itemHeader > span:last-child {
+  font-size: 10px;
+  color: #6b7280;
+  font-weight: 400;
 }
 
 .itemSub {
-  font-size: 12px;
-  color: #475569;
+  font-size: 10px;
+  color: #6b7280;
   margin-top: 2px;
 }
 
 .bullets {
-  padding-left: 18px;
   margin: 6px 0 0;
-  font-size: 12px;
+  padding-left: 16px;
+  font-size: 10px;
   line-height: 1.5;
+  color: #374151;
 }
 
-.twoColumn {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+.bullets li {
+  margin-bottom: 3px;
+}
+
+.bullets li:last-child {
+  margin-bottom: 0;
+}
+
+/* References */
+.references {
+  font-size: 10px;
+  color: #6b7280;
+  font-style: italic;
+  text-align: center;
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid #e5e7eb;
 }
 
 @media print {
   .page {
     box-shadow: none;
     margin: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+@media screen {
+  .page {
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
   }
 }

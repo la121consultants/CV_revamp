@@ -115,19 +115,19 @@ export const OutputDisplay = ({
           {showCV && (
             <TabsContent value="cv" className="m-0">
               <div className="p-6">
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                   <div className="space-y-2">
                     <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                       <FileText className="w-5 h-5 text-primary" />
                       Your Tailored CV
                     </h3>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs font-medium text-muted-foreground">CV style</span>
+                      <span className="text-xs font-medium text-muted-foreground">Template</span>
                       <ToggleGroup
                         type="single"
                         value={cvStyle}
                         onValueChange={(value) => {
-                          if (value === "standard" || value === "aesthetic" || value === "boujee") {
+                          if (value === "standard" || value === "aesthetic" || value === "signature") {
                             onStyleChange(value);
                           }
                         }}
@@ -139,13 +139,13 @@ export const OutputDisplay = ({
                         <ToggleGroupItem value="aesthetic" className="text-xs px-3">
                           Aesthetic
                         </ToggleGroupItem>
-                        <ToggleGroupItem value="boujee" className="text-xs px-3">
-                          Boujee
+                        <ToggleGroupItem value="signature" className="text-xs px-3">
+                          Signature
                         </ToggleGroupItem>
                       </ToggleGroup>
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -161,7 +161,7 @@ export const OutputDisplay = ({
                       disabled={isDownloading.cv}
                     >
                       <Download className="w-4 h-4 mr-1" />
-                      Download as Word
+                      Word
                     </Button>
                     <Button
                       variant="outline"
@@ -170,7 +170,7 @@ export const OutputDisplay = ({
                       disabled={isDownloading.cv}
                     >
                       <Download className="w-4 h-4 mr-1" />
-                      Download as PDF
+                      PDF
                     </Button>
                   </div>
                 </div>
@@ -184,12 +184,12 @@ export const OutputDisplay = ({
           {showLetter && (
             <TabsContent value="coverLetter" className="m-0">
               <div className="p-6">
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                   <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                     <Mail className="w-5 h-5 text-primary" />
                     Your Cover Letter
                   </h3>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -205,7 +205,7 @@ export const OutputDisplay = ({
                       disabled={isDownloading.letter}
                     >
                       <Download className="w-4 h-4 mr-1" />
-                      Download as Word
+                      Word
                     </Button>
                     <Button
                       variant="outline"
@@ -214,7 +214,7 @@ export const OutputDisplay = ({
                       disabled={isDownloading.letter}
                     >
                       <Download className="w-4 h-4 mr-1" />
-                      Download as PDF
+                      PDF
                     </Button>
                   </div>
                 </div>
