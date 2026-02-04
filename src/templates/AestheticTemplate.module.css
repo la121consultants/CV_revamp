@@ -9,49 +9,50 @@
   padding: 20mm;
   background: #ffffff;
   color: #1f2937;
-  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  font-size: 11px;
-  line-height: 1.5;
+  font-family: "Calibri", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-size: 11pt;
+  line-height: 1.4;
   box-sizing: border-box;
   overflow: hidden;
-  --cv-primary: #1e40af;
+  --cv-primary: #111827;
   --cv-primary-contrast: #ffffff;
-  --cv-primary-light: #dbeafe;
-  --cv-sidebar: #f0f4ff;
+  --cv-primary-light: #f3f4f6;
+  --cv-sidebar: #ffffff;
   --cv-sidebar-text: #1f2937;
-  --cv-border: #3b82f6;
-  --cv-muted: #6b7280;
+  --cv-border: #e5e7eb;
+  --cv-muted: #4b5563;
 }
 
 .layout {
   display: grid;
   grid-template-columns: 32% 1fr;
-  gap: 20px;
+  gap: 14px;
   height: 100%;
 }
 
 /* LEFT SIDEBAR - 30-35% width */
 .sidebar {
   background: var(--cv-sidebar);
-  padding: 16px;
-  border-radius: 8px;
+  padding: 0 12px 0 0;
+  border-right: 1px solid var(--cv-border);
+  border-radius: 0;
 }
 
 .name {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   margin: 0 0 4px 0;
-  color: var(--cv-primary);
+  color: #111827;
   line-height: 1.2;
 }
 
 .title {
-  font-size: 11px;
-  margin: 0 0 14px 0;
-  color: var(--cv-primary);
+  font-size: 12px;
+  margin: 0 0 12px 0;
+  color: var(--cv-muted);
   font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  text-transform: none;
+  letter-spacing: 0.02em;
 }
 
 /* Contact Details */
@@ -62,21 +63,21 @@
 .sectionTitle {
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--cv-primary);
+  color: #111827;
   padding-bottom: 4px;
   margin-bottom: 8px;
-  border-bottom: 2px solid var(--cv-border);
+  border-bottom: 1px solid var(--cv-border);
 }
 
 .contactList {
-  font-size: 10px;
+  font-size: 10.5px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   color: var(--cv-sidebar-text);
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .contactList span {
@@ -91,10 +92,10 @@
 }
 
 .skillItem {
-  font-size: 10px;
+  font-size: 10.5px;
   color: var(--cv-sidebar-text);
-  padding: 4px 0;
-  border-bottom: 1px solid var(--cv-primary-light);
+  padding: 2px 0;
+  border-bottom: none;
 }
 
 .skillItem:last-child {
@@ -110,7 +111,7 @@
   font-size: 11px;
   line-height: 1.6;
   color: #374151;
-  text-align: justify;
+  text-align: left;
 }
 
 /* Experience & Education Items */
@@ -132,7 +133,7 @@
 
 .itemHeader > span:first-child {
   font-weight: 600;
-  color: var(--cv-primary);
+  color: #111827;
 }
 
 .itemHeader > span:last-child {
@@ -142,14 +143,14 @@
 }
 
 .itemSub {
-  font-size: 10px;
+  font-size: 10.5px;
   color: var(--cv-muted);
 }
 
 .bullets {
   margin: 6px 0 0;
   padding-left: 14px;
-  font-size: 10px;
+  font-size: 10.5px;
   line-height: 1.5;
   color: #374151;
 }
@@ -164,12 +165,12 @@
 
 /* References */
 .references {
-  font-size: 10px;
+  font-size: 10.5px;
   color: var(--cv-muted);
   font-style: italic;
   margin-top: 16px;
   padding-top: 10px;
-  border-top: 1px solid var(--cv-primary-light);
+  border-top: 1px solid var(--cv-border);
 }
 
 @media print {
