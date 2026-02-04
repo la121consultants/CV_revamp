@@ -14,6 +14,13 @@
   line-height: 1.5;
   box-sizing: border-box;
   overflow: hidden;
+  --cv-primary: #1e40af;
+  --cv-primary-contrast: #ffffff;
+  --cv-primary-light: #dbeafe;
+  --cv-sidebar: #f0f4ff;
+  --cv-sidebar-text: #1f2937;
+  --cv-border: #3b82f6;
+  --cv-muted: #6b7280;
 }
 
 .layout {
@@ -25,7 +32,7 @@
 
 /* LEFT SIDEBAR - 30-35% width */
 .sidebar {
-  background: #f0f4ff;
+  background: var(--cv-sidebar);
   padding: 16px;
   border-radius: 8px;
 }
@@ -34,14 +41,14 @@
   font-size: 18px;
   font-weight: 700;
   margin: 0 0 4px 0;
-  color: #1e40af;
+  color: var(--cv-primary);
   line-height: 1.2;
 }
 
 .title {
   font-size: 11px;
   margin: 0 0 14px 0;
-  color: #3b82f6;
+  color: var(--cv-primary);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -57,10 +64,10 @@
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #1e40af;
+  color: var(--cv-primary);
   padding-bottom: 4px;
   margin-bottom: 8px;
-  border-bottom: 2px solid #3b82f6;
+  border-bottom: 2px solid var(--cv-border);
 }
 
 .contactList {
@@ -68,7 +75,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  color: #374151;
+  color: var(--cv-sidebar-text);
   margin-bottom: 16px;
 }
 
@@ -85,9 +92,9 @@
 
 .skillItem {
   font-size: 10px;
-  color: #374151;
+  color: var(--cv-sidebar-text);
   padding: 4px 0;
-  border-bottom: 1px solid #dbeafe;
+  border-bottom: 1px solid var(--cv-primary-light);
 }
 
 .skillItem:last-child {
@@ -125,18 +132,18 @@
 
 .itemHeader > span:first-child {
   font-weight: 600;
-  color: #1e40af;
+  color: var(--cv-primary);
 }
 
 .itemHeader > span:last-child {
   font-size: 10px;
-  color: #6b7280;
+  color: var(--cv-muted);
   font-weight: 400;
 }
 
 .itemSub {
   font-size: 10px;
-  color: #6b7280;
+  color: var(--cv-muted);
 }
 
 .bullets {
@@ -158,11 +165,11 @@
 /* References */
 .references {
   font-size: 10px;
-  color: #6b7280;
+  color: var(--cv-muted);
   font-style: italic;
   margin-top: 16px;
   padding-top: 10px;
-  border-top: 1px solid #dbeafe;
+  border-top: 1px solid var(--cv-primary-light);
 }
 
 @media print {
