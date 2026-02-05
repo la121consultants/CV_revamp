@@ -92,11 +92,18 @@ export interface UserSubmission {
   full_name: string;
   email: string;
   phone: string | null;
+  city: string | null;
+  linkedin_url: string | null;
+  portfolio_url: string | null;
+  target_role: string | null;
   job_title: string;
   job_description: string;
   person_spec: string | null;
-  linkedin_url: string | null;
   cv_filename: string | null;
+  cv_text: string | null;
+  service_type: string | null;
+  status: string | null;
+  internal_notes: string | null;
   output_type: string;
   created_at: string;
 }

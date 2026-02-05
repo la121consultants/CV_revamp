@@ -64,43 +64,64 @@ export type Database = {
       }
       user_submissions: {
         Row: {
+          city: string | null
           created_at: string
           cv_filename: string | null
+          cv_text: string | null
           email: string
           full_name: string
           id: string
+          internal_notes: string | null
           job_description: string
           job_title: string
           linkedin_url: string | null
           output_type: string
           person_spec: string | null
           phone: string | null
+          portfolio_url: string | null
+          service_type: string | null
+          status: string | null
+          target_role: string | null
         }
         Insert: {
+          city?: string | null
           created_at?: string
           cv_filename?: string | null
+          cv_text?: string | null
           email: string
           full_name: string
           id?: string
+          internal_notes?: string | null
           job_description: string
           job_title: string
           linkedin_url?: string | null
           output_type?: string
           person_spec?: string | null
           phone?: string | null
+          portfolio_url?: string | null
+          service_type?: string | null
+          status?: string | null
+          target_role?: string | null
         }
         Update: {
+          city?: string | null
           created_at?: string
           cv_filename?: string | null
+          cv_text?: string | null
           email?: string
           full_name?: string
           id?: string
+          internal_notes?: string | null
           job_description?: string
           job_title?: string
           linkedin_url?: string | null
           output_type?: string
           person_spec?: string | null
           phone?: string | null
+          portfolio_url?: string | null
+          service_type?: string | null
+          status?: string | null
+          target_role?: string | null
         }
         Relationships: []
       }
