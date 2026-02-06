@@ -13,8 +13,11 @@ import {
   Search,
   Filter,
   Calendar,
-  Eye
+  Eye,
+  UserCog
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AdminUserManagement } from "@/components/AdminUserManagement";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -315,13 +318,26 @@ const AdminDashboard = () => {
           ))}
         </div>
 
-        {/* User Submissions Table - Only for Super Admin */}
+        {/* Tabbed Content - Only for Super Admin */}
         {isSuperAdmin && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-card rounded-xl border border-border p-6"
+          <Tabs defaultValue="submissions" className="space-y-6">
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="submissions" className="gap-2">
+                <Users className="w-4 h-4" />
+                Submissions
+              </TabsTrigger>
+              <TabsTrigger value="admins" className="gap-2">
+                <UserCog className="w-4 h-4" />
+                Manage Admins
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="submissions">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="bg-card rounded-xl border border-border p-6"
           >
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6">
               <h3 className="text-lg font-semibold text-foreground">User Submissions</h3>
@@ -486,7 +502,13 @@ const AdminDashboard = () => {
                 </table>
               </div>
             )}
-          </motion.div>
+              </motion.div>
+            </TabsContent>
+
+            <TabsContent value="admins">
+              <AdminUserManagement />
+            </TabsContent>
+          </Tabs>
         )}
       </main>
     </div>
