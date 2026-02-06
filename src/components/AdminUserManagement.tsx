@@ -123,34 +123,33 @@ export const AdminUserManagement = () => {
 
     setIsCreating(true);
     try {
-      // Create user using Supabase auth signUp
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: newEmail,
-        password: newPassword,
-        options: {
-          emailRedirectTo: window.location.origin + "/admin/login",
-        }
-      });
-
-      if (authError) throw authError;
-
-      if (!authData.user) {
-        throw new Error("Failed to create user");
+      // Get the current session token
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error("Not authenticated");
       }
 
-      // Insert the role for the new user
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .insert({
-          user_id: authData.user.id,
+      // Call edge function to create admin user (uses service role, doesn't switch session)
+      const response = await supabase.functions.invoke("create-admin", {
+        body: {
+          email: newEmail,
+          password: newPassword,
           role: newRole,
-        });
+        },
+      });
 
-      if (roleError) throw roleError;
+      if (response.error) {
+        throw new Error(response.error.message || "Failed to create admin");
+      }
+
+      if (response.data?.error) {
+        throw new Error(response.data.error);
+      }
 
       toast({
         title: "Admin created",
-        description: `${newEmail} has been added as ${newRole === 'super_admin' ? 'Super Admin' : 'Admin'}. They will receive a confirmation email.`,
+        description: `${newEmail} has been added as ${newRole === 'super_admin' ? 'Super Admin' : 'Admin'}. They can now log in.`,
       });
 
       // Reset form and close dialog

@@ -74,10 +74,10 @@ const AdminDashboard = () => {
   }, [isAdmin, loading, user, navigate]);
 
   useEffect(() => {
-    if (isSuperAdmin) {
+    if (isAdmin) {
       fetchSubmissions();
     }
-  }, [isSuperAdmin]);
+  }, [isAdmin]);
 
   const fetchSubmissions = async () => {
     setIsLoadingData(true);
@@ -318,18 +318,20 @@ const AdminDashboard = () => {
           ))}
         </div>
 
-        {/* Tabbed Content - Only for Super Admin */}
-        {isSuperAdmin && (
+        {/* Tabbed Content - Show to all admins */}
+        {isAdmin && (
           <Tabs defaultValue="submissions" className="space-y-6">
-            <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsList className={`grid w-full max-w-md ${isSuperAdmin ? 'grid-cols-2' : 'grid-cols-1'}`}>
               <TabsTrigger value="submissions" className="gap-2">
                 <Users className="w-4 h-4" />
                 Submissions
               </TabsTrigger>
-              <TabsTrigger value="admins" className="gap-2">
-                <UserCog className="w-4 h-4" />
-                Manage Admins
-              </TabsTrigger>
+              {isSuperAdmin && (
+                <TabsTrigger value="admins" className="gap-2">
+                  <UserCog className="w-4 h-4" />
+                  Manage Admins
+                </TabsTrigger>
+              )}
             </TabsList>
 
             <TabsContent value="submissions">
@@ -486,14 +488,16 @@ const AdminDashboard = () => {
                             >
                               <Eye className="w-4 h-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => deleteSubmission(submission.id, e)}
-                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                            {isSuperAdmin && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => deleteSubmission(submission.id, e)}
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -505,9 +509,11 @@ const AdminDashboard = () => {
               </motion.div>
             </TabsContent>
 
-            <TabsContent value="admins">
-              <AdminUserManagement />
-            </TabsContent>
+            {isSuperAdmin && (
+              <TabsContent value="admins">
+                <AdminUserManagement />
+              </TabsContent>
+            )}
           </Tabs>
         )}
       </main>
