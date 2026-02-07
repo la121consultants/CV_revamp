@@ -386,6 +386,7 @@ const AdminDashboard = () => {
                 <SelectContent>
                   <SelectItem value="all">All Services</SelectItem>
                   <SelectItem value="CV Revamp">CV Revamp</SelectItem>
+                  <SelectItem value="AI Suggestions">AI Suggestions</SelectItem>
                   <SelectItem value="CV Review">CV Review</SelectItem>
                   <SelectItem value="cv">CV Only</SelectItem>
                   <SelectItem value="coverLetter">Cover Letter</SelectItem>
