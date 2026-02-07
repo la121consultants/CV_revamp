@@ -9,6 +9,8 @@ import { OutputTypeSelector } from "./OutputTypeSelector";
 import { OutputDisplay } from "./OutputDisplay";
 import { AIChatBox } from "./AIChatBox";
 import { ProcessingStatus } from "./ProcessingStatus";
+import { CVModeSelector, type CVBuildMode } from "./CVModeSelector";
+import { GuidedCVBuilder } from "./GuidedCVBuilder";
 import { supabase } from "@/integrations/supabase/client";
 import type {
   CVData,
@@ -29,6 +31,7 @@ interface MainAppViewProps {
 }
 
 export const MainAppView = ({ onBack }: MainAppViewProps) => {
+  const [buildMode, setBuildMode] = useState<CVBuildMode | null>(null);
   const [cvData, setCvData] = useState<CVData | null>(null);
   const [jobDetails, setJobDetails] = useState<JobDescription>({ 
     title: '', 
@@ -74,7 +77,8 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
           person_spec: jobDetails.personSpec || null,
           linkedin_url: jobDetails.linkedinUrl || null,
           cv_filename: cvData?.fileName || null,
-          output_type: outputType
+          output_type: outputType,
+          service_type: buildMode === 'guided' ? 'AI Suggestions' : 'CV Revamp',
         });
 
       if (error) {
@@ -209,6 +213,7 @@ ${userDetails.fullName}
   };
 
   const handleReset = () => {
+    setBuildMode(null);
     setCvData(null);
     setJobDetails({ title: '', description: '', personSpec: '', linkedinUrl: '' });
     setUserDetails({ fullName: '', email: '', phone: '' });
@@ -303,6 +308,9 @@ ${userDetails.fullName}
     [userDetails.fullName, userDetails.phone, userDetails.email, jobDetails.title]
   );
 
+  // Check if we have enough details to enter guided mode
+  const hasBasicDetails = userDetails.fullName && userDetails.email && jobDetails.title;
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -311,12 +319,26 @@ ${userDetails.fullName}
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center justify-between mb-8"
         >
-          <Button variant="ghost" onClick={onBack} className="gap-2">
+          <Button
+            variant="ghost"
+            onClick={() => {
+              if (buildMode === "guided" && !output) {
+                setBuildMode(null);
+                return;
+              }
+              if (buildMode && !output) {
+                setBuildMode(null);
+                return;
+              }
+              onBack();
+            }}
+            className="gap-2"
+          >
             <ArrowLeft className="w-4 h-4" />
-            Back to Home
+            {buildMode && !output ? "Back" : "Back to Home"}
           </Button>
-          
-          {output && (
+
+          {(output || buildMode === "guided") && (
             <Button variant="outline" onClick={handleReset} className="gap-2">
               <RotateCcw className="w-4 h-4" />
               Start Over
@@ -350,7 +372,7 @@ ${userDetails.fullName}
                 cvStyle={cvStyle}
                 onStyleChange={setCvStyle}
               />
-              <AIChatBox 
+              <AIChatBox
                 output={output}
                 onUpdateOutput={setOutput}
                 messages={messages}
@@ -364,7 +386,22 @@ ${userDetails.fullName}
                 onEditRequest={handleEditRequest}
               />
             </motion.div>
-          ) : (
+          ) : buildMode === "guided" ? (
+            <motion.div
+              key="guided"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <GuidedCVBuilder
+                userName={userDetails.fullName}
+                userEmail={userDetails.email}
+                userPhone={userDetails.phone}
+                jobTitle={jobDetails.title}
+                jobDescription={jobDetails.description}
+              />
+            </motion.div>
+          ) : !buildMode ? (
             <motion.div
               key="input"
               initial={{ opacity: 0 }}
@@ -377,7 +414,7 @@ ${userDetails.fullName}
                   Let's Tailor Your CV
                 </h2>
                 <p className="text-muted-foreground">
-                  Upload your CV, add the job details, and let AI do the rest.
+                  Fill in your details and job information, then choose how to build your CV.
                 </p>
               </div>
 
@@ -385,37 +422,75 @@ ${userDetails.fullName}
                 {/* Step 1: Your Details */}
                 <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
                   <h3 className="text-lg font-semibold text-foreground mb-4">Step 1: Your Details</h3>
-                  <UserDetailsForm 
+                  <UserDetailsForm
                     userDetails={userDetails}
                     onChange={setUserDetails}
                   />
                 </div>
 
-                {/* Step 2: Upload CV */}
+                {/* Step 2: Job Details */}
                 <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
-                  <h3 className="text-lg font-semibold text-foreground mb-4">Step 2: Upload Your CV</h3>
-                  <CVUploader 
-                    onUpload={setCvData} 
-                    cvData={cvData} 
-                    onClear={() => setCvData(null)} 
+                  <h3 className="text-lg font-semibold text-foreground mb-4">Step 2: Add Job Details</h3>
+                  <JobDetailsForm
+                    jobDetails={jobDetails}
+                    onChange={setJobDetails}
                   />
                 </div>
 
-                {/* Step 3: Job Details */}
+                {/* Step 3: Choose Mode */}
+                <div className="pt-4">
+                  {hasBasicDetails ? (
+                    <CVModeSelector
+                      onSelect={(mode) => {
+                        if (mode === "guided") {
+                          setBuildMode("guided");
+                        } else {
+                          setBuildMode("revamp");
+                        }
+                      }}
+                    />
+                  ) : (
+                    <p className="text-center text-sm text-muted-foreground">
+                      Please fill in your details and job title to continue
+                    </p>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          ) : buildMode === "revamp" ? (
+            <motion.div
+              key="revamp-input"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="max-w-3xl mx-auto"
+            >
+              <div className="text-center mb-8">
+                <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+                  AI Full CV Revamp
+                </h2>
+                <p className="text-muted-foreground">
+                  Upload your CV and choose your output type. AI will tailor everything for you.
+                </p>
+              </div>
+
+              <div className="space-y-8">
+                {/* Upload CV */}
                 <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
-                  <h3 className="text-lg font-semibold text-foreground mb-4">Step 3: Add Job Details</h3>
-                  <JobDetailsForm 
-                    jobDetails={jobDetails} 
-                    onChange={setJobDetails} 
+                  <h3 className="text-lg font-semibold text-foreground mb-4">Upload Your CV</h3>
+                  <CVUploader
+                    onUpload={setCvData}
+                    cvData={cvData}
+                    onClear={() => setCvData(null)}
                   />
                 </div>
 
-                {/* Step 4: Output Type */}
+                {/* Output Type */}
                 <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
-                  <h3 className="text-lg font-semibold text-foreground mb-4">Step 4: Choose Output</h3>
-                  <OutputTypeSelector 
-                    selected={outputType} 
-                    onChange={setOutputType} 
+                  <h3 className="text-lg font-semibold text-foreground mb-4">Choose Output</h3>
+                  <OutputTypeSelector
+                    selected={outputType}
+                    onChange={setOutputType}
                   />
                 </div>
 
@@ -435,13 +510,13 @@ ${userDetails.fullName}
                   </Button>
                   {!isReadyToProcess && (
                     <p className="text-center text-sm text-muted-foreground mt-3">
-                      Please fill in your details, upload your CV, and add the job information to continue
+                      Please upload your CV to continue
                     </p>
                   )}
                 </motion.div>
               </div>
             </motion.div>
-          )}
+          ) : null}
         </AnimatePresence>
       </div>
     </div>
