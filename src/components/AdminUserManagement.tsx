@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { UserPlus, Trash2, Shield, Mail, Loader2 } from "lucide-react";
+import { UserPlus, Trash2, Shield, Mail, Loader2, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,6 +48,12 @@ export const AdminUserManagement = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  // Reset password state
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [resetTarget, setResetTarget] = useState<AdminUser | null>(null);
+  const [resetPassword, setResetPassword] = useState("");
+  const [isResetting, setIsResetting] = useState(false);
   
   // Form state
   const [newEmail, setNewEmail] = useState("");
@@ -196,6 +202,37 @@ export const AdminUserManagement = () => {
     }
   };
 
+  const handleResetPassword = async () => {
+    if (!resetTarget || !resetPassword) {
+      toast({ title: "Missing fields", description: "Please enter a new password", variant: "destructive" });
+      return;
+    }
+    if (resetPassword.length < 6) {
+      toast({ title: "Password too short", description: "Password must be at least 6 characters", variant: "destructive" });
+      return;
+    }
+
+    setIsResetting(true);
+    try {
+      const response = await supabase.functions.invoke("reset-admin-password", {
+        body: { user_id: resetTarget.user_id, new_password: resetPassword },
+      });
+
+      if (response.error) throw new Error(response.error.message);
+      if (response.data?.error) throw new Error(response.data.error);
+
+      toast({ title: "Password reset", description: `Password for ${resetTarget.email} has been updated.` });
+      setResetPassword("");
+      setResetTarget(null);
+      setResetDialogOpen(false);
+    } catch (error: any) {
+      console.error("Error resetting password:", error);
+      toast({ title: "Error", description: error.message || "Failed to reset password", variant: "destructive" });
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -318,34 +355,91 @@ export const AdminUserManagement = () => {
                 </div>
               </div>
               
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Remove Admin Access?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This will revoke admin access for {adminUser.email}. They will no longer be able to access the dashboard or download CSV exports.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => removeAdminRole(adminUser.id, adminUser.email || "")}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    >
-                      Remove Access
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-muted-foreground hover:text-foreground"
+                  onClick={() => {
+                    setResetTarget(adminUser);
+                    setResetPassword("");
+                    setResetDialogOpen(true);
+                  }}
+                  title="Reset password"
+                >
+                  <KeyRound className="w-4 h-4" />
+                </Button>
+
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Remove Admin Access?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will revoke admin access for {adminUser.email}. They will no longer be able to access the dashboard or download CSV exports.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => removeAdminRole(adminUser.id, adminUser.email || "")}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Remove Access
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
             </div>
           ))}
         </div>
       )}
+
+      {/* Reset Password Dialog */}
+      <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset Password</DialogTitle>
+            <DialogDescription>
+              Set a new password for {resetTarget?.email}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label htmlFor="reset-password">New Password</Label>
+              <Input
+                id="reset-password"
+                type="password"
+                placeholder="Minimum 6 characters"
+                value={resetPassword}
+                onChange={(e) => setResetPassword(e.target.value)}
+              />
+            </div>
+            <Button
+              className="w-full gradient-primary"
+              onClick={handleResetPassword}
+              disabled={isResetting}
+            >
+              {isResetting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Resetting...
+                </>
+              ) : (
+                <>
+                  <KeyRound className="w-4 h-4 mr-2" />
+                  Reset Password
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 };
