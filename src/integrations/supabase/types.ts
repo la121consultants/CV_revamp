@@ -41,6 +41,57 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          billing_interval: string | null
+          cancel_at_period_end: boolean
+          created_at: string
+          current_period_end: string | null
+          id: string
+          plan_name: string | null
+          plan_type: string
+          price: number | null
+          start_date: string | null
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_identifier: string
+        }
+        Insert: {
+          billing_interval?: string | null
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          plan_name?: string | null
+          plan_type?: string
+          price?: number | null
+          start_date?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_identifier: string
+        }
+        Update: {
+          billing_interval?: string | null
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          plan_name?: string | null
+          plan_type?: string
+          price?: number | null
+          start_date?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_identifier?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -59,6 +110,33 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_usage: {
+        Row: {
+          created_at: string
+          cv_revamp_count: number
+          id: string
+          updated_at: string
+          usage_date: string
+          user_identifier: string
+        }
+        Insert: {
+          created_at?: string
+          cv_revamp_count?: number
+          id?: string
+          updated_at?: string
+          usage_date: string
+          user_identifier: string
+        }
+        Update: {
+          created_at?: string
+          cv_revamp_count?: number
+          id?: string
+          updated_at?: string
+          usage_date?: string
+          user_identifier?: string
         }
         Relationships: []
       }

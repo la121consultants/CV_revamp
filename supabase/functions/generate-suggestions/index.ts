@@ -1,11 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { getSupabaseAdmin, getUsageDate, isActiveSubscription, normalizeIdentifier, corsHeaders } from "../_shared/usage.ts";
 
 const sectionPrompts: Record<string, string> = {
   summary: `Generate exactly 3 professional summary sentences for a CV. Each should be:
@@ -50,7 +44,7 @@ serve(async (req) => {
   }
 
   try {
-    const { section, jobTitle, jobDescription, existingContent, userName } = await req.json();
+    const { section, jobTitle, jobDescription, existingContent, userName, userEmail } = await req.json();
 
     if (!section || !sectionPrompts[section]) {
       return new Response(
@@ -59,9 +53,54 @@ serve(async (req) => {
       );
     }
 
+    if (!userEmail) {
+      return new Response(
+        JSON.stringify({ error: "User email is required for usage tracking." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
+    }
+
+    const supabaseAdmin = getSupabaseAdmin();
+    const normalizedEmail = normalizeIdentifier(userEmail);
+    const usageDate = getUsageDate();
+
+    const { data: subscriptionData, error: subscriptionError } = await supabaseAdmin
+      .from("subscriptions")
+      .select("*")
+      .eq("user_identifier", normalizedEmail)
+      .maybeSingle();
+
+    if (subscriptionError) {
+      throw subscriptionError;
+    }
+
+    const hasActiveSubscription = isActiveSubscription(subscriptionData);
+
+    let currentUsageCount = 0;
+    if (!hasActiveSubscription) {
+      const { data: usageData, error: usageError } = await supabaseAdmin
+        .from("user_usage")
+        .select("cv_revamp_count")
+        .eq("user_identifier", normalizedEmail)
+        .eq("usage_date", usageDate)
+        .maybeSingle();
+
+      if (usageError) {
+        throw usageError;
+      }
+
+      currentUsageCount = usageData?.cv_revamp_count ?? 0;
+      if (currentUsageCount >= 1) {
+        return new Response(
+          JSON.stringify({ error: "Usage limit reached. Please upgrade your plan." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     const contextPrompt = `
@@ -127,6 +166,30 @@ ${sectionPrompts[section]}`;
         .map((line: string) => line.replace(/^[\d\-\*\.\)]+\s*/, "").trim())
         .filter(Boolean)
         .slice(0, 3);
+    }
+
+    if (!hasActiveSubscription) {
+      if (currentUsageCount === 0) {
+        const { error: insertError } = await supabaseAdmin
+          .from("user_usage")
+          .insert({
+            user_identifier: normalizedEmail,
+            usage_date: usageDate,
+            cv_revamp_count: 1,
+          });
+        if (insertError) {
+          throw insertError;
+        }
+      } else {
+        const { error: updateError } = await supabaseAdmin
+          .from("user_usage")
+          .update({ cv_revamp_count: currentUsageCount + 1 })
+          .eq("user_identifier", normalizedEmail)
+          .eq("usage_date", usageDate);
+        if (updateError) {
+          throw updateError;
+        }
+      }
     }
 
     return new Response(JSON.stringify({ suggestions }), {

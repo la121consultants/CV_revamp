@@ -11,6 +11,7 @@ import { AIChatBox } from "./AIChatBox";
 import { ProcessingStatus } from "./ProcessingStatus";
 import { CVModeSelector, type CVBuildMode } from "./CVModeSelector";
 import { GuidedCVBuilder } from "./GuidedCVBuilder";
+import { UpgradeModal } from "./UpgradeModal";
 import { supabase } from "@/integrations/supabase/client";
 import type {
   CVData,
@@ -25,10 +26,34 @@ import type {
   DocumentHeader,
 } from "@/types";
 import { toast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface MainAppViewProps {
   onBack: () => void;
 }
+
+type SubscriptionInfo = {
+  plan_type: "free" | "monthly" | "annual";
+  status: "active" | "past_due" | "cancelled" | "inactive";
+  plan_name?: string | null;
+  price?: number | null;
+  billing_interval?: string | null;
+  current_period_end?: string | null;
+  cancel_at_period_end?: boolean;
+  stripe_customer_id?: string | null;
+  stripe_subscription_id?: string | null;
+};
 
 export const MainAppView = ({ onBack }: MainAppViewProps) => {
   const [buildMode, setBuildMode] = useState<CVBuildMode | null>(null);
@@ -51,6 +76,10 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [cvStyle, setCvStyle] = useState<CVStyle>("standard");
+  const [subscriptionInfo, setSubscriptionInfo] = useState<SubscriptionInfo | null>(null);
+  const [isSubscriptionLoading, setIsSubscriptionLoading] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [chatMode, setChatMode] = useState<ChatMode>(() => {
     if (typeof window === "undefined") return "instant";
     return (sessionStorage.getItem("cv-chat-mode") as ChatMode) || "instant";
@@ -63,6 +92,132 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
     (jobDetails.description || isLinkedInMethod) && 
     userDetails.fullName && 
     userDetails.email;
+
+  const fetchSubscription = useCallback(async (email: string) => {
+    if (!email) return;
+    setIsSubscriptionLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("get-subscription", {
+        body: { userEmail: email },
+      });
+
+      if (error) throw error;
+      if (data?.subscription) {
+        setSubscriptionInfo(data.subscription);
+      }
+    } catch (err: any) {
+      console.error("Subscription fetch error:", err);
+    } finally {
+      setIsSubscriptionLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!userDetails.email) {
+      setSubscriptionInfo(null);
+      return;
+    }
+    fetchSubscription(userDetails.email);
+  }, [userDetails.email, fetchSubscription]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const checkoutStatus = params.get("checkout");
+    if (!checkoutStatus) return;
+    if (checkoutStatus === "success") {
+      toast({ title: "Subscription active", description: "Your unlimited CV revamps are now unlocked." });
+      if (userDetails.email) {
+        fetchSubscription(userDetails.email);
+      }
+    }
+    if (checkoutStatus === "cancelled") {
+      toast({ title: "Checkout cancelled", description: "You can upgrade anytime from the upgrade prompt." });
+    }
+    params.delete("checkout");
+    const newQuery = params.toString();
+    const newUrl = newQuery ? `${window.location.pathname}?${newQuery}` : window.location.pathname;
+    window.history.replaceState({}, "", newUrl);
+  }, [fetchSubscription, userDetails.email]);
+
+  const checkUsageLimit = useCallback(async () => {
+    if (!userDetails.email) {
+      toast({
+        title: "Email required",
+        description: "Please enter your email before generating a CV revamp.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke("track-usage", {
+        body: { userEmail: userDetails.email, mode: "check" },
+      });
+
+      if (error) throw error;
+      if (data?.allowed === false) {
+        toast({
+          title: "Daily limit reached",
+          description: "Upgrade to unlock unlimited CV revamps.",
+          variant: "destructive",
+        });
+        setShowUpgradeModal(true);
+        return false;
+      }
+      return true;
+    } catch (err: any) {
+      console.error("Usage check error:", err);
+      const message = String(err?.message || "").toLowerCase();
+      if (message.includes("usage limit") || message.includes("402")) {
+        setShowUpgradeModal(true);
+      }
+      toast({
+        title: "Error",
+        description: err.message || "Unable to verify usage limits.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  }, [userDetails.email]);
+
+  const consumeUsage = useCallback(async () => {
+    if (!userDetails.email) return;
+    try {
+      await supabase.functions.invoke("track-usage", {
+        body: { userEmail: userDetails.email, mode: "consume" },
+      });
+    } catch (err) {
+      console.error("Usage consume error:", err);
+    }
+  }, [userDetails.email]);
+
+  const handleCancelSubscription = async () => {
+    if (!userDetails.email) return;
+    setIsCancelling(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("cancel-subscription", {
+        body: { userEmail: userDetails.email },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        toast({
+          title: "Cancellation scheduled",
+          description: "Your subscription will cancel at the end of the current billing period.",
+        });
+        fetchSubscription(userDetails.email);
+      }
+    } catch (err: any) {
+      console.error("Cancel subscription error:", err);
+      toast({
+        title: "Error",
+        description: err.message || "Unable to cancel subscription.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCancelling(false);
+    }
+  };
 
   const saveSubmission = async () => {
     try {
@@ -90,6 +245,9 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
   };
 
   const simulateProcessing = useCallback(async () => {
+    const allowed = await checkUsageLimit();
+    if (!allowed) return;
+
     setIsProcessing(true);
     
     // Save user submission to database
@@ -163,12 +321,13 @@ ${userDetails.fullName}
 
     setOutput(simulatedOutput);
     setIsProcessing(false);
+    await consumeUsage();
     
     toast({
       title: "Success!",
       description: "Your tailored documents are ready.",
     });
-  }, [jobDetails.title, jobDetails.description, jobDetails.personSpec, jobDetails.linkedinUrl, userDetails, cvData, outputType]);
+  }, [jobDetails.title, jobDetails.description, jobDetails.personSpec, jobDetails.linkedinUrl, userDetails, cvData, outputType, checkUsageLimit, consumeUsage]);
 
   const handleSendMessage = async (message: string) => {
     setMessages((prev) => [...prev, { role: "user", content: message }]);
@@ -311,6 +470,12 @@ ${userDetails.fullName}
   // Check if we have enough details to enter guided mode
   const hasBasicDetails = userDetails.fullName && userDetails.email && jobDetails.title;
 
+  const planLabel = subscriptionInfo?.plan_type === "monthly"
+    ? "Unlimited – Monthly"
+    : subscriptionInfo?.plan_type === "annual"
+    ? "Unlimited – Annual"
+    : "Free";
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -393,12 +558,62 @@ ${userDetails.fullName}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
+              {userDetails.email && (
+                <div className="mb-6 rounded-xl border border-border bg-card p-4 shadow-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Subscription</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-base font-semibold text-foreground">{planLabel}</p>
+                        {subscriptionInfo?.status === "active" && (
+                          <Badge variant="secondary">Unlimited</Badge>
+                        )}
+                      </div>
+                      {subscriptionInfo?.cancel_at_period_end && subscriptionInfo?.current_period_end && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Cancellation scheduled for {new Date(subscriptionInfo.current_period_end).toLocaleDateString("en-GB")}.
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {subscriptionInfo?.status === "active" ? (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              Cancel subscription
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Cancel your subscription?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Your plan will remain active until the end of the current billing period, and no further charges will occur.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Keep subscription</AlertDialogCancel>
+                              <AlertDialogAction onClick={handleCancelSubscription} disabled={isCancelling}>
+                                {isCancelling ? "Cancelling..." : "Confirm cancellation"}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      ) : (
+                        <Button size="sm" onClick={() => setShowUpgradeModal(true)}>
+                          Upgrade
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
               <GuidedCVBuilder
                 userName={userDetails.fullName}
                 userEmail={userDetails.email}
                 userPhone={userDetails.phone}
                 jobTitle={jobDetails.title}
                 jobDescription={jobDetails.description}
+                onUsageLimit={() => setShowUpgradeModal(true)}
               />
             </motion.div>
           ) : !buildMode ? (
@@ -426,6 +641,58 @@ ${userDetails.fullName}
                     userDetails={userDetails}
                     onChange={setUserDetails}
                   />
+                  {userDetails.email && (
+                    <div className="mt-4 rounded-xl border border-border bg-muted/40 p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Subscription</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-semibold text-foreground">{planLabel}</p>
+                            {isSubscriptionLoading && (
+                              <span className="text-xs text-muted-foreground">Checking...</span>
+                            )}
+                          </div>
+                          {subscriptionInfo?.status === "past_due" && (
+                            <p className="text-xs text-destructive mt-1">Payment issue — update your plan to restore access.</p>
+                          )}
+                          {subscriptionInfo?.cancel_at_period_end && subscriptionInfo?.current_period_end && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Cancellation scheduled for {new Date(subscriptionInfo.current_period_end).toLocaleDateString("en-GB")}.
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {subscriptionInfo?.status === "active" ? (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="sm">
+                                  Cancel subscription
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Cancel your subscription?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Your plan will remain active until the end of the current billing period, and no further charges will occur.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Keep subscription</AlertDialogCancel>
+                                  <AlertDialogAction onClick={handleCancelSubscription} disabled={isCancelling}>
+                                    {isCancelling ? "Cancelling..." : "Confirm cancellation"}
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          ) : (
+                            <Button size="sm" onClick={() => setShowUpgradeModal(true)}>
+                              Upgrade
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Step 2: Job Details */}
@@ -475,6 +742,55 @@ ${userDetails.fullName}
               </div>
 
               <div className="space-y-8">
+                {userDetails.email && (
+                  <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Subscription</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-semibold text-foreground">{planLabel}</p>
+                          {subscriptionInfo?.status === "active" && (
+                            <Badge variant="secondary">Unlimited</Badge>
+                          )}
+                        </div>
+                        {subscriptionInfo?.cancel_at_period_end && subscriptionInfo?.current_period_end && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Cancellation scheduled for {new Date(subscriptionInfo.current_period_end).toLocaleDateString("en-GB")}.
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {subscriptionInfo?.status === "active" ? (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="outline" size="sm">
+                                Cancel subscription
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Cancel your subscription?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Your plan will remain active until the end of the current billing period, and no further charges will occur.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Keep subscription</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleCancelSubscription} disabled={isCancelling}>
+                                  {isCancelling ? "Cancelling..." : "Confirm cancellation"}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        ) : (
+                          <Button size="sm" onClick={() => setShowUpgradeModal(true)}>
+                            Upgrade
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
                 {/* Upload CV */}
                 <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
                   <h3 className="text-lg font-semibold text-foreground mb-4">Upload Your CV</h3>
@@ -518,6 +834,11 @@ ${userDetails.fullName}
             </motion.div>
           ) : null}
         </AnimatePresence>
+        <UpgradeModal
+          open={showUpgradeModal}
+          onOpenChange={setShowUpgradeModal}
+          userEmail={userDetails.email}
+        />
       </div>
     </div>
   );
