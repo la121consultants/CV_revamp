@@ -43,6 +43,7 @@ interface GuidedCVBuilderProps {
   userPhone: string;
   jobTitle: string;
   jobDescription: string;
+  onUsageLimit?: () => void;
 }
 
 export const GuidedCVBuilder = ({
@@ -51,6 +52,7 @@ export const GuidedCVBuilder = ({
   userPhone,
   jobTitle,
   jobDescription,
+  onUsageLimit,
 }: GuidedCVBuilderProps) => {
   const [openSection, setOpenSection] = useState<SectionId>("summary");
   const [sectionContent, setSectionContent] = useState<Record<SectionId, string>>({
@@ -88,10 +90,16 @@ export const GuidedCVBuilder = ({
             jobDescription,
             existingContent: sectionContent[section] || "",
             userName,
+            userEmail,
           },
         });
 
         if (response.error) {
+          if (response.error.message?.toLowerCase().includes("usage limit")) {
+            toast({ title: "Usage limit reached", description: "Please upgrade your plan for more AI suggestions.", variant: "destructive" });
+            onUsageLimit?.();
+            return;
+          }
           throw new Error(response.error.message);
         }
 
@@ -102,6 +110,7 @@ export const GuidedCVBuilder = ({
           }
           if (response.data.error.includes("Usage limit") || response.data.error.includes("upgrade")) {
             toast({ title: "Usage limit reached", description: "Please upgrade your plan for more AI suggestions.", variant: "destructive" });
+            onUsageLimit?.();
             return;
           }
           throw new Error(response.data.error);
@@ -113,6 +122,9 @@ export const GuidedCVBuilder = ({
         setAddedSuggestions((prev) => ({ ...prev, [section]: new Set() }));
       } catch (err: any) {
         console.error("Error generating suggestions:", err);
+        if (String(err?.message || "").toLowerCase().includes("usage limit")) {
+          onUsageLimit?.();
+        }
         toast({
           title: "Error",
           description: err.message || "Failed to generate suggestions",
@@ -122,7 +134,7 @@ export const GuidedCVBuilder = ({
         setLoadingSection(null);
       }
     },
-    [jobTitle, jobDescription, sectionContent, userName]
+    [jobTitle, jobDescription, sectionContent, userName, userEmail]
   );
 
   const handleOpenSection = (sectionId: SectionId) => {

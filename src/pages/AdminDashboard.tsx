@@ -48,10 +48,24 @@ interface Submission {
   created_at: string;
 }
 
+interface SubscriptionInfo {
+  user_identifier: string;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  plan_type: string;
+  plan_name: string | null;
+  price: number | null;
+  billing_interval: string | null;
+  status: string;
+  current_period_end: string | null;
+  cancel_at_period_end: boolean;
+}
+
 const AdminDashboard = () => {
   const { user, isAdmin, isSuperAdmin, signOut, loading } = useAuth();
   const navigate = useNavigate();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [subscriptionsByEmail, setSubscriptionsByEmail] = useState<Record<string, SubscriptionInfo>>({});
   const [isLoadingData, setIsLoadingData] = useState(false);
   
   // Filters
@@ -79,6 +93,33 @@ const AdminDashboard = () => {
     }
   }, [isAdmin]);
 
+  const fetchSubscriptions = async (submissionData: Submission[]) => {
+    const emails = Array.from(
+      new Set(submissionData.map((submission) => submission.email.toLowerCase().trim()))
+    );
+    if (emails.length === 0) {
+      setSubscriptionsByEmail({});
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("subscriptions")
+      .select("*")
+      .in("user_identifier", emails);
+
+    if (error) {
+      console.error("Error fetching subscriptions:", error);
+      return;
+    }
+
+    const mapped = (data as SubscriptionInfo[]).reduce<Record<string, SubscriptionInfo>>((acc, subscription) => {
+      acc[subscription.user_identifier] = subscription;
+      return acc;
+    }, {});
+
+    setSubscriptionsByEmail(mapped);
+  };
+
   const fetchSubmissions = async () => {
     setIsLoadingData(true);
     try {
@@ -88,7 +129,9 @@ const AdminDashboard = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setSubmissions((data as Submission[]) || []);
+      const submissionsData = (data as Submission[]) || [];
+      setSubmissions(submissionsData);
+      await fetchSubscriptions(submissionsData);
     } catch (error) {
       console.error("Error fetching submissions:", error);
       toast({
@@ -157,13 +200,20 @@ const AdminDashboard = () => {
       "Target Role",
       "Service Type",
       "Status",
+      "Plan Type",
+      "Subscription Status",
+      "Stripe Customer ID",
+      "Stripe Subscription ID",
+      "Current Period End",
+      "Cancel At Period End",
       "Created At"
     ];
 
     const csvContent = [
       headers.join(","),
-      ...filteredSubmissions.map((s) =>
-        [
+      ...filteredSubmissions.map((s) => {
+        const subscription = subscriptionsByEmail[s.email.toLowerCase().trim()];
+        return [
           s.id,
           `"${s.full_name}"`,
           s.email,
@@ -174,9 +224,15 @@ const AdminDashboard = () => {
           `"${s.target_role || s.job_title}"`,
           s.service_type || s.output_type,
           s.status || "New",
+          subscription?.plan_type || "free",
+          subscription?.status || "inactive",
+          subscription?.stripe_customer_id || "",
+          subscription?.stripe_subscription_id || "",
+          subscription?.current_period_end || "",
+          subscription?.cancel_at_period_end ? "true" : "false",
           new Date(s.created_at).toLocaleString()
-        ].join(",")
-      )
+        ].join(",");
+      })
     ].join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -446,63 +502,93 @@ const AdminDashboard = () => {
                       <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden md:table-cell">City</th>
                       <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Target Role</th>
                       <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden lg:table-cell">Service</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden xl:table-cell">Plan</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden xl:table-cell">Sub Status</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden xl:table-cell">Period End</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden 2xl:table-cell">Stripe IDs</th>
                       <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Status</th>
                       <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden md:table-cell">Date</th>
                       <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredSubmissions.map((submission) => (
-                      <tr 
-                        key={submission.id} 
-                        className="border-b border-border/50 hover:bg-muted/50 cursor-pointer"
-                        onClick={() => navigate(`/admin/submissions/${submission.id}`)}
-                      >
-                        <td className="py-3 px-4 text-sm text-foreground font-medium">{submission.full_name}</td>
-                        <td className="py-3 px-4 text-sm text-foreground">{submission.email}</td>
-                        <td className="py-3 px-4 text-sm text-muted-foreground hidden lg:table-cell">{submission.phone || "-"}</td>
-                        <td className="py-3 px-4 text-sm text-muted-foreground hidden md:table-cell">{submission.city || "-"}</td>
-                        <td className="py-3 px-4 text-sm text-foreground">{submission.target_role || submission.job_title}</td>
-                        <td className="py-3 px-4 text-sm text-muted-foreground hidden lg:table-cell">{submission.service_type || submission.output_type}</td>
-                        <td className="py-3 px-4">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            (submission.status || "New") === "Completed" ? "bg-green-500/10 text-green-500" :
-                            submission.status === "In Review" ? "bg-yellow-500/10 text-yellow-500" :
-                            "bg-blue-500/10 text-blue-500"
-                          }`}>
-                            {submission.status || "New"}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-sm text-muted-foreground hidden md:table-cell">
-                          {new Date(submission.created_at).toLocaleDateString()}
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/admin/submissions/${submission.id}`);
-                              }}
-                              className="text-primary hover:text-primary hover:bg-primary/10"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            {isSuperAdmin && (
+                    {filteredSubmissions.map((submission) => {
+                      const subscription = subscriptionsByEmail[submission.email.toLowerCase().trim()];
+                      return (
+                        <tr 
+                          key={submission.id} 
+                          className="border-b border-border/50 hover:bg-muted/50 cursor-pointer"
+                          onClick={() => navigate(`/admin/submissions/${submission.id}`)}
+                        >
+                          <td className="py-3 px-4 text-sm text-foreground font-medium">{submission.full_name}</td>
+                          <td className="py-3 px-4 text-sm text-foreground">{submission.email}</td>
+                          <td className="py-3 px-4 text-sm text-muted-foreground hidden lg:table-cell">{submission.phone || "-"}</td>
+                          <td className="py-3 px-4 text-sm text-muted-foreground hidden md:table-cell">{submission.city || "-"}</td>
+                          <td className="py-3 px-4 text-sm text-foreground">{submission.target_role || submission.job_title}</td>
+                          <td className="py-3 px-4 text-sm text-muted-foreground hidden lg:table-cell">{submission.service_type || submission.output_type}</td>
+                          <td className="py-3 px-4 text-sm text-muted-foreground hidden xl:table-cell">
+                            {subscription?.plan_type || "free"}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-muted-foreground hidden xl:table-cell">
+                            {subscription?.status || "inactive"}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-muted-foreground hidden xl:table-cell">
+                            {subscription?.current_period_end
+                              ? new Date(subscription.current_period_end).toLocaleDateString()
+                              : "-"}
+                          </td>
+                          <td className="py-3 px-4 text-xs text-muted-foreground hidden 2xl:table-cell">
+                            <div className="space-y-1">
+                              <div title={subscription?.stripe_customer_id || ""}>
+                                <span className="font-medium">Cust:</span>{" "}
+                                {subscription?.stripe_customer_id ? `${subscription.stripe_customer_id.slice(0, 8)}...` : "-"}
+                              </div>
+                              <div title={subscription?.stripe_subscription_id || ""}>
+                                <span className="font-medium">Sub:</span>{" "}
+                                {subscription?.stripe_subscription_id ? `${subscription.stripe_subscription_id.slice(0, 8)}...` : "-"}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              (submission.status || "New") === "Completed" ? "bg-green-500/10 text-green-500" :
+                              submission.status === "In Review" ? "bg-yellow-500/10 text-yellow-500" :
+                              "bg-blue-500/10 text-blue-500"
+                            }`}>
+                              {submission.status || "New"}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-sm text-muted-foreground hidden md:table-cell">
+                            {new Date(submission.created_at).toLocaleDateString()}
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex gap-1">
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={(e) => deleteSubmission(submission.id, e)}
-                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/admin/submissions/${submission.id}`);
+                                }}
+                                className="text-primary hover:text-primary hover:bg-primary/10"
                               >
-                                <Trash2 className="w-4 h-4" />
+                                <Eye className="w-4 h-4" />
                               </Button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                              {isSuperAdmin && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => deleteSubmission(submission.id, e)}
+                                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

@@ -50,6 +50,15 @@ interface SubmissionDetail {
   created_at: string;
 }
 
+interface SubscriptionDetail {
+  plan_type: string;
+  status: string;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  current_period_end: string | null;
+  cancel_at_period_end: boolean;
+}
+
 const statusOptions = [
   { value: "New", label: "New" },
   { value: "In Review", label: "In Review" },
@@ -61,6 +70,7 @@ const AdminSubmissionDetail = () => {
   const { user, isSuperAdmin, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [submission, setSubmission] = useState<SubmissionDetail | null>(null);
+  const [subscriptionInfo, setSubscriptionInfo] = useState<SubscriptionDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [status, setStatus] = useState<string>("New");
@@ -98,6 +108,7 @@ const AdminSubmissionDetail = () => {
       setSubmission(submissionData);
       setStatus(submissionData.status || "New");
       setInternalNotes(submissionData.internal_notes || "");
+      await fetchSubscriptionDetails(submissionData.email);
     } catch (error) {
       console.error("Error fetching submission:", error);
       toast({
@@ -109,6 +120,21 @@ const AdminSubmissionDetail = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const fetchSubscriptionDetails = async (email: string) => {
+    const { data, error } = await supabase
+      .from("subscriptions")
+      .select("plan_type, status, stripe_customer_id, stripe_subscription_id, current_period_end, cancel_at_period_end")
+      .eq("user_identifier", email.toLowerCase().trim())
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error fetching subscription:", error);
+      return;
+    }
+
+    setSubscriptionInfo((data as SubscriptionDetail) || null);
   };
 
   const handleSave = async () => {
@@ -247,6 +273,43 @@ const AdminSubmissionDetail = () => {
                   <span>{submission.cv_filename}</span>
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Subscription Info */}
+          <div className="bg-card rounded-xl border border-border p-6 mb-6">
+            <h3 className="text-lg font-semibold text-foreground mb-4">Subscription Status</h3>
+            <div className="grid md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-muted-foreground">Plan Type</p>
+                <p className="text-foreground font-medium">{subscriptionInfo?.plan_type || "free"}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Status</p>
+                <p className="text-foreground font-medium">{subscriptionInfo?.status || "inactive"}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Stripe Customer ID</p>
+                <p className="text-foreground font-medium break-all">{subscriptionInfo?.stripe_customer_id || "-"}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Stripe Subscription ID</p>
+                <p className="text-foreground font-medium break-all">{subscriptionInfo?.stripe_subscription_id || "-"}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Current Period End</p>
+                <p className="text-foreground font-medium">
+                  {subscriptionInfo?.current_period_end
+                    ? new Date(subscriptionInfo.current_period_end).toLocaleString()
+                    : "-"}
+                </p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Cancellation</p>
+                <p className="text-foreground font-medium">
+                  {subscriptionInfo?.cancel_at_period_end ? "Scheduled" : "Active"}
+                </p>
+              </div>
             </div>
           </div>
 
