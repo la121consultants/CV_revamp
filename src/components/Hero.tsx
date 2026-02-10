@@ -60,7 +60,6 @@ export const Hero = ({ onGetStarted }: HeroProps) => {
             {[
               "Job URL auto-extraction",
               "ATS keyword optimization",
-              "Bulk tailoring via Chrome extension",
             ].map((item) => (
               <span
                 key={item}
