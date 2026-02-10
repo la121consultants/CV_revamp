@@ -124,7 +124,7 @@ const AdminSubmissionDetail = () => {
 
   const fetchSubscriptionDetails = async (email: string) => {
     const { data, error } = await supabase
-      .from("subscriptions")
+      .from("subscriptions" as any)
       .select("plan_type, status, stripe_customer_id, stripe_subscription_id, current_period_end, cancel_at_period_end")
       .eq("user_identifier", email.toLowerCase().trim())
       .maybeSingle();
@@ -134,7 +134,7 @@ const AdminSubmissionDetail = () => {
       return;
     }
 
-    setSubscriptionInfo((data as SubscriptionDetail) || null);
+    setSubscriptionInfo((data as unknown as SubscriptionDetail) || null);
   };
 
   const handleSave = async () => {
