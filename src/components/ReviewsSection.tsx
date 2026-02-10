@@ -11,13 +11,13 @@ const reviews = [
   {
     name: "James O.",
     role: "Senior Nurse, Manchester",
-    text: "Applying to NHS Band 7 roles was so stressful. TVV tailored my CV perfectly to the person specification. I secured the role within a month.",
+    text: "Applying to NHS Band 7 roles was so stressful. LA121's tool tailored my CV perfectly to the person specification. I secured the role within a month.",
     rating: 5,
   },
   {
     name: "Priya S.",
     role: "IT Consultant, Birmingham",
-    text: "The cover letter generator alone is worth it. I landed a contract at Capgemini after using TVV to revamp my entire application.",
+    text: "The cover letter generator alone is worth it. I landed a contract at Capgemini after using LA121's CV Revamp Tool to overhaul my entire application.",
     rating: 5,
   },
   {

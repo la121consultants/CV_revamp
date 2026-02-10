@@ -65,10 +65,10 @@ const pricingPlans = [
 const faqs = [
   { q: "How does the AI CV builder work?", a: "Upload your existing CV and paste a job description. Our AI analyses the role requirements and rewrites your CV to highlight relevant experience, skills, and ATS-friendly keywords — all in professional UK English." },
   { q: "Is the CV review free?", a: "Yes — every user gets one free CV revamp per day. For unlimited access, upgrade to our monthly plan at £9.99/month or pay £1 per document download." },
-  { q: "Does it work for UK jobs?", a: "Absolutely. TVV is built specifically for the UK job market, using British English and formatting conventions trusted by graduates, career changers, and senior leaders." },
+  { q: "Does it work for UK jobs?", a: "Absolutely. LA121 CV Revamp Tool is built specifically for the UK job market, using British English and formatting conventions trusted by graduates, career changers, and senior leaders." },
   { q: "What is ATS optimisation?", a: "ATS (Applicant Tracking System) optimisation ensures your CV contains the right keywords and formatting to pass automated screening software used by most UK employers." },
-  { q: "Can I use this returning from maternity leave?", a: "Yes. TVV is designed for career returners, including parents returning after maternity or paternity leave. Our AI helps present your experience confidently and address gaps professionally." },
-  { q: "Is it suitable for apprenticeship applications?", a: "Absolutely. Whether you're applying for your first apprenticeship or a competitive internship, TVV tailors your CV to highlight transferable skills, education, and potential." },
+  { q: "Can I use this returning from maternity leave?", a: "Yes. LA121 CV Revamp Tool is designed for career returners, including parents returning after maternity or paternity leave. Our AI helps present your experience confidently and address gaps professionally." },
+  { q: "Is it suitable for apprenticeship applications?", a: "Absolutely. Whether you're applying for your first apprenticeship or a competitive internship, LA121 CV Revamp Tool tailors your CV to highlight transferable skills, education, and potential." },
 ];
 
 const Index = () => {
@@ -104,7 +104,7 @@ const Index = () => {
                       Built For Everyone
                     </span>
                     <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
-                      Who Is TVV For?
+                      Who Is It For?
                     </h2>
                     <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                       From your first application to your next promotion — we've got you covered.
@@ -385,7 +385,7 @@ const Index = () => {
                       Ready to Get Hired?
                     </h2>
                     <p className="text-lg text-white/60 mb-8 max-w-xl mx-auto">
-                      Join hundreds of UK job seekers who've transformed their applications with TVV.
+                      Join hundreds of UK job seekers who've transformed their applications with LA121 CV Revamp Tool.
                     </p>
                     <Button
                       size="lg"
