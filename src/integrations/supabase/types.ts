@@ -41,6 +41,42 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_cvs: {
+        Row: {
+          cover_letter_content: string | null
+          created_at: string
+          cv_content: string
+          cv_style: string | null
+          id: string
+          job_description: string | null
+          job_title: string
+          output_type: string
+          user_id: string
+        }
+        Insert: {
+          cover_letter_content?: string | null
+          created_at?: string
+          cv_content: string
+          cv_style?: string | null
+          id?: string
+          job_description?: string | null
+          job_title: string
+          output_type?: string
+          user_id: string
+        }
+        Update: {
+          cover_letter_content?: string | null
+          created_at?: string
+          cv_content?: string
+          cv_style?: string | null
+          id?: string
+          job_description?: string | null
+          job_title?: string
+          output_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           billing_interval: string | null
