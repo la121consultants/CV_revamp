@@ -2,6 +2,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
+import { ReviewsSection } from "@/components/ReviewsSection";
 import { Footer } from "@/components/Footer";
 import { MainAppView } from "@/components/MainAppView";
 
@@ -152,6 +153,9 @@ const Index = () => {
                   </div>
                 </div>
               </section>
+
+              {/* Reviews Section */}
+              <ReviewsSection />
 
               {/* CTA Section */}
               <section className="py-20 gradient-hero">
