@@ -28,8 +28,8 @@
 
 /* ── Dark header banner ── */
 .header {
-  background: var(--cv-primary);
-  color: var(--cv-primary-contrast);
+  background: #f3f4f6;
+  color: #1f2937;
   padding: 22px 20mm 16px;
   margin: 0;
 }
@@ -40,13 +40,13 @@
   margin: 0;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--cv-primary-contrast);
+  color: #000000;
 }
 
 .title {
   font-size: 12px;
   margin: 4px 0 0;
-  color: var(--cv-accent);
+  color: #4b5563;
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;

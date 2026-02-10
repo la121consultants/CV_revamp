@@ -36,8 +36,8 @@
 
 /* ── Left sidebar ── */
 .sidebar {
-  background: var(--cv-sidebar);
-  color: var(--cv-sidebar-text);
+  background: #e8f0f8;
+  color: #1f2937;
   padding: 20mm 14px 20mm 20mm;
   display: flex;
   flex-direction: column;
@@ -48,14 +48,14 @@
   font-size: 20px;
   font-weight: 700;
   margin: 0 0 2px;
-  color: var(--cv-primary-contrast);
+  color: #000000;
   line-height: 1.15;
 }
 
 .title {
   font-size: 11px;
   margin: 0 0 16px;
-  color: var(--cv-primary-light);
+  color: #1e3a5f;
   font-weight: 400;
   letter-spacing: 0.03em;
 }
@@ -69,10 +69,10 @@
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--cv-primary-light);
+  color: #1e3a5f;
   padding-bottom: 4px;
   margin-bottom: 6px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
 }
 
 .contactList {
@@ -80,12 +80,11 @@
   flex-direction: column;
   gap: 5px;
   font-size: 9.5px;
-  color: var(--cv-sidebar-text);
+  color: #1f2937;
 }
 
 .contactList span {
   word-break: break-word;
-  opacity: 0.92;
 }
 
 .skillList {
@@ -96,10 +95,9 @@
 
 .skillItem {
   font-size: 9.5px;
-  color: var(--cv-sidebar-text);
+  color: #1f2937;
   padding: 3px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  opacity: 0.92;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .skillItem:last-child {
