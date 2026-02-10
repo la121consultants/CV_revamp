@@ -82,6 +82,7 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
   const [subscriptionInfo, setSubscriptionInfo] = useState<SubscriptionInfo | null>(null);
   const [isSubscriptionLoading, setIsSubscriptionLoading] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [hasOneOffPayment, setHasOneOffPayment] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [chatMode, setChatMode] = useState<ChatMode>(() => {
     if (typeof window === "undefined") return "instant";
@@ -123,25 +124,45 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
     fetchSubscription(userDetails.email);
   }, [userDetails.email, fetchSubscription]);
 
+  // Check payment status for logged-in users
+  const fetchPaymentStatus = useCallback(async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase.functions.invoke("check-subscription");
+      if (error) throw error;
+      if (data?.subscribed) setHasOneOffPayment(true); // subscription covers downloads
+      if (data?.has_one_off_payment) setHasOneOffPayment(true);
+    } catch (err) {
+      console.error("Payment status check error:", err);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchPaymentStatus();
+  }, [fetchPaymentStatus]);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     const checkoutStatus = params.get("checkout");
     if (!checkoutStatus) return;
     if (checkoutStatus === "success") {
-      toast({ title: "Subscription active", description: "Your unlimited CV revamps are now unlocked." });
+      toast({ title: "Payment successful!", description: "You can now download your CV." });
       if (userDetails.email) {
         fetchSubscription(userDetails.email);
       }
+      fetchPaymentStatus();
+      setHasOneOffPayment(true);
     }
     if (checkoutStatus === "cancelled") {
-      toast({ title: "Checkout cancelled", description: "You can upgrade anytime from the upgrade prompt." });
+      toast({ title: "Checkout cancelled", description: "You can upgrade anytime from the download buttons." });
     }
     params.delete("checkout");
+    params.delete("type");
     const newQuery = params.toString();
     const newUrl = newQuery ? `${window.location.pathname}?${newQuery}` : window.location.pathname;
     window.history.replaceState({}, "", newUrl);
-  }, [fetchSubscription, userDetails.email]);
+  }, [fetchSubscription, fetchPaymentStatus, userDetails.email]);
 
   const checkUsageLimit = useCallback(async () => {
     if (!userDetails.email) {
@@ -248,10 +269,6 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
   };
 
   const simulateProcessing = useCallback(async () => {
-    // Check usage limit BEFORE processing — upgrade modal only appears here
-    const allowed = await checkUsageLimit();
-    if (!allowed) return;
-
     setIsProcessing(true);
     
     // Save user submission to database
@@ -549,6 +566,13 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
                 header={documentHeader}
                 cvStyle={cvStyle}
                 onStyleChange={setCvStyle}
+                onDownloadBlocked={() => setShowUpgradeModal(true)}
+                canDownload={
+                  hasOneOffPayment ||
+                  subscriptionInfo?.status === "active" ||
+                  subscriptionInfo?.plan_type === "monthly" ||
+                  subscriptionInfo?.plan_type === "annual"
+                }
               />
               <AIChatBox
                 output={output}

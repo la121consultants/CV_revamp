@@ -16,6 +16,8 @@ interface OutputDisplayProps {
   header: DocumentHeader;
   cvStyle: CVStyle;
   onStyleChange: (style: CVStyle) => void;
+  canDownload?: boolean;
+  onDownloadBlocked?: () => void;
 }
 
 export const OutputDisplay = ({
@@ -24,6 +26,8 @@ export const OutputDisplay = ({
   header,
   cvStyle,
   onStyleChange,
+  canDownload = false,
+  onDownloadBlocked,
 }: OutputDisplayProps) => {
   const [copiedLetter, setCopiedLetter] = useState(false);
   const [isDownloading, setIsDownloading] = useState<{ cv: boolean; letter: boolean }>({
@@ -55,6 +59,10 @@ export const OutputDisplay = ({
     kind: "cv" | "coverLetter",
     format: "docx" | "pdf"
   ) => {
+    if (!canDownload) {
+      onDownloadBlocked?.();
+      return;
+    }
     const target = kind === "cv" ? "cv" : "letter";
     try {
       setIsDownloading((prev) => ({ ...prev, [target]: true }));
@@ -141,6 +149,8 @@ export const OutputDisplay = ({
                   data={previewData}
                   selectedTemplate={cvStyle}
                   onTemplateChange={onStyleChange}
+                  canDownload={canDownload}
+                  onDownloadBlocked={onDownloadBlocked}
                 />
               </div>
             </TabsContent>

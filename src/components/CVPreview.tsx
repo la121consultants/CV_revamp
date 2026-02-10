@@ -16,12 +16,16 @@ interface CVPreviewProps {
   data?: CVData;
   selectedTemplate: CVStyle;
   onTemplateChange: (template: CVStyle) => void;
+  canDownload?: boolean;
+  onDownloadBlocked?: () => void;
 }
 
 export const CVPreview = ({ 
   data = sampleCVData, 
   selectedTemplate, 
-  onTemplateChange 
+  onTemplateChange,
+  canDownload = false,
+  onDownloadBlocked,
 }: CVPreviewProps) => {
   const [isExporting, setIsExporting] = useState(false);
   const [selectedThemeId, setSelectedThemeId] = useState("classic-blue");
@@ -190,6 +194,10 @@ export const CVPreview = ({
   const activeTheme = themes.find((theme) => theme.id === selectedThemeId) ?? themes[0];
 
   const handleDownload = async (format: "docx" | "pdf") => {
+    if (!canDownload) {
+      onDownloadBlocked?.();
+      return;
+    }
     setIsExporting(true);
     try {
       if (format === "docx") {
