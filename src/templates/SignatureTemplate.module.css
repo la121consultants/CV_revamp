@@ -1,155 +1,115 @@
-/* SIGNATURE TEMPLATE - Premium two-column, executive style */
-/* A4: 210mm x 297mm, 20mm margins */
-/* Theme: Neutral greys, charcoal, soft taupe */
+/* SIGNATURE TEMPLATE - Executive dark header banner, single-column body */
+/* A4: 210mm x 297mm */
 
 .page {
   width: 210mm;
   min-height: 297mm;
   max-height: 297mm;
   margin: 0 auto;
-  padding: 20mm;
   background: #ffffff;
   color: #1f2937;
   font-family: "Calibri", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  font-size: 11pt;
-  line-height: 1.4;
+  font-size: 10.5pt;
+  line-height: 1.45;
   box-sizing: border-box;
   overflow: hidden;
-  --cv-primary: #111827;
+  --cv-primary: #1f2937;
   --cv-primary-contrast: #ffffff;
-  --cv-primary-light: #f3f4f6;
-  --cv-sidebar: #ffffff;
-  --cv-sidebar-text: #1f2937;
-  --cv-border: #e5e7eb;
+  --cv-accent: #b08d57;
   --cv-muted: #4b5563;
+  --cv-border: #d1d5db;
 }
 
-.layout {
-  display: grid;
-  grid-template-columns: 30% 1fr;
-  gap: 14px;
-  height: 100%;
-}
-
-/* LEFT SIDEBAR - 30% width */
-.sidebar {
-  background: var(--cv-sidebar);
-  padding: 0 12px 0 0;
-  border-radius: 0;
-  border-right: 1px solid var(--cv-border);
+/* ── Dark header banner ── */
+.header {
+  background: var(--cv-primary);
+  color: var(--cv-primary-contrast);
+  padding: 22px 20mm 16px;
+  margin: 0;
 }
 
 .name {
-  font-size: 20px;
+  font-size: 28px;
   font-weight: 700;
-  margin: 0 0 4px 0;
-  color: var(--cv-sidebar-text);
-  line-height: 1.2;
+  margin: 0;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cv-primary-contrast);
 }
 
 .title {
   font-size: 12px;
-  margin: 0 0 12px 0;
-  color: var(--cv-muted);
+  margin: 4px 0 0;
+  color: var(--cv-accent);
   font-weight: 500;
-  text-transform: none;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-/* Section Styles */
+/* ── Contact bar ── */
+.contactBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  padding: 8px 20mm;
+  background: #f8f7f5;
+  border-bottom: 2px solid var(--cv-accent);
+  font-size: 9.5px;
+  color: var(--cv-muted);
+}
+
+.contactBar span {
+  white-space: nowrap;
+}
+
+/* ── Body ── */
+.body {
+  padding: 14px 20mm 20mm;
+}
+
 .section {
-  margin-bottom: 18px;
-}
-
-.section:last-child {
-  margin-bottom: 0;
+  margin-bottom: 14px;
 }
 
 .sectionTitle {
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #111827;
-  padding: 0 0 4px 0;
-  margin-bottom: 10px;
-  border-bottom: 1px solid var(--cv-border);
-  display: block;
-}
-
-/* Contact Details */
-.contactList {
-  font-size: 10.5px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  color: var(--cv-sidebar-text);
-}
-
-.contactList span {
-  word-break: break-word;
-  padding: 2px 0;
-  border-bottom: none;
-}
-
-.contactList span:last-child {
-  border-bottom: none;
-}
-
-/* Skills */
-.skillList {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.skillBadge {
-  background: transparent;
-  border: none;
-  color: var(--cv-sidebar-text);
-  padding: 0;
-  border-radius: 0;
-  font-size: 10.5px;
-  font-weight: 400;
-}
-
-/* RIGHT MAIN CONTENT - 70% width */
-.main {
-  padding: 0;
+  color: var(--cv-primary);
+  padding-left: 10px;
+  margin-bottom: 6px;
+  border-left: 3px solid var(--cv-accent);
 }
 
 .summary {
-  font-size: 11px;
+  font-size: 10.5px;
   line-height: 1.6;
-  color: var(--cv-sidebar-text);
-  text-align: left;
-  background: transparent;
-  padding: 0;
-  border-radius: 0;
-  border: none;
+  color: #374151;
 }
 
-/* Card-style sections */
-.card {
-  background: transparent;
-  padding: 0;
-  border-radius: 0;
-  border: none;
-  margin-bottom: 14px;
+/* ── Skills (two-column grid) ── */
+.skillGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px 20px;
 }
 
-.card:last-child {
-  margin-bottom: 0;
+.skillGrid span {
+  font-size: 10px;
+  color: #374151;
+  padding: 2px 0;
+  border-bottom: 1px dotted var(--cv-border);
 }
 
-/* Experience & Education Items */
-.experienceItem {
-  margin-bottom: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--cv-border);
+/* ── Experience & Education ── */
+.item {
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f0eeeb;
 }
 
-.experienceItem:last-child {
+.item:last-child {
   margin-bottom: 0;
   padding-bottom: 0;
   border-bottom: none;
@@ -159,33 +119,33 @@
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  font-size: 11px;
-  margin-bottom: 2px;
+  font-size: 10.5px;
 }
 
 .itemHeader > span:first-child {
   font-weight: 600;
-  color: var(--cv-sidebar-text);
+  color: var(--cv-primary);
 }
 
 .itemHeader > span:last-child {
-  font-size: 10px;
+  font-size: 9.5px;
   color: var(--cv-muted);
-  font-weight: 400;
   font-style: italic;
 }
 
 .itemSub {
-  font-size: 10.5px;
-  color: var(--cv-muted);
+  font-size: 10px;
+  color: var(--cv-accent);
+  font-weight: 500;
+  margin-top: 1px;
 }
 
 .bullets {
-  margin: 6px 0 0;
+  margin: 4px 0 0;
   padding-left: 14px;
-  font-size: 10.5px;
+  font-size: 10px;
   line-height: 1.5;
-  color: var(--cv-sidebar-text);
+  color: #374151;
 }
 
 .bullets li {
@@ -196,17 +156,13 @@
   margin-bottom: 0;
 }
 
-/* References */
+/* ── References ── */
 .references {
-  font-size: 10.5px;
+  font-size: 10px;
   color: var(--cv-muted);
   font-style: italic;
-  text-align: left;
-  margin-top: 16px;
-  padding: 10px 0 0;
-  background: transparent;
-  border-radius: 0;
-  border: none;
+  margin-top: 14px;
+  padding-top: 8px;
   border-top: 1px solid var(--cv-border);
 }
 

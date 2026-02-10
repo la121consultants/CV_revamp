@@ -3,13 +3,18 @@ import type { CVData } from "@/types/cv";
 const xmlEscape = (text: string) =>
   text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-const paragraph = (text: string) =>
-  `<w:p><w:r><w:t>${xmlEscape(text)}</w:t></w:r></w:p>`;
+const paragraph = (text: string, bold = false, size = 21) => {
+  const rpr = bold ? `<w:rPr><w:b /><w:sz w:val="${size}" /></w:rPr>` : `<w:rPr><w:sz w:val="${size}" /></w:rPr>`;
+  return `<w:p><w:r>${rpr}<w:t xml:space="preserve">${xmlEscape(text)}</w:t></w:r></w:p>`;
+};
 
 const heading = (text: string) =>
-  `<w:p><w:pPr><w:pStyle w:val="Heading2" /></w:pPr><w:r><w:t>${xmlEscape(
+  `<w:p><w:pPr><w:pStyle w:val="Heading2" /><w:spacing w:before="200" w:after="80" /></w:pPr><w:r><w:rPr><w:b /><w:sz w:val="22" /><w:caps /></w:rPr><w:t>${xmlEscape(
     text.toUpperCase()
   )}</w:t></w:r></w:p>`;
+
+const bulletItem = (text: string) =>
+  `<w:p><w:pPr><w:pStyle w:val="ListBullet" /><w:numPr><w:ilvl w:val="0" /><w:numId w:val="1" /></w:numPr></w:pPr><w:r><w:rPr><w:sz w:val="20" /></w:rPr><w:t xml:space="preserve">${xmlEscape(text)}</w:t></w:r></w:p>`;
 
 const createDocumentXml = (data: CVData, templateName: string) => {
   const { personal, skills, experience, education } = data;
@@ -22,43 +27,50 @@ const createDocumentXml = (data: CVData, templateName: string) => {
   ].filter(Boolean);
 
   const paragraphs: string[] = [];
-  const title = `${personal.firstName} ${personal.lastName}`.trim();
-  paragraphs.push(paragraph(title));
-  if (personal.title) paragraphs.push(paragraph(personal.title));
+
+  // Name
+  paragraphs.push(paragraph(`${personal.firstName} ${personal.lastName}`.trim(), true, 32));
+  if (personal.title) paragraphs.push(paragraph(personal.title, false, 22));
   if (contactParts.length > 0) {
-    paragraphs.push(paragraph(contactParts.join(" | ")));
+    paragraphs.push(paragraph(contactParts.join("  |  "), false, 18));
   }
 
+  // Professional Summary
   paragraphs.push(heading("Professional Summary"));
   if (personal.summary) paragraphs.push(paragraph(personal.summary));
 
+  // Key Skills
   paragraphs.push(heading("Key Skills"));
-  skills.forEach((skill) => paragraphs.push(paragraph(`• ${skill.name}`)));
+  skills.forEach((skill) => paragraphs.push(bulletItem(skill.name)));
 
+  // Work Experience
   paragraphs.push(heading("Work Experience"));
   experience.forEach((item) => {
-    paragraphs.push(paragraph(`${item.role} — ${item.company}${item.location ? ` (${item.location})` : ""}`));
-    paragraphs.push(paragraph(`${item.startDate} - ${item.endDate}`));
-    item.bullets.forEach((point) => paragraphs.push(paragraph(`• ${point}`)));
+    paragraphs.push(paragraph(`${item.role} — ${item.company}${item.location ? ` (${item.location})` : ""}`, true));
+    paragraphs.push(paragraph(`${item.startDate} – ${item.endDate}`, false, 19));
+    item.bullets.forEach((point) => paragraphs.push(bulletItem(point)));
   });
 
+  // Education
   paragraphs.push(heading("Education"));
   education.forEach((item) => {
-    paragraphs.push(paragraph(`${item.qualification} — ${item.institution}`));
-    paragraphs.push(paragraph(`${item.startDate} - ${item.endDate}`));
-    (item.details || []).forEach((detail) => paragraphs.push(paragraph(`• ${detail}`)));
+    paragraphs.push(paragraph(`${item.qualification} — ${item.institution}`, true));
+    paragraphs.push(paragraph(`${item.startDate} – ${item.endDate}`, false, 19));
+    (item.details || []).forEach((detail) => paragraphs.push(bulletItem(detail)));
   });
 
-  paragraphs.push(paragraph("References available on request"));
-  paragraphs.push(paragraph(`Template: ${templateName}`));
+  // References
+  paragraphs.push(paragraph(""));
+  paragraphs.push(paragraph("References available on request", false, 19));
 
+  // A4: 11906 x 16838 twips, 20mm margins = 1134 twips
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
   <w:body>
     ${paragraphs.join("")}
     <w:sectPr>
-      <w:pgSz w:w="12240" w:h="15840" />
-      <w:pgMar w:top="720" w:right="720" w:bottom="720" w:left="720" w:header="720" w:footer="720" w:gutter="0" />
+      <w:pgSz w:w="11906" w:h="16838" />
+      <w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="720" w:footer="720" w:gutter="0" />
     </w:sectPr>
   </w:body>
 </w:document>`;
