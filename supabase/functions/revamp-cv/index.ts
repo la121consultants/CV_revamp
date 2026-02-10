@@ -91,7 +91,17 @@ serve(async (req) => {
     const wantCV = outputType === "cv" || outputType === "both";
     const wantLetter = outputType === "coverLetter" || outputType === "both";
 
-    const systemPrompt = `You are a professional UK CV writer. You produce ATS-optimised, role-relevant CVs and cover letters in UK English. Always respond with ONLY valid JSON – no markdown code fences, no explanation.`;
+    const systemPrompt = `You are a professional UK CV writer. You produce ATS-optimised, role-relevant CVs and cover letters in UK English. Always respond with ONLY valid JSON – no markdown code fences, no explanation.
+
+CRITICAL RULES YOU MUST FOLLOW:
+1. Use ONLY the candidate's actual name exactly as provided. NEVER invent names or use placeholder names. NEVER use "Alex Mitchell" or any other fabricated name.
+2. All personal details (name, location, job titles, employment history, dates, education, skills, certifications) must match the uploaded CV exactly.
+3. Use the candidate's location exactly as provided — do NOT change, generalise, or assume a different city or country.
+4. Do NOT add information not present in the uploaded CV — no invented employers, qualifications, responsibilities, or metrics.
+5. You MAY improve wording, structure, clarity, bullet point conciseness, and optimise phrasing for UK job applications.
+6. You may NOT change factual details, add roles/employers/education, or insert example content.
+7. If any detail is missing or unclear, leave it unchanged rather than guessing.
+8. The final CV must contain ZERO references to any name other than the candidate's own name.`;
 
     const userPrompt = `
 Candidate name: ${userName || "Not specified"}
@@ -105,8 +115,8 @@ ${jobDescription || "Not provided"}
 ${personSpec ? `Person specification:\n${personSpec}` : ""}
 
 Please produce a JSON object with the following keys:
-${wantCV ? `"cv": A full, professionally written CV in Markdown format tailored to the target role. Include sections: Professional Summary, Key Skills, Professional Experience (with bullet-point achievements using action verbs and quantified results), Education. Use UK English.` : ""}
-${wantLetter ? `"coverLetter": A compelling cover letter in Markdown format addressed to the Hiring Manager for the target role. Highlight relevant experience. Use UK English.` : ""}
+${wantCV ? `"cv": A full, professionally rewritten CV in Markdown format tailored to the target role. Use ONLY the information from the candidate's existing CV. Include sections: Professional Summary, Key Skills, Professional Experience (with bullet-point achievements using action verbs), Education. Use UK English. The candidate's real name and location MUST appear exactly as provided.` : ""}
+${wantLetter ? `"coverLetter": A compelling cover letter in Markdown format addressed to the Hiring Manager for the target role. Use ONLY information from the candidate's existing CV. Highlight relevant experience. Use UK English. Use the candidate's real name.` : ""}
 
 Return ONLY the JSON object, nothing else.`;
 
