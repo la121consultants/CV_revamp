@@ -1,42 +1,50 @@
 import { motion } from "framer-motion";
-import { LogIn, LogOut, User } from "lucide-react";
+import { LogIn, LogOut, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import logo from "@/assets/logo.png";
 
 export const Header = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <motion.header
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full py-4 px-6 glass sticky top-0 z-50 border-b border-border"
+      className="w-full py-3 px-6 glass sticky top-0 z-50 border-b border-border/50"
     >
       <div className="container mx-auto flex items-center justify-between">
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
-          <img src={logo} alt="LA121 Consultants" className="h-12 w-auto" />
+          <img src={logo} alt="TVV" className="h-10 w-auto" />
           <div>
-            <h1 className="text-xl font-bold text-foreground">LA121</h1>
-            <p className="text-xs text-muted-foreground">AI CV Review</p>
+            <h1 className="text-lg font-display font-bold text-foreground tracking-tight">TVV</h1>
+            <p className="text-[10px] text-muted-foreground font-medium tracking-wider uppercase">Career Platform</p>
           </div>
         </div>
         
-        <nav className="flex items-center gap-4">
-          <a href="#features" className="hidden md:block text-sm text-muted-foreground hover:text-foreground transition-colors">
+        <nav className="hidden md:flex items-center gap-6">
+          <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
             Features
           </a>
-          <a href="#how-it-works" className="hidden md:block text-sm text-muted-foreground hover:text-foreground transition-colors">
-            How it Works
+          <a href="#who-its-for" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+            Who It's For
           </a>
-          <button onClick={() => navigate("/subscription")} className="hidden md:block text-sm text-muted-foreground hover:text-foreground transition-colors">
-            Subscription
+          <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+            How It Works
+          </a>
+          <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+            Pricing
+          </a>
+          <button onClick={() => navigate("/subscription")} className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+            My Plan
           </button>
           {user ? (
             <div className="flex items-center gap-2">
-              <span className="hidden sm:inline text-sm text-muted-foreground truncate max-w-[150px]">
+              <span className="text-sm text-muted-foreground truncate max-w-[120px]">
                 {user.email}
               </span>
               <Button
@@ -46,7 +54,7 @@ export const Header = () => {
                 className="gap-1"
               >
                 <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline">Sign Out</span>
+                Sign Out
               </Button>
             </div>
           ) : (
@@ -54,14 +62,42 @@ export const Header = () => {
               variant="outline"
               size="sm"
               onClick={() => navigate("/login")}
-              className="gap-1"
+              className="gap-1 border-border/60"
             >
               <LogIn className="w-4 h-4" />
               Sign In
             </Button>
           )}
         </nav>
+
+        {/* Mobile menu toggle */}
+        <button className="md:hidden p-2" onClick={() => setMobileOpen(!mobileOpen)}>
+          {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
       </div>
+
+      {/* Mobile nav */}
+      {mobileOpen && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          className="md:hidden border-t border-border/50 mt-3 pt-4 pb-2 space-y-3"
+        >
+          <a href="#features" className="block text-sm text-muted-foreground px-2 py-1" onClick={() => setMobileOpen(false)}>Features</a>
+          <a href="#who-its-for" className="block text-sm text-muted-foreground px-2 py-1" onClick={() => setMobileOpen(false)}>Who It's For</a>
+          <a href="#how-it-works" className="block text-sm text-muted-foreground px-2 py-1" onClick={() => setMobileOpen(false)}>How It Works</a>
+          <a href="#pricing" className="block text-sm text-muted-foreground px-2 py-1" onClick={() => setMobileOpen(false)}>Pricing</a>
+          {user ? (
+            <Button variant="ghost" size="sm" onClick={async () => { await signOut(); navigate("/"); setMobileOpen(false); }}>
+              <LogOut className="w-4 h-4 mr-1" /> Sign Out
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" onClick={() => { navigate("/login"); setMobileOpen(false); }}>
+              <LogIn className="w-4 h-4 mr-1" /> Sign In
+            </Button>
+          )}
+        </motion.div>
+      )}
     </motion.header>
   );
 };
