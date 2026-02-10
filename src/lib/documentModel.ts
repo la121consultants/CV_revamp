@@ -181,6 +181,20 @@ const orderSections = (sections: DocumentSection[], header?: DocumentHeader) => 
     "personal information", "personal", "details",
   ]);
 
+  /** Check if a paragraph line looks like a personal detail (name, email, phone, etc.) */
+  const isPersonalDetailLine = (line: string): boolean => {
+    const l = line.toLowerCase();
+    // Lines that contain an email address and phone number together
+    if (/@/.test(l) && /\d{5,}/.test(l.replace(/\s/g, ""))) return true;
+    // Lines that are just a name + contact info string (short, contains header name)
+    if (header?.name) {
+      const nameWords = header.name.toLowerCase().split(/\s+/);
+      const matchesName = nameWords.every(w => l.includes(w));
+      if (matchesName && l.length < 200 && (/\d{5,}/.test(l.replace(/\s/g, "")) || /@/.test(l))) return true;
+    }
+    return false;
+  };
+
   const isPersonalDetailContent = (section: DocumentSection) => {
     const n = normalizeTitle(section.title);
     if (personalDetailTitles.has(n)) return true;
@@ -193,15 +207,21 @@ const orderSections = (sections: DocumentSection[], header?: DocumentHeader) => 
     return false;
   };
 
+  // Filter out entire personal detail sections
   const filtered = sections.filter((s) => !isPersonalDetailContent(s));
+
+  // Strip personal detail lines from within remaining sections (e.g. name/phone/email inside summary)
+  const cleaned = filtered.map((s) => ({
+    ...s,
+    paragraphs: s.paragraphs.filter((p) => !isPersonalDetailLine(p)),
+  }));
 
   const experienceKeys = new Set(["work experience", "education"]);
   const ordered: DocumentSection[] = [];
   const usedSections = new Set<DocumentSection>();
 
-  /** Fuzzy match: find the first filtered section whose normalised title contains the key */
   const findByKey = (key: string): DocumentSection | undefined =>
-    filtered.find((s) => !usedSections.has(s) && normalizeTitle(s.title).includes(key));
+    cleaned.find((s) => !usedSections.has(s) && normalizeTitle(s.title).includes(key));
 
   sectionOrder.forEach((key) => {
     if (key === "references") return;
@@ -212,7 +232,7 @@ const orderSections = (sections: DocumentSection[], header?: DocumentHeader) => 
     }
   });
 
-  filtered.forEach((section) => {
+  cleaned.forEach((section) => {
     if (!usedSections.has(section)) {
       const normalized = normalizeTitle(section.title);
       if (normalized !== "references" && !personalDetailTitles.has(normalized)) {
