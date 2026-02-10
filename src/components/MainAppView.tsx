@@ -83,6 +83,7 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
   const [isSubscriptionLoading, setIsSubscriptionLoading] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [hasOneOffPayment, setHasOneOffPayment] = useState(false);
+  const [hasUnlimitedGrant, setHasUnlimitedGrant] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [chatMode, setChatMode] = useState<ChatMode>(() => {
     if (typeof window === "undefined") return "instant";
@@ -124,16 +125,31 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
     fetchSubscription(userDetails.email);
   }, [userDetails.email, fetchSubscription]);
 
-  // Check payment status for logged-in users
+  // Check payment status and admin-granted access for logged-in users
   const fetchPaymentStatus = useCallback(async () => {
     if (!user) return;
     try {
       const { data, error } = await supabase.functions.invoke("check-subscription");
       if (error) throw error;
-      if (data?.subscribed) setHasOneOffPayment(true); // subscription covers downloads
+      if (data?.subscribed) setHasOneOffPayment(true);
       if (data?.has_one_off_payment) setHasOneOffPayment(true);
     } catch (err) {
       console.error("Payment status check error:", err);
+    }
+
+    // Check admin-granted unlimited access
+    if (user.email) {
+      try {
+        const { data: grantData } = await supabase
+          .from("unlimited_access_grants" as any)
+          .select("id")
+          .eq("user_email", user.email.toLowerCase())
+          .eq("is_active", true)
+          .limit(1);
+        setHasUnlimitedGrant(!!(grantData && (grantData as any[]).length > 0));
+      } catch {
+        // silently fail
+      }
     }
   }, [user]);
 
@@ -568,6 +584,7 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
                 onStyleChange={setCvStyle}
                 onDownloadBlocked={() => setShowUpgradeModal(true)}
                 canDownload={
+                  hasUnlimitedGrant ||
                   hasOneOffPayment ||
                   subscriptionInfo?.status === "active" ||
                   subscriptionInfo?.plan_type === "monthly" ||
