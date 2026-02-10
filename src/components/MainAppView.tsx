@@ -356,9 +356,6 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
         }
       }
 
-      // Consume usage after successful generation
-      await consumeUsage();
-      
       toast({
         title: "Success!",
         description: "Your tailored documents are ready.",
