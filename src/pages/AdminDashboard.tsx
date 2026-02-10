@@ -14,10 +14,12 @@ import {
   Filter,
   Calendar,
   Eye,
-  UserCog
+  UserCog,
+  Crown
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminUserManagement } from "@/components/AdminUserManagement";
+import { UnlimitedAccessManagement } from "@/components/UnlimitedAccessManagement";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -377,16 +379,22 @@ const AdminDashboard = () => {
         {/* Tabbed Content - Show to all admins */}
         {isAdmin && (
           <Tabs defaultValue="submissions" className="space-y-6">
-            <TabsList className={`grid w-full max-w-md ${isSuperAdmin ? 'grid-cols-2' : 'grid-cols-1'}`}>
+            <TabsList className={`grid w-full max-w-lg ${isSuperAdmin ? 'grid-cols-3' : 'grid-cols-1'}`}>
               <TabsTrigger value="submissions" className="gap-2">
                 <Users className="w-4 h-4" />
                 Submissions
               </TabsTrigger>
               {isSuperAdmin && (
-                <TabsTrigger value="admins" className="gap-2">
-                  <UserCog className="w-4 h-4" />
-                  Manage Admins
-                </TabsTrigger>
+                <>
+                  <TabsTrigger value="unlimited" className="gap-2">
+                    <Crown className="w-4 h-4" />
+                    Unlimited Users
+                  </TabsTrigger>
+                  <TabsTrigger value="admins" className="gap-2">
+                    <UserCog className="w-4 h-4" />
+                    Manage Admins
+                  </TabsTrigger>
+                </>
               )}
             </TabsList>
 
@@ -595,6 +603,12 @@ const AdminDashboard = () => {
             )}
               </motion.div>
             </TabsContent>
+
+            {isSuperAdmin && (
+              <TabsContent value="unlimited">
+                <UnlimitedAccessManagement />
+              </TabsContent>
+            )}
 
             {isSuperAdmin && (
               <TabsContent value="admins">

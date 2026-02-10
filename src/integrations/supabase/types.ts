@@ -128,6 +128,36 @@ export type Database = {
         }
         Relationships: []
       }
+      unlimited_access_grants: {
+        Row: {
+          created_at: string
+          granted_by: string
+          id: string
+          is_active: boolean
+          notes: string | null
+          revoked_at: string | null
+          user_email: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          revoked_at?: string | null
+          user_email: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          revoked_at?: string | null
+          user_email?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
