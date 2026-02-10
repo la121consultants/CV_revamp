@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ReactMarkdown from "react-markdown";
 import { CVPreview } from "@/components/CVPreview";
-import { sampleCVData } from "@/types/cv";
+import { parseCVDataFromMarkdown } from "@/utils/parseCVData";
 import type { CVStyle, DocumentHeader, TailoredOutput, OutputType } from "@/types";
 import { renderDocumentRequest, downloadDocumentRequest } from "@/lib/documentApi";
 import { toast } from "@/hooks/use-toast";
@@ -96,19 +96,13 @@ export const OutputDisplay = ({
   const defaultTab = showCV ? "cv" : "coverLetter";
 
   const previewData = useMemo(() => {
-    const [firstName = "Your", lastName = "Name"] = header.name.split(" ");
-    return {
-      ...sampleCVData,
-      personal: {
-        ...sampleCVData.personal,
-        firstName,
-        lastName: lastName || "",
-        title: header.role || sampleCVData.personal.title,
-        email: header.email || sampleCVData.personal.email,
-        phone: header.phone || sampleCVData.personal.phone,
-      },
-    };
-  }, [header]);
+    return parseCVDataFromMarkdown(output.cv, {
+      name: header.name,
+      role: header.role,
+      email: header.email,
+      phone: header.phone,
+    });
+  }, [output.cv, header]);
 
   return (
     <motion.div
