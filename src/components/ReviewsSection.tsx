@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Star } from "lucide-react";
+import { Star, Quote } from "lucide-react";
 
 const reviews = [
   {
@@ -11,13 +11,13 @@ const reviews = [
   {
     name: "James O.",
     role: "Senior Nurse, Manchester",
-    text: "Applying to NHS Band 7 roles was so stressful. LA121 tailored my CV perfectly to the person specification. I secured the role within a month.",
+    text: "Applying to NHS Band 7 roles was so stressful. TVV tailored my CV perfectly to the person specification. I secured the role within a month.",
     rating: 5,
   },
   {
     name: "Priya S.",
     role: "IT Consultant, Birmingham",
-    text: "The cover letter generator alone is worth it. I landed a contract at Capgemini after using LA121 to revamp my entire application.",
+    text: "The cover letter generator alone is worth it. I landed a contract at Capgemini after using TVV to revamp my entire application.",
     rating: 5,
   },
   {
@@ -42,12 +42,16 @@ export const ReviewsSection = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-12"
+          className="text-center mb-14"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <span className="premium-badge bg-secondary/10 text-secondary border border-secondary/20 mb-4">
+            <Star className="w-3.5 h-3.5 fill-secondary" />
+            Testimonials
+          </span>
+          <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
             Trusted by Job Seekers Across the UK
           </h2>
-          <div className="flex items-center justify-center gap-1 mb-2">
+          <div className="flex items-center justify-center gap-1 mb-3">
             {[...Array(5)].map((_, i) => (
               <Star key={i} className="w-6 h-6 fill-secondary text-secondary" />
             ))}
@@ -65,15 +69,16 @@ export const ReviewsSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.08 }}
-              className="p-6 rounded-2xl bg-card border border-border shadow-sm hover:shadow-md transition-shadow"
+              className="premium-card p-6 relative group"
             >
-              <div className="flex items-center gap-1 mb-3">
+              <Quote className="absolute top-4 right-4 w-8 h-8 text-secondary/10 group-hover:text-secondary/20 transition-colors" />
+              <div className="flex items-center gap-1 mb-4">
                 {[...Array(review.rating)].map((_, i) => (
                   <Star key={i} className="w-4 h-4 fill-secondary text-secondary" />
                 ))}
               </div>
-              <p className="text-foreground mb-4 leading-relaxed">"{review.text}"</p>
-              <div>
+              <p className="text-foreground mb-5 leading-relaxed text-sm">"{review.text}"</p>
+              <div className="border-t border-border pt-4">
                 <p className="font-semibold text-foreground text-sm">{review.name}</p>
                 <p className="text-xs text-muted-foreground">{review.role}</p>
               </div>
