@@ -7,7 +7,7 @@ interface AestheticTemplateProps {
 }
 
 export const AestheticTemplate = ({ data, theme }: AestheticTemplateProps) => {
-  const { personal, skills, experience, education } = data;
+  const { personal, skills, experience, education, projects } = data;
 
   return (
     <section
@@ -34,21 +34,21 @@ export const AestheticTemplate = ({ data, theme }: AestheticTemplateProps) => {
             <br />
             {personal.lastName}
           </h1>
-          <p className={styles.title}>{personal.title}</p>
+          {personal.title && <p className={styles.title}>{personal.title}</p>}
 
           <div className={styles.sidebarSection}>
             <div className={styles.sidebarSectionTitle}>Contact</div>
             <div className={styles.contactList}>
-              {personal.location && <span>{personal.location}</span>}
-              {personal.phone && <span>{personal.phone}</span>}
               {personal.email && <span>{personal.email}</span>}
+              {personal.phone && <span>{personal.phone}</span>}
+              {personal.location && <span>{personal.location}</span>}
               {personal.linkedin && <span>{personal.linkedin}</span>}
               {personal.portfolio && <span>{personal.portfolio}</span>}
             </div>
           </div>
 
           <div className={styles.sidebarSection}>
-            <div className={styles.sidebarSectionTitle}>Skills</div>
+            <div className={styles.sidebarSectionTitle}>Key Skills</div>
             <div className={styles.skillList}>
               {skills.map((skill, index) => (
                 <div key={index} className={styles.skillItem}>
@@ -61,58 +61,88 @@ export const AestheticTemplate = ({ data, theme }: AestheticTemplateProps) => {
 
         {/* RIGHT MAIN CONTENT */}
         <main className={styles.main}>
-          <div className={styles.section}>
-            <div className={styles.sectionTitle}>Professional Summary</div>
-            <p className={styles.summary}>{personal.summary}</p>
-          </div>
+          {/* 2. Professional Summary */}
+          {personal.summary && (
+            <div className={styles.section}>
+              <div className={styles.sectionTitle}>Professional Summary</div>
+              <p className={styles.summary}>{personal.summary}</p>
+            </div>
+          )}
 
-          <div className={styles.section}>
-            <div className={styles.sectionTitle}>Work Experience</div>
-            {experience.map((item, index) => (
-              <div key={index} className={styles.experienceItem}>
-                <div className={styles.itemHeader}>
-                  <span>{item.role}</span>
-                  <span>
-                    {item.startDate} – {item.endDate}
-                  </span>
+          {/* 4. Work Experience */}
+          {experience.length > 0 && (
+            <div className={styles.section}>
+              <div className={styles.sectionTitle}>Work Experience</div>
+              {experience.map((item, index) => (
+                <div key={index} className={styles.experienceItem}>
+                  <div className={styles.itemHeader}>
+                    <span>{item.role}</span>
+                    <span>
+                      {item.startDate} – {item.endDate}
+                    </span>
+                  </div>
+                  <div className={styles.itemSub}>
+                    {item.company}
+                    {item.location && ` · ${item.location}`}
+                  </div>
+                  {item.bullets.length > 0 && (
+                    <ul className={styles.bullets}>
+                      {item.bullets.map((bullet, bi) => (
+                        <li key={bi}>{bullet}</li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
-                <div className={styles.itemSub}>
-                  {item.company}
-                  {item.location && ` · ${item.location}`}
-                </div>
-                {item.bullets.length > 0 && (
-                  <ul className={styles.bullets}>
-                    {item.bullets.map((bullet, bi) => (
-                      <li key={bi}>{bullet}</li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
-          <div className={styles.section}>
-            <div className={styles.sectionTitle}>Education</div>
-            {education.map((item, index) => (
-              <div key={index} className={styles.experienceItem}>
-                <div className={styles.itemHeader}>
-                  <span>{item.qualification}</span>
-                  <span>
-                    {item.startDate} – {item.endDate}
-                  </span>
+          {/* 5. Education */}
+          {education.length > 0 && (
+            <div className={styles.section}>
+              <div className={styles.sectionTitle}>Education</div>
+              {education.map((item, index) => (
+                <div key={index} className={styles.experienceItem}>
+                  <div className={styles.itemHeader}>
+                    <span>{item.qualification}</span>
+                    <span>
+                      {item.startDate} – {item.endDate}
+                    </span>
+                  </div>
+                  <div className={styles.itemSub}>{item.institution}</div>
+                  {item.details && item.details.length > 0 && (
+                    <ul className={styles.bullets}>
+                      {item.details.map((detail, di) => (
+                        <li key={di}>{detail}</li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
-                <div className={styles.itemSub}>{item.institution}</div>
-                {item.details && item.details.length > 0 && (
-                  <ul className={styles.bullets}>
-                    {item.details.map((detail, di) => (
-                      <li key={di}>{detail}</li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
+          {/* 6. Projects */}
+          {projects.length > 0 && (
+            <div className={styles.section}>
+              <div className={styles.sectionTitle}>Projects</div>
+              {projects.map((project, index) => (
+                <div key={index} className={styles.experienceItem}>
+                  <div className={styles.itemHeader}>
+                    <span>{project.title}</span>
+                  </div>
+                  {project.description && (
+                    <p style={{ fontSize: "10pt", margin: "0 0 2pt 0" }}>{project.description}</p>
+                  )}
+                  {project.contribution && (
+                    <p style={{ fontSize: "10pt", margin: "0 0 2pt 0", fontStyle: "italic" }}>{project.contribution}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* 7. References – always last */}
           <div className={styles.references}>
             References available on request
           </div>

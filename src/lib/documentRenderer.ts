@@ -63,7 +63,8 @@ const createDocumentXml = (model: DocumentModel) => {
   if (model.kind === "cv" && model.header) {
     const nameLine = style === "signature" ? model.header.name.toUpperCase() : model.header.name;
     pushParagraph(nameLine, { bold: true, size: style === "signature" ? 36 : style === "aesthetic" ? 34 : 30, alignment: "center", spacing: 40 });
-    pushParagraph(`${model.header.phone}  |  ${model.header.email}`, { size: 20, alignment: "center", spacing: 40 });
+    const contactParts = [model.header.email, model.header.phone, model.header.location, model.header.linkedin].filter(Boolean);
+    pushParagraph(contactParts.join("  |  "), { size: 20, alignment: "center", spacing: 40 });
     pushParagraph(model.header.role, { bold: true, size: 24, alignment: "center", spacing: 200 });
   } else {
     pushParagraph(model.title, { bold: true, size: 28, alignment: "center", spacing: 200 });
@@ -242,7 +243,8 @@ export const renderPdf = (model: DocumentModel): Blob => {
   if (model.kind === "cv" && model.header) {
     const nameLine = style === "signature" ? model.header.name.toUpperCase() : model.header.name;
     pushLine(nameLine, styleConfig.nameSize, styleConfig.lineSpacing + 6);
-    pushLine(`${model.header.phone}  |  ${model.header.email}`, styleConfig.bodySize, styleConfig.lineSpacing);
+    const contactParts = [model.header.email, model.header.phone, model.header.location, model.header.linkedin].filter(Boolean);
+    pushLine(contactParts.join("  |  "), styleConfig.bodySize, styleConfig.lineSpacing);
     pushLine(model.header.role, styleConfig.roleSize, styleConfig.lineSpacing + 4);
     lines.push({ text: "", size: 1, spacing: 8 }); // spacer
   } else {

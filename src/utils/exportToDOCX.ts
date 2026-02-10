@@ -59,6 +59,16 @@ const createDocumentXml = (data: CVData, templateName: string) => {
     (item.details || []).forEach((detail) => paragraphs.push(bulletItem(detail)));
   });
 
+  // Projects (if any)
+  if (data.projects && data.projects.length > 0) {
+    paragraphs.push(heading("Projects"));
+    data.projects.forEach((project) => {
+      paragraphs.push(paragraph(project.title, true));
+      if (project.description) paragraphs.push(paragraph(project.description));
+      if (project.contribution) paragraphs.push(paragraph(project.contribution, false, 19));
+    });
+  }
+
   // References
   paragraphs.push(paragraph(""));
   paragraphs.push(paragraph("References available on request", false, 19));

@@ -71,7 +71,9 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
   const [userDetails, setUserDetails] = useState<UserDetails>({
     fullName: user?.user_metadata?.full_name || '',
     email: user?.email || '',
-    phone: ''
+    phone: '',
+    city: '',
+    linkedin: '',
   });
   const [outputType, setOutputType] = useState<OutputType>('both');
   const [output, setOutput] = useState<TailoredOutput | null>(null);
@@ -470,7 +472,7 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
     setBuildMode(null);
     setCvData(null);
     setJobDetails({ title: '', description: '', personSpec: '', linkedinUrl: '' });
-    setUserDetails({ fullName: '', email: '', phone: '' });
+    setUserDetails({ fullName: '', email: '', phone: '', city: '', linkedin: '' });
     setOutput(null);
     setMessages([]);
     setPendingAction(null);
@@ -558,8 +560,10 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
       phone: userDetails.phone || "Phone Number",
       email: userDetails.email || "Email Address",
       role: jobDetails.title || "Target Role",
+      location: userDetails.city || "",
+      linkedin: userDetails.linkedin || "",
     }),
-    [userDetails.fullName, userDetails.phone, userDetails.email, jobDetails.title]
+    [userDetails.fullName, userDetails.phone, userDetails.email, userDetails.city, userDetails.linkedin, jobDetails.title]
   );
 
   // Check if we have enough details to enter guided mode
