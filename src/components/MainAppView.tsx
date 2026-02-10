@@ -128,6 +128,22 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
   // Check payment status and admin-granted access for logged-in users
   const fetchPaymentStatus = useCallback(async () => {
     if (!user) return;
+
+    // Check if user is admin/super_admin — they get unlimited access
+    try {
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .limit(1);
+      if (roleData && roleData.length > 0 && (roleData[0].role === "super_admin" || roleData[0].role === "admin")) {
+        setHasUnlimitedGrant(true);
+        return;
+      }
+    } catch {
+      // silently fail
+    }
+
     try {
       const { data, error } = await supabase.functions.invoke("check-subscription");
       if (error) throw error;
