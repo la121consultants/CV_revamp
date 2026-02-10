@@ -93,6 +93,12 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
     return (sessionStorage.getItem("cv-chat-mode") as ChatMode) || "instant";
   });
   const [pendingAction, setPendingAction] = useState<PendingChatAction | null>(null);
+  const [chatSuggestions, setChatSuggestions] = useState<string[]>([
+    "Make the CV more concise",
+    "Add more action verbs",
+    "Emphasize leadership skills",
+    "Make the cover letter more personal",
+  ]);
 
   const isLinkedInMethod = !!jobDetails.linkedinUrl && jobDetails.linkedinUrl.includes('linkedin.com');
   const isReadyToProcess = cvData && 
@@ -426,6 +432,47 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
     }
   }, [jobDetails.title, jobDetails.description, jobDetails.personSpec, jobDetails.linkedinUrl, userDetails, cvData, outputType]);
 
+  const applyChatChangesViaAI = async (message: string) => {
+    if (!output) return;
+    try {
+      const { data, error } = await supabase.functions.invoke("refine-cv", {
+        body: {
+          currentCV: output.cv,
+          currentCoverLetter: output.coverLetter,
+          userMessage: message,
+          jobTitle: jobDetails.title,
+          outputType,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      setOutput((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          cv: data.cv || prev.cv,
+          coverLetter: data.coverLetter || prev.coverLetter,
+        };
+      });
+
+      if (data.followUpSuggestions && data.followUpSuggestions.length > 0) {
+        setChatSuggestions(data.followUpSuggestions);
+      }
+
+      return data.summary || `Applied your request: "${message}"`;
+    } catch (err: any) {
+      console.error("Refine CV error:", err);
+      toast({
+        title: "Refinement failed",
+        description: err.message || "Unable to refine the document. Please try again.",
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+
   const handleSendMessage = async (message: string) => {
     setMessages((prev) => [...prev, { role: "user", content: message }]);
     if (pendingAction) {
@@ -457,13 +504,13 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
     }
 
     setIsChatLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    applyChatChanges(message);
+    const summary = await applyChatChangesViaAI(message);
     const response: Message = {
       role: "assistant",
-      content: `I've applied your request: "${message}". I've updated your CV/cover letter to reflect it. Want to refine anything else?`,
+      content: summary
+        ? `✅ ${summary}\n\nWould you like to refine anything else?`
+        : `I wasn't able to apply that change. Please try rephrasing your request.`,
     };
-
     setMessages((prev) => [...prev, response]);
     setIsChatLoading(false);
   };
@@ -477,18 +524,12 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
     setMessages([]);
     setPendingAction(null);
     setCvStyle("standard");
-  };
-
-  const applyChatChanges = (message: string) => {
-    const updateNote = `\n\n## Update Notes\n- ${message}`;
-    const letterNote = `\n\nRequested updates: ${message}`;
-    setOutput((prev) => {
-      if (!prev) return prev;
-      return {
-        cv: `${prev.cv}${updateNote}`,
-        coverLetter: `${prev.coverLetter}${letterNote}`,
-      };
-    });
+    setChatSuggestions([
+      "Make the CV more concise",
+      "Add more action verbs",
+      "Emphasize leadership skills",
+      "Make the cover letter more personal",
+    ]);
   };
 
   const summarizeRequest = (message: string) => {
@@ -500,14 +541,21 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
     return summary.slice(0, 3).map((item) => item.replace(/^to\s+/i, ""));
   };
 
-  const handleProceed = () => {
+  const handleProceed = async () => {
     if (!pendingAction) return;
-    applyChatChanges(pendingAction.message);
+    setIsChatLoading(true);
+    const summary = await applyChatChangesViaAI(pendingAction.message);
     setMessages((prev) => [
       ...prev,
-      { role: "assistant", content: "Updates applied. Let me know if you'd like more changes." },
+      {
+        role: "assistant",
+        content: summary
+          ? `✅ ${summary}\n\nLet me know if you'd like more changes.`
+          : "I wasn't able to apply that change. Please try rephrasing.",
+      },
     ]);
     setPendingAction(null);
+    setIsChatLoading(false);
   };
 
   const handleCancel = () => {
@@ -657,6 +705,7 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
                   onProceed={handleProceed}
                   onCancel={handleCancel}
                   onEditRequest={handleEditRequest}
+                  suggestions={chatSuggestions}
                 />
                 {output.suggestions && output.suggestions.length > 0 && (
                   <MissingSectionSuggestions
