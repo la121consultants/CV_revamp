@@ -36,7 +36,7 @@ const RenderPage = ({ data, style }: { data: CVData; style: CVStyle }) => {
       style={{
         width: "210mm",
         minHeight: "297mm",
-        padding: "20mm",
+        padding: "20mm 20mm 30mm",
         boxShadow: "0 4px 24px rgba(0,0,0,0.15), 0 1px 4px rgba(0,0,0,0.08)",
         fontFamily,
         color: "#1a1a1a",
@@ -89,7 +89,7 @@ const RenderPage = ({ data, style }: { data: CVData; style: CVStyle }) => {
               borderBottom: "1px solid #ccc",
               paddingBottom: "3pt",
               marginBottom: "5pt",
-              color: "#333",
+            color: "#000000",
             }}
           >
             {formatHeading("Professional Summary")}
@@ -112,7 +112,7 @@ const RenderPage = ({ data, style }: { data: CVData; style: CVStyle }) => {
               borderBottom: "1px solid #ccc",
               paddingBottom: "3pt",
               marginBottom: "5pt",
-              color: "#333",
+             color: "#000000",
             }}
           >
             {formatHeading("Key Skills")}
@@ -137,7 +137,7 @@ const RenderPage = ({ data, style }: { data: CVData; style: CVStyle }) => {
               borderBottom: "1px solid #ccc",
               paddingBottom: "3pt",
               marginBottom: "5pt",
-              color: "#333",
+              color: "#000000",
             }}
           >
             {formatHeading("Work Experience")}
@@ -172,7 +172,7 @@ const RenderPage = ({ data, style }: { data: CVData; style: CVStyle }) => {
               borderBottom: "1px solid #ccc",
               paddingBottom: "3pt",
               marginBottom: "5pt",
-              color: "#333",
+              color: "#000000",
             }}
           >
             {formatHeading("Education")}
@@ -209,7 +209,7 @@ const RenderPage = ({ data, style }: { data: CVData; style: CVStyle }) => {
               borderBottom: "1px solid #ccc",
               paddingBottom: "3pt",
               marginBottom: "5pt",
-              color: "#333",
+              color: "#000000",
             }}
           >
             {formatHeading("Projects")}
@@ -241,10 +241,10 @@ const RenderPage = ({ data, style }: { data: CVData; style: CVStyle }) => {
             borderBottom: "1px solid #ccc",
             paddingBottom: "3pt",
             marginBottom: "5pt",
-            color: "#333",
-          }}
-        >
-          {formatHeading("References")}
+              color: "#000000",
+            }}
+          >
+            {formatHeading("References")}
         </div>
         <p style={{ fontSize: "10.5pt", margin: "0", fontWeight: 400 }}>
           References available on request

@@ -330,8 +330,6 @@ export const CVPreview = ({
           style={{
             width: "210mm",
             minHeight: "297mm",
-            maxHeight: "297mm",
-            overflow: "hidden",
             transform: "scale(0.5)",
             transformOrigin: "top left",
             marginBottom: "-148.5mm",
