@@ -7,7 +7,7 @@ interface StandardTemplateProps {
 }
 
 export const StandardTemplate = ({ data, theme }: StandardTemplateProps) => {
-  const { personal, skills, experience, education, projects } = data;
+  const { personal, skills, experience, education, training, projects } = data;
 
 
   return (
@@ -97,6 +97,31 @@ export const StandardTemplate = ({ data, theme }: StandardTemplateProps) => {
           <div className={styles.sectionTitle}>Education</div>
           {education.map((item, index) => (
             <div key={`edu-${index}`} className={styles.item}>
+              <div className={styles.itemHeader}>
+                <span>{item.qualification}</span>
+                <span>
+                  {item.startDate} – {item.endDate}
+                </span>
+              </div>
+              <div className={styles.itemSub}>{item.institution}</div>
+              {item.details && item.details.length > 0 && (
+                <ul className={styles.bullets}>
+                  {item.details.map((detail, di) => (
+                    <li key={di}>{detail}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </section>
+      )}
+
+      {/* 5b. Training */}
+      {training.length > 0 && (
+        <section className={styles.section}>
+          <div className={styles.sectionTitle}>Training</div>
+          {training.map((item, index) => (
+            <div key={`trn-${index}`} className={styles.item}>
               <div className={styles.itemHeader}>
                 <span>{item.qualification}</span>
                 <span>

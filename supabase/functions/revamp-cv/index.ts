@@ -123,7 +123,8 @@ MANDATORY SECTION ORDER (use only sections present in the uploaded CV, in this o
 - Personal Profile / Professional Summary
 - Key Skills
 - Employment History / Work Experience
-- Education & Qualifications
+- Education (formal qualifications, degrees, diplomas)
+- Training (professional training, courses, certifications, CPD)
 - Additional Information (if applicable)
 - References (always last — see rule below)
 
