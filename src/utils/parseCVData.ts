@@ -212,6 +212,36 @@ const parseProjects = (section: RawSection | undefined): ProjectItem[] => {
   return items;
 };
 
+/**
+ * Parse a date string like "Jan 2020", "2020", "Present", "Current" into a
+ * comparable timestamp. "Present"/"Current" returns Infinity so it sorts first
+ * in reverse-chronological order.
+ */
+const parseDateToTimestamp = (dateStr: string): number => {
+  if (!dateStr) return -Infinity;
+  const normalized = dateStr.trim().toLowerCase();
+  if (normalized === "present" || normalized === "current") return Infinity;
+
+  const monthYear = dateStr.match(/(\w+)\s+(\d{4})/);
+  if (monthYear) {
+    const d = new Date(`${monthYear[1]} 1, ${monthYear[2]}`);
+    return isNaN(d.getTime()) ? -Infinity : d.getTime();
+  }
+
+  const yearOnly = dateStr.match(/(\d{4})/);
+  if (yearOnly) return new Date(`Jan 1, ${yearOnly[1]}`).getTime();
+
+  return -Infinity;
+};
+
+/** Sort items in reverse chronological order by endDate then startDate */
+const sortReverseChronological = <T extends { endDate: string; startDate: string }>(items: T[]): T[] =>
+  [...items].sort((a, b) => {
+    const endDiff = parseDateToTimestamp(b.endDate) - parseDateToTimestamp(a.endDate);
+    if (endDiff !== 0) return endDiff;
+    return parseDateToTimestamp(b.startDate) - parseDateToTimestamp(a.startDate);
+  });
+
 export const parseCVDataFromMarkdown = (
   markdown: string,
   header?: { name?: string; role?: string; email?: string; phone?: string; city?: string; linkedin?: string; portfolio?: string }
@@ -250,8 +280,8 @@ export const parseCVDataFromMarkdown = (
       summary,
     },
     skills,
-    experience: parseExperience(experienceSection),
-    education: parseEducation(educationSection),
+    experience: sortReverseChronological(parseExperience(experienceSection)),
+    education: sortReverseChronological(parseEducation(educationSection)),
     projects,
   };
 };

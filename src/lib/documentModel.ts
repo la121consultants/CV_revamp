@@ -110,6 +110,63 @@ const sectionOrder = [
   "references",
 ];
 
+/**
+ * Parse a date string like "Jan 2020", "2020", "Present" into a comparable
+ * timestamp. "Present"/"Current" returns Infinity (sorts first in reverse-chrono).
+ */
+const parseDateStr = (dateStr: string): number => {
+  if (!dateStr) return -Infinity;
+  const n = dateStr.trim().toLowerCase();
+  if (n === "present" || n === "current") return Infinity;
+  const my = dateStr.match(/(\w+)\s+(\d{4})/);
+  if (my) { const d = new Date(`${my[1]} 1, ${my[2]}`); return isNaN(d.getTime()) ? -Infinity : d.getTime(); }
+  const yo = dateStr.match(/(\d{4})/);
+  return yo ? new Date(`Jan 1, ${yo[1]}`).getTime() : -Infinity;
+};
+
+/** Sort experience bullet groups within a section in reverse chronological order */
+const sortExperienceBullets = (section: DocumentSection): DocumentSection => {
+  // Each "role block" in a section is: paragraph lines for role/company/dates, then bullets
+  // The section as-is from the AI should already be ordered, but we enforce it here.
+  // We look for date patterns in paragraphs to identify role boundaries and sort them.
+  const dateRangeRegex = /(\w+\s+\d{4}\s*[–—-]\s*(?:\w+\s+\d{4}|Present|Current)|\d{4}\s*[–—-]\s*(?:\d{4}|Present|Current))/i;
+
+  type RoleBlock = { paragraphs: string[]; bullets: string[]; endTimestamp: number; startTimestamp: number };
+  const blocks: RoleBlock[] = [];
+  let current: RoleBlock | null = null;
+
+  for (const p of section.paragraphs) {
+    const match = p.match(dateRangeRegex);
+    if (match) {
+      if (current) blocks.push(current);
+      const dates = match[1].split(/[–—-]/).map(d => d.trim());
+      current = { paragraphs: [p], bullets: [], endTimestamp: parseDateStr(dates[1] || ""), startTimestamp: parseDateStr(dates[0] || "") };
+    } else if (current) {
+      current.paragraphs.push(p);
+    } else {
+      current = { paragraphs: [p], bullets: [], endTimestamp: -Infinity, startTimestamp: -Infinity };
+    }
+  }
+  for (const b of section.bullets) {
+    if (current) current.bullets.push(b);
+    else { current = { paragraphs: [], bullets: [b], endTimestamp: -Infinity, startTimestamp: -Infinity }; }
+  }
+  if (current) blocks.push(current);
+
+  if (blocks.length <= 1) return section;
+
+  blocks.sort((a, b) => {
+    const diff = b.endTimestamp - a.endTimestamp;
+    return diff !== 0 ? diff : b.startTimestamp - a.startTimestamp;
+  });
+
+  return {
+    title: section.title,
+    paragraphs: blocks.flatMap(bl => bl.paragraphs),
+    bullets: blocks.flatMap(bl => bl.bullets),
+  };
+};
+
 const normalizeTitle = (title: string) =>
   title
     .toLowerCase()
@@ -123,12 +180,14 @@ const orderSections = (sections: DocumentSection[], header?: DocumentHeader) => 
     sectionMap.set(normalizeTitle(section.title), section);
   });
 
+  const experienceKeys = new Set(["work experience", "education"]);
   const ordered: DocumentSection[] = [];
   sectionOrder.forEach((key) => {
     if (key === "references") return; // handle references at the end
     const found = sectionMap.get(key);
     if (found) {
-      ordered.push(found);
+      // Sort experience & education blocks in reverse chronological order
+      ordered.push(experienceKeys.has(key) ? sortExperienceBullets(found) : found);
     }
   });
 
