@@ -125,26 +125,7 @@ const orderSections = (sections: DocumentSection[], header?: DocumentHeader) => 
 
   const ordered: DocumentSection[] = [];
   sectionOrder.forEach((key) => {
-    if (key === "references") {
-      const existing = sectionMap.get(key);
-      if (existing) {
-        if (existing.paragraphs.length === 0 && existing.bullets.length === 0) {
-          ordered.push({
-            ...existing,
-            paragraphs: ["Available on request."],
-          });
-        } else {
-          ordered.push(existing);
-        }
-      } else {
-        ordered.push({
-          title: "References",
-          paragraphs: ["Available on request."],
-          bullets: [],
-        });
-      }
-      return;
-    }
+    if (key === "references") return; // handle references at the end
     const found = sectionMap.get(key);
     if (found) {
       ordered.push(found);
@@ -152,11 +133,19 @@ const orderSections = (sections: DocumentSection[], header?: DocumentHeader) => 
   });
 
   const usedTitles = new Set(ordered.map((section) => normalizeTitle(section.title)));
+  usedTitles.add("references"); // exclude references from unordered pass
   sections.forEach((section) => {
     const normalized = normalizeTitle(section.title);
     if (!usedTitles.has(normalized)) {
       ordered.push(section);
     }
+  });
+
+  // Always add References as the final section with exact standard text
+  ordered.push({
+    title: "References",
+    paragraphs: ["References available on request."],
+    bullets: [],
   });
 
   return ordered;

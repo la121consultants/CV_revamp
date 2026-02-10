@@ -36,49 +36,58 @@ const formatHeading = (text: string, style?: string) => {
 
 const createDocumentXml = (model: DocumentModel) => {
   const paragraphs: string[] = [];
-  const pushParagraph = (text: string) => {
-    paragraphs.push(`<w:p><w:r><w:t>${xmlEscape(text)}</w:t></w:r></w:p>`);
+  const style = model.style ?? "standard";
+
+  const pushParagraph = (text: string, opts?: { bold?: boolean; size?: number; alignment?: string; spacing?: number }) => {
+    const sz = opts?.size ?? 22; // 11pt default (half-points)
+    const bold = opts?.bold ? "<w:b/>" : "";
+    const jc = opts?.alignment ? `<w:jc w:val="${opts.alignment}"/>` : "";
+    const spacingAfter = opts?.spacing ?? 120;
+    paragraphs.push(
+      `<w:p><w:pPr>${jc}<w:spacing w:after="${spacingAfter}" w:line="276" w:lineRule="auto"/></w:pPr><w:r><w:rPr>${bold}<w:sz w:val="${sz}"/><w:szCs w:val="${sz}"/><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/></w:rPr><w:t xml:space="preserve">${xmlEscape(text)}</w:t></w:r></w:p>`
+    );
   };
 
   const pushHeading = (text: string) => {
     paragraphs.push(
-      `<w:p><w:pPr><w:pStyle w:val="Heading2" /></w:pPr><w:r><w:t>${xmlEscape(
-        text
-      )}</w:t></w:r></w:p>`
+      `<w:p><w:pPr><w:spacing w:before="240" w:after="80" w:line="276" w:lineRule="auto"/><w:pBdr><w:bottom w:val="single" w:sz="4" w:space="1" w:color="999999"/></w:pBdr></w:pPr><w:r><w:rPr><w:b/><w:sz w:val="24"/><w:szCs w:val="24"/><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/><w:color w:val="333333"/></w:rPr><w:t>${xmlEscape(text)}</w:t></w:r></w:p>`
+    );
+  };
+
+  const pushBullet = (text: string) => {
+    paragraphs.push(
+      `<w:p><w:pPr><w:spacing w:after="60" w:line="276" w:lineRule="auto"/><w:ind w:left="360" w:hanging="180"/></w:pPr><w:r><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/></w:rPr><w:t xml:space="preserve">${xmlEscape("• " + text)}</w:t></w:r></w:p>`
     );
   };
 
   if (model.kind === "cv" && model.header) {
-    const nameLine = model.header.name;
-    const phoneLine = model.header.phone;
-    const emailLine = model.header.email;
-    const roleLine = model.header.role;
-    pushParagraph(model.style === "signature" ? nameLine.toUpperCase() : nameLine);
-    pushParagraph(phoneLine);
-    pushParagraph(emailLine);
-    pushParagraph(roleLine);
+    const nameLine = style === "signature" ? model.header.name.toUpperCase() : model.header.name;
+    pushParagraph(nameLine, { bold: true, size: style === "signature" ? 36 : style === "aesthetic" ? 34 : 30, alignment: "center", spacing: 40 });
+    pushParagraph(`${model.header.phone}  |  ${model.header.email}`, { size: 20, alignment: "center", spacing: 40 });
+    pushParagraph(model.header.role, { bold: true, size: 24, alignment: "center", spacing: 200 });
   } else {
-    pushParagraph(model.title);
+    pushParagraph(model.title, { bold: true, size: 28, alignment: "center", spacing: 200 });
   }
 
   if (model.kind === "coverLetter" && model.coverLetter) {
     const { dateLine, greeting, paragraphs: body, signOff, signature } = model.coverLetter;
-    [dateLine, greeting, ...body, signOff, signature].filter(Boolean).forEach(pushParagraph);
+    [dateLine, greeting, ...body, signOff, signature].filter(Boolean).forEach((t) => pushParagraph(t));
   } else {
     model.sections.forEach((section) => {
-      pushHeading(formatHeading(section.title, model.style));
-      section.paragraphs.forEach(pushParagraph);
-      section.bullets.forEach((bullet) => pushParagraph(`• ${bullet}`));
+      pushHeading(formatHeading(section.title, style));
+      section.paragraphs.forEach((p) => pushParagraph(p));
+      section.bullets.forEach((bullet) => pushBullet(bullet));
     });
   }
 
+  // A4 page size: 11906 twips wide × 16838 twips tall, 20mm margins ≈ 1134 twips
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
   <w:body>
     ${paragraphs.join("")}
     <w:sectPr>
-      <w:pgSz w:w="12240" w:h="15840" />
-      <w:pgMar w:top="720" w:right="720" w:bottom="720" w:left="720" w:header="720" w:footer="720" w:gutter="0" />
+      <w:pgSz w:w="11906" w:h="16838" />
+      <w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="720" w:footer="720" w:gutter="0" />
     </w:sectPr>
   </w:body>
 </w:document>`;
@@ -209,15 +218,16 @@ export const renderDocx = async (model: DocumentModel): Promise<Blob> => {
 };
 
 export const renderPdf = (model: DocumentModel): Blob => {
-  const pageWidth = 612;
-  const pageHeight = 792;
-  const margin = 54;
-  const maxChars = 90;
+  // A4 in points: 595 × 842
+  const pageWidth = 595;
+  const pageHeight = 842;
+  const margin = 57; // ~20mm
+  const maxChars = 85;
   const style = model.style ?? "standard";
   const styleConfig = {
-    standard: { nameSize: 18, roleSize: 12, headingSize: 12, bodySize: 11, lineSpacing: 15 },
-    aesthetic: { nameSize: 20, roleSize: 12, headingSize: 13, bodySize: 11, lineSpacing: 16 },
-    signature: { nameSize: 22, roleSize: 13, headingSize: 13, bodySize: 11, lineSpacing: 16 },
+    standard: { nameSize: 16, roleSize: 12, headingSize: 12, bodySize: 10.5, lineSpacing: 14, bulletIndent: 12 },
+    aesthetic: { nameSize: 18, roleSize: 12, headingSize: 12, bodySize: 10.5, lineSpacing: 14, bulletIndent: 12 },
+    signature: { nameSize: 20, roleSize: 13, headingSize: 12, bodySize: 10.5, lineSpacing: 14, bulletIndent: 12 },
   }[style];
 
   type PdfLine = { text: string; size: number; spacing: number };
@@ -231,29 +241,30 @@ export const renderPdf = (model: DocumentModel): Blob => {
 
   if (model.kind === "cv" && model.header) {
     const nameLine = style === "signature" ? model.header.name.toUpperCase() : model.header.name;
-    pushLine(nameLine, styleConfig.nameSize, styleConfig.lineSpacing + 4);
-    pushLine(model.header.phone, styleConfig.bodySize, styleConfig.lineSpacing);
-    pushLine(model.header.email, styleConfig.bodySize, styleConfig.lineSpacing);
-    pushLine(model.header.role, styleConfig.roleSize, styleConfig.lineSpacing);
+    pushLine(nameLine, styleConfig.nameSize, styleConfig.lineSpacing + 6);
+    pushLine(`${model.header.phone}  |  ${model.header.email}`, styleConfig.bodySize, styleConfig.lineSpacing);
+    pushLine(model.header.role, styleConfig.roleSize, styleConfig.lineSpacing + 4);
+    lines.push({ text: "", size: 1, spacing: 8 }); // spacer
   } else {
-    pushLine(model.title, 18, 22);
+    pushLine(model.title, 16, 20);
   }
 
   if (model.kind === "coverLetter" && model.coverLetter) {
     const { dateLine, greeting, paragraphs, signOff, signature } = model.coverLetter;
-    [dateLine, greeting].forEach((line) => pushLine(line, 12, 16));
-    paragraphs.forEach((paragraph) => pushLine(paragraph, 12, 16));
-    pushLine(signOff, 12, 16);
-    if (signature) pushLine(signature, 12, 16);
+    [dateLine, greeting].forEach((line) => pushLine(line, 11, 15));
+    paragraphs.forEach((paragraph) => pushLine(paragraph, 11, 15));
+    pushLine(signOff, 11, 15);
+    if (signature) pushLine(signature, 11, 15);
   } else {
     model.sections.forEach((section) => {
+      lines.push({ text: "", size: 1, spacing: 6 }); // section gap
       const headingText = formatHeading(section.title, style);
-      pushLine(headingText, styleConfig.headingSize, styleConfig.lineSpacing + 3);
+      pushLine(headingText, styleConfig.headingSize, styleConfig.lineSpacing + 4);
       section.paragraphs.forEach((paragraph) =>
         pushLine(paragraph, styleConfig.bodySize, styleConfig.lineSpacing)
       );
       section.bullets.forEach((bullet) =>
-        pushLine(`• ${bullet}`, styleConfig.bodySize, styleConfig.lineSpacing)
+        pushLine(`  • ${bullet}`, styleConfig.bodySize, styleConfig.lineSpacing)
       );
     });
   }
