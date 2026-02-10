@@ -58,7 +58,7 @@ export const Hero = ({ onGetStarted }: HeroProps) => {
             className="text-lg md:text-xl text-white/70 mb-8 max-w-2xl mx-auto text-balance leading-relaxed"
           >
             Whether you're a graduate, career changer, returning parent, or senior leader — 
-            TVV builds ATS-optimised, recruiter-ready CVs tailored to your target role in minutes.
+            LA121 CV Revamp Tool builds ATS-optimised, recruiter-ready CVs tailored to your target role in minutes.
           </motion.p>
 
           {/* Social proof */}

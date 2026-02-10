@@ -19,10 +19,10 @@ export const Header = () => {
     >
       <div className="container mx-auto flex items-center justify-between">
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
-          <img src={logo} alt="TVV" className="h-10 w-auto" />
+          <img src={logo} alt="LA121 CV Revamp Tool" className="h-10 w-auto" />
           <div>
-            <h1 className="text-lg font-display font-bold text-foreground tracking-tight">TVV</h1>
-            <p className="text-[10px] text-muted-foreground font-medium tracking-wider uppercase">Career Platform</p>
+            <h1 className="text-base font-display font-bold text-foreground tracking-tight leading-tight">LA121 CV Revamp</h1>
+            <p className="text-[10px] text-muted-foreground font-medium tracking-wider uppercase">By LA121 Consultants</p>
           </div>
         </div>
         
