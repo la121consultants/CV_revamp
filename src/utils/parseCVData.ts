@@ -3,6 +3,15 @@ import type { CVData, ExperienceItem, EducationItem, ProjectItem } from "@/types
 /**
  * Parse generated CV markdown text into structured CVData for template rendering.
  * Ensures all three templates (Standard, Aesthetic, Signature) show the same content.
+ *
+ * GLOBAL RULE: All 7 mandatory sections must always be present:
+ * 1. Personal Details / Header
+ * 2. Professional Summary
+ * 3. Key Skills
+ * 4. Work Experience
+ * 5. Education
+ * 6. Projects
+ * 7. References
  */
 
 const headingRegex = /^#{1,6}\s+(.*)$/;
@@ -21,7 +30,27 @@ interface RawSection {
   title: string;
   paragraphs: string[];
   bullets: string[];
+  level: number; // heading level: 1-6 for markdown headings, 99 for heuristic headings
 }
+
+/** Known top-level CV section keywords */
+const TOP_LEVEL_KEYS = [
+  "professional summary", "summary", "profile", "about",
+  "skill", "competenc", "expertise", "key skills",
+  "experience", "work history", "employment", "career history", "work experience",
+  "education", "qualification", "academic", "training",
+  "project", "placement", "internship",
+  "references", "hobbies", "interests", "certifications", "achievements",
+  "personal details", "contact details", "contact information", "contact",
+  "personal information", "personal", "details",
+];
+
+const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, "").trim();
+
+const isTopLevelSection = (title: string): boolean => {
+  const n = norm(title);
+  return TOP_LEVEL_KEYS.some((k) => n.includes(k) || n === k);
+};
 
 const parseSections = (text: string): RawSection[] => {
   const lines = text.split(/\r?\n/);
@@ -32,10 +61,22 @@ const parseSections = (text: string): RawSection[] => {
     const trimmed = lines[i].trim();
     if (!trimmed) continue;
 
+    // Check for markdown heading
     const headingMatch = trimmed.match(headingRegex);
     if (headingMatch) {
-      if (current) sections.push(current);
-      current = { title: clean(headingMatch[1]), paragraphs: [], bullets: [] };
+      const level = (trimmed.match(/^(#{1,6})/)![1]).length;
+      const title = clean(headingMatch[1]);
+
+      // Only start a new section for top-level headings OR level <= 2
+      // Sub-headings (###, ####) within experience/education are treated as content
+      if (level <= 2 || isTopLevelSection(title)) {
+        if (current) sections.push(current);
+        current = { title, paragraphs: [], bullets: [], level };
+      } else {
+        // Sub-heading: treat as content within current section
+        if (!current) current = { title: "Professional Summary", paragraphs: [], bullets: [], level: 2 };
+        current.paragraphs.push(clean(headingMatch[1]));
+      }
       continue;
     }
 
@@ -45,13 +86,13 @@ const parseSections = (text: string): RawSection[] => {
       (i + 1 >= lines.length || lines[i + 1].trim() === "") &&
       /^[A-Z][A-Za-z0-9 \-&,/()]+$/.test(clean(trimmed));
 
-    if (looksLikeHeading && clean(trimmed).length > 2) {
+    if (looksLikeHeading && clean(trimmed).length > 2 && isTopLevelSection(clean(trimmed))) {
       if (current) sections.push(current);
-      current = { title: clean(trimmed), paragraphs: [], bullets: [] };
+      current = { title: clean(trimmed), paragraphs: [], bullets: [], level: 99 };
       continue;
     }
 
-    if (!current) current = { title: "Professional Summary", paragraphs: [], bullets: [] };
+    if (!current) current = { title: "Professional Summary", paragraphs: [], bullets: [], level: 2 };
 
     const bulletMatch = trimmed.match(bulletRegex);
     if (bulletMatch) {
@@ -64,8 +105,6 @@ const parseSections = (text: string): RawSection[] => {
   return sections;
 };
 
-const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, "").trim();
-
 /** Titles that represent repeated personal/contact detail blocks to be excluded */
 const personalDetailTitles = new Set([
   "personal details", "contact details", "contact information", "contact",
@@ -75,9 +114,29 @@ const personalDetailTitles = new Set([
 const findSection = (sections: RawSection[], ...keywords: string[]) =>
   sections.find((s) => {
     const n = norm(s.title);
-    if (personalDetailTitles.has(n)) return false; // skip personal details sections
+    if (personalDetailTitles.has(n)) return false;
     return keywords.some((k) => n.includes(k));
   });
+
+/** Collect ALL sections matching keyword (in case content is fragmented across multiple sections) */
+const findAllSections = (sections: RawSection[], ...keywords: string[]): RawSection | undefined => {
+  const matches = sections.filter((s) => {
+    const n = norm(s.title);
+    if (personalDetailTitles.has(n)) return false;
+    return keywords.some((k) => n.includes(k));
+  });
+  if (matches.length === 0) return undefined;
+  // Merge all matches into one
+  return {
+    title: matches[0].title,
+    paragraphs: matches.flatMap((m) => m.paragraphs),
+    bullets: matches.flatMap((m) => m.bullets),
+    level: matches[0].level,
+  };
+};
+
+// Broad date-range regex
+const dateRangeRegex = /(\w+\s+\d{4}\s*[–—\-]\s*(?:\w+\s+\d{4}|Present|Current)|\d{4}\s*[–—\-]\s*(?:\d{4}|Present|Current))/i;
 
 const parseExperience = (section: RawSection | undefined): ExperienceItem[] => {
   if (!section) return [];
@@ -86,14 +145,10 @@ const parseExperience = (section: RawSection | undefined): ExperienceItem[] => {
 
   const allLines = [...section.paragraphs, ...section.bullets.map((b) => `• ${b}`)];
 
-  // Broad date-range regex: matches "Month Year – Month Year/Present" or "Year – Year/Present"
-  const dateRangeRegex = /(\w+\s+\d{4}\s*[–—\-]\s*(?:\w+\s+\d{4}|Present|Current)|\d{4}\s*[–—\-]\s*(?:\d{4}|Present|Current))/i;
-
   for (const line of allLines) {
-    // Check if this line contains a date range anywhere
     const dateInLine = line.match(dateRangeRegex);
 
-    // Try the original pattern: "Role | dates"
+    // Pattern: "Role | dates" or "Role – dates"
     const dateMatch = line.match(/(.+?)\s*[|–—-]\s*(\w+\s*\d{4}\s*[–—-]\s*(?:\w+\s*\d{4}|Present|Current))/i);
     if (dateMatch) {
       if (currentItem?.role) items.push(buildExperienceItem(currentItem));
@@ -102,7 +157,7 @@ const parseExperience = (section: RawSection | undefined): ExperienceItem[] => {
       continue;
     }
 
-    // Line is purely a date range (dates on their own line)
+    // Line is purely a date range
     if (dateInLine && clean(line.replace(dateRangeRegex, "")).length < 5) {
       const dates = dateInLine[1].split(/[–—-]/).map((d) => d.trim());
       if (currentItem) {
@@ -112,7 +167,7 @@ const parseExperience = (section: RawSection | undefined): ExperienceItem[] => {
       continue;
     }
 
-    // Company line (usually follows role)
+    // Company line (follows role)
     if (currentItem && !currentItem.company && !line.startsWith("•")) {
       currentItem.company = clean(line);
       continue;
@@ -124,7 +179,7 @@ const parseExperience = (section: RawSection | undefined): ExperienceItem[] => {
       continue;
     }
 
-    // Fallback: treat as a new role if it looks like one (short non-bullet line)
+    // Fallback: treat as a new role if short non-bullet line
     if (!line.startsWith("•") && line.length < 100 && line.length > 3) {
       if (currentItem?.role) items.push(buildExperienceItem(currentItem));
       currentItem = { role: clean(line), startDate: "", endDate: "", bullets: [] };
@@ -132,24 +187,18 @@ const parseExperience = (section: RawSection | undefined): ExperienceItem[] => {
   }
   if (currentItem?.role) items.push(buildExperienceItem(currentItem));
 
-  // Fallback: if structured parsing yielded nothing, create entries from raw content
+  // Fallback: create entries from raw content
   if (items.length === 0) {
-    // Try paragraphs as role titles, bullets as descriptions
     if (section.paragraphs.length > 0) {
       for (const p of section.paragraphs) {
         items.push({ company: "", role: clean(p), location: "", startDate: "", endDate: "", bullets: [] });
       }
-      // Attach all bullets to the first item
       if (items.length > 0 && section.bullets.length > 0) {
         items[0].bullets = section.bullets.map(b => clean(b));
       }
     } else if (section.bullets.length > 0) {
       items.push({
-        company: "",
-        role: section.title,
-        startDate: "",
-        endDate: "",
-        location: "",
+        company: "", role: section.title, startDate: "", endDate: "", location: "",
         bullets: section.bullets.map(b => clean(b)),
       });
     }
@@ -170,7 +219,6 @@ const buildExperienceItem = (partial: Partial<ExperienceItem>): ExperienceItem =
 const parseEducation = (section: RawSection | undefined): EducationItem[] => {
   if (!section) return [];
   const items: EducationItem[] = [];
-
   const allText = [...section.paragraphs, ...section.bullets];
   let current: Partial<EducationItem> | null = null;
 
@@ -181,10 +229,7 @@ const parseEducation = (section: RawSection | undefined): EducationItem[] => {
       const dates = dateMatch ? dateMatch[1].split(/[–—-]/).map((d) => d.trim()) : [];
       current = {
         qualification: clean(line.replace(/\d{4}\s*[–—-]\s*(?:\d{4}|Present|Current)/i, "").trim()) || clean(line),
-        institution: "",
-        startDate: dates[0] || "",
-        endDate: dates[1] || "",
-        details: [],
+        institution: "", startDate: dates[0] || "", endDate: dates[1] || "", details: [],
       };
     } else if (current) {
       if (!current.institution) {
@@ -197,7 +242,7 @@ const parseEducation = (section: RawSection | undefined): EducationItem[] => {
   }
   if (current?.qualification) items.push(buildEducationItem(current));
 
-  // Fallback: if structured parsing yielded nothing, create entries from raw content
+  // Fallback
   if (items.length === 0) {
     if (section.paragraphs.length > 0) {
       for (const p of section.paragraphs) {
@@ -228,7 +273,6 @@ const parseProjects = (section: RawSection | undefined): ProjectItem[] => {
   let current: Partial<ProjectItem> | null = null;
 
   for (const line of allLines) {
-    // Short lines are likely project titles
     if (line.length < 80 && !line.startsWith("•")) {
       if (current?.title) items.push({ title: current.title, description: current.description || "", contribution: current.contribution });
       current = { title: clean(line), description: "" };
@@ -250,29 +294,20 @@ const parseProjects = (section: RawSection | undefined): ProjectItem[] => {
   return items;
 };
 
-/**
- * Parse a date string like "Jan 2020", "2020", "Present", "Current" into a
- * comparable timestamp. "Present"/"Current" returns Infinity so it sorts first
- * in reverse-chronological order.
- */
 const parseDateToTimestamp = (dateStr: string): number => {
   if (!dateStr) return -Infinity;
   const normalized = dateStr.trim().toLowerCase();
   if (normalized === "present" || normalized === "current") return Infinity;
-
   const monthYear = dateStr.match(/(\w+)\s+(\d{4})/);
   if (monthYear) {
     const d = new Date(`${monthYear[1]} 1, ${monthYear[2]}`);
     return isNaN(d.getTime()) ? -Infinity : d.getTime();
   }
-
   const yearOnly = dateStr.match(/(\d{4})/);
   if (yearOnly) return new Date(`Jan 1, ${yearOnly[1]}`).getTime();
-
   return -Infinity;
 };
 
-/** Sort items in reverse chronological order by endDate then startDate */
 const sortReverseChronological = <T extends { endDate: string; startDate: string }>(items: T[]): T[] =>
   [...items].sort((a, b) => {
     const endDiff = parseDateToTimestamp(b.endDate) - parseDateToTimestamp(a.endDate);
@@ -287,7 +322,7 @@ export const parseCVDataFromMarkdown = (
   const sections = parseSections(markdown);
   const [firstName = "", lastName = ""] = (header?.name || "").split(/\s+/, 2);
 
-  /** Detect lines that are just personal details (name + phone/email) embedded in section content */
+  /** Detect lines that are just personal details */
   const isPersonalDetailLine = (line: string): boolean => {
     const l = line.toLowerCase();
     if (/@/.test(l) && /\d{5,}/.test(l.replace(/\s/g, ""))) return true;
@@ -306,11 +341,12 @@ export const parseCVDataFromMarkdown = (
     bullets: s.bullets.filter(b => !isPersonalDetailLine(b)),
   }));
 
+  // Use findAllSections for experience/education to handle fragmented content
   const summarySection = findSection(cleanedSections, "professional summary", "summary", "profile", "about");
   const skillsSection = findSection(cleanedSections, "skill", "competenc", "expertise");
-  const experienceSection = findSection(cleanedSections, "experience", "work history", "employment", "career history");
-  const educationSection = findSection(cleanedSections, "education", "qualification", "academic", "training");
-  const projectsSection = findSection(cleanedSections, "project", "placement", "internship");
+  const experienceSection = findAllSections(cleanedSections, "experience", "work history", "employment", "career history");
+  const educationSection = findAllSections(cleanedSections, "education", "qualification", "academic", "training");
+  const projectsSection = findAllSections(cleanedSections, "project", "placement", "internship");
 
   const summary = summarySection
     ? [...summarySection.paragraphs, ...summarySection.bullets].join(" ")
