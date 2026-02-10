@@ -259,7 +259,7 @@ export const parseCVDataFromMarkdown = (
   const summarySection = findSection(sections, "professional summary", "summary", "profile", "about");
   const skillsSection = findSection(sections, "skill", "competenc", "expertise");
   const experienceSection = findSection(sections, "experience", "work history", "employment", "career history");
-  const educationSection = findSection(sections, "education", "qualification", "academic");
+  const educationSection = findSection(sections, "education", "qualification", "academic", "training");
   const projectsSection = findSection(sections, "project", "placement", "internship");
 
   const summary = summarySection

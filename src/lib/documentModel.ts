@@ -195,28 +195,29 @@ const orderSections = (sections: DocumentSection[], header?: DocumentHeader) => 
 
   const filtered = sections.filter((s) => !isPersonalDetailContent(s));
 
-  const sectionMap = new Map<string, DocumentSection>();
-  filtered.forEach((section) => {
-    sectionMap.set(normalizeTitle(section.title), section);
-  });
-
   const experienceKeys = new Set(["work experience", "education"]);
   const ordered: DocumentSection[] = [];
+  const usedSections = new Set<DocumentSection>();
+
+  /** Fuzzy match: find the first filtered section whose normalised title contains the key */
+  const findByKey = (key: string): DocumentSection | undefined =>
+    filtered.find((s) => !usedSections.has(s) && normalizeTitle(s.title).includes(key));
+
   sectionOrder.forEach((key) => {
     if (key === "references") return;
-    const found = sectionMap.get(key);
+    const found = findByKey(key);
     if (found) {
+      usedSections.add(found);
       ordered.push(experienceKeys.has(key) ? sortExperienceBullets(found) : found);
     }
   });
 
-  const usedTitles = new Set(ordered.map((section) => normalizeTitle(section.title)));
-  usedTitles.add("references");
-  personalDetailTitles.forEach((t) => usedTitles.add(t));
   filtered.forEach((section) => {
-    const normalized = normalizeTitle(section.title);
-    if (!usedTitles.has(normalized)) {
-      ordered.push(section);
+    if (!usedSections.has(section)) {
+      const normalized = normalizeTitle(section.title);
+      if (normalized !== "references" && !personalDetailTitles.has(normalized)) {
+        ordered.push(section);
+      }
     }
   });
 

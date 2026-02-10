@@ -7,8 +7,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { buildDocumentModel } from "@/lib/documentModel";
-import type { CVStyle, DocumentHeader, DocumentModel } from "@/types";
+import { parseCVDataFromMarkdown } from "@/utils/parseCVData";
+import type { CVStyle, DocumentHeader } from "@/types";
+import type { CVData } from "@/types/cv";
 
 interface WordPreviewModalProps {
   open: boolean;
@@ -18,14 +19,16 @@ interface WordPreviewModalProps {
   cvStyle: CVStyle;
 }
 
-const formatHeading = (text: string, style?: string) => {
-  if (style === "aesthetic") return text.replace(/\b\w/g, (c) => c.toUpperCase());
-  return text.toUpperCase();
-};
-
-const RenderPage = ({ model }: { model: DocumentModel }) => {
-  const style = model.style ?? "standard";
+const RenderPage = ({ data, style }: { data: CVData; style: CVStyle }) => {
   const fontFamily = "Calibri, 'Segoe UI', Arial, Helvetica, sans-serif";
+  const { personal, skills, experience, education, projects } = data;
+
+  const formatHeading = (text: string) => {
+    if (style === "aesthetic") return text.replace(/\b\w/g, (c) => c.toUpperCase());
+    return text.toUpperCase();
+  };
+
+  const contactParts = [personal.email, personal.phone, personal.location, personal.linkedin].filter(Boolean);
 
   return (
     <div
@@ -43,44 +46,40 @@ const RenderPage = ({ model }: { model: DocumentModel }) => {
       }}
     >
       {/* Header */}
-      {model.header && (
+      <div
+        style={{
+          textAlign: "center",
+          marginBottom: "18pt",
+          paddingBottom: "12pt",
+          borderBottom: "1px solid #999",
+        }}
+      >
         <div
           style={{
-            textAlign: "center",
-            marginBottom: "18pt",
-            paddingBottom: "12pt",
-            borderBottom: "1px solid #999",
+            fontSize: style === "signature" ? "18pt" : style === "aesthetic" ? "17pt" : "15pt",
+            fontWeight: 700,
+            letterSpacing: style === "signature" ? "1px" : "0",
+            textTransform: style === "signature" ? "uppercase" : "none",
+            marginBottom: "4pt",
           }}
         >
-          <div
-            style={{
-              fontSize: style === "signature" ? "18pt" : style === "aesthetic" ? "17pt" : "15pt",
-              fontWeight: 700,
-              letterSpacing: style === "signature" ? "1px" : "0",
-              textTransform: style === "signature" ? "uppercase" : "none",
-              marginBottom: "4pt",
-            }}
-          >
-            {model.header.name}
-          </div>
-          <div style={{ fontSize: "10pt", marginBottom: "2pt", color: "#444" }}>
-            {[model.header.email, model.header.phone, model.header.location, model.header.linkedin].filter(Boolean).join("  |  ")}
-          </div>
-          <div
-            style={{
-              fontSize: "12pt",
-              fontWeight: 600,
-              marginTop: "6pt",
-            }}
-          >
-            {model.header.role}
-          </div>
+          {personal.firstName} {personal.lastName}
         </div>
-      )}
+        {contactParts.length > 0 && (
+          <div style={{ fontSize: "10pt", marginBottom: "2pt", color: "#444" }}>
+            {contactParts.join("  |  ")}
+          </div>
+        )}
+        {personal.title && (
+          <div style={{ fontSize: "12pt", fontWeight: 600, marginTop: "6pt" }}>
+            {personal.title}
+          </div>
+        )}
+      </div>
 
-      {/* Sections */}
-      {model.sections.map((section, i) => (
-        <div key={i} style={{ marginBottom: "10pt" }}>
+      {/* Professional Summary */}
+      {personal.summary && (
+        <div style={{ marginBottom: "10pt" }}>
           <div
             style={{
               fontSize: "12pt",
@@ -90,24 +89,151 @@ const RenderPage = ({ model }: { model: DocumentModel }) => {
               borderBottom: "1px solid #ccc",
               paddingBottom: "3pt",
               marginBottom: "5pt",
-              marginTop: i > 0 ? "10pt" : "0",
               color: "#333",
             }}
           >
-            {formatHeading(section.title, style)}
+            {formatHeading("Professional Summary")}
           </div>
-          {section.paragraphs.map((p, j) => (
-            <p key={j} style={{ fontSize: "10.5pt", margin: "0 0 4pt 0", fontWeight: 400 }}>
-              {p}
-            </p>
-          ))}
-          {section.bullets.map((b, j) => (
-            <p key={`b-${j}`} style={{ fontSize: "10.5pt", margin: "0 0 3pt 18pt", fontWeight: 400 }}>
-              • {b}
+          <p style={{ fontSize: "10.5pt", margin: "0 0 4pt 0", fontWeight: 400 }}>
+            {personal.summary}
+          </p>
+        </div>
+      )}
+
+      {/* Key Skills */}
+      {skills.length > 0 && (
+        <div style={{ marginBottom: "10pt" }}>
+          <div
+            style={{
+              fontSize: "12pt",
+              fontWeight: 700,
+              textTransform: style === "aesthetic" ? "capitalize" : "uppercase",
+              letterSpacing: "0.5px",
+              borderBottom: "1px solid #ccc",
+              paddingBottom: "3pt",
+              marginBottom: "5pt",
+              color: "#333",
+            }}
+          >
+            {formatHeading("Key Skills")}
+          </div>
+          {skills.map((skill, i) => (
+            <p key={i} style={{ fontSize: "10.5pt", margin: "0 0 3pt 18pt", fontWeight: 400 }}>
+              • {skill.name}
             </p>
           ))}
         </div>
-      ))}
+      )}
+
+      {/* Work Experience */}
+      {experience.length > 0 && (
+        <div style={{ marginBottom: "10pt" }}>
+          <div
+            style={{
+              fontSize: "12pt",
+              fontWeight: 700,
+              textTransform: style === "aesthetic" ? "capitalize" : "uppercase",
+              letterSpacing: "0.5px",
+              borderBottom: "1px solid #ccc",
+              paddingBottom: "3pt",
+              marginBottom: "5pt",
+              color: "#333",
+            }}
+          >
+            {formatHeading("Work Experience")}
+          </div>
+          {experience.map((item, i) => (
+            <div key={i} style={{ marginBottom: "8pt" }}>
+              <p style={{ fontSize: "10.5pt", fontWeight: 700, margin: "0 0 2pt 0" }}>
+                {item.role} — {item.company}{item.location ? ` (${item.location})` : ""}
+              </p>
+              <p style={{ fontSize: "10pt", margin: "0 0 3pt 0", color: "#555" }}>
+                {item.startDate} – {item.endDate}
+              </p>
+              {item.bullets.map((b, j) => (
+                <p key={j} style={{ fontSize: "10.5pt", margin: "0 0 3pt 18pt", fontWeight: 400 }}>
+                  • {b}
+                </p>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Education */}
+      {education.length > 0 && (
+        <div style={{ marginBottom: "10pt" }}>
+          <div
+            style={{
+              fontSize: "12pt",
+              fontWeight: 700,
+              textTransform: style === "aesthetic" ? "capitalize" : "uppercase",
+              letterSpacing: "0.5px",
+              borderBottom: "1px solid #ccc",
+              paddingBottom: "3pt",
+              marginBottom: "5pt",
+              color: "#333",
+            }}
+          >
+            {formatHeading("Education")}
+          </div>
+          {education.map((item, i) => (
+            <div key={i} style={{ marginBottom: "6pt" }}>
+              <p style={{ fontSize: "10.5pt", fontWeight: 700, margin: "0 0 2pt 0" }}>
+                {item.qualification} — {item.institution}
+              </p>
+              {(item.startDate || item.endDate) && (
+                <p style={{ fontSize: "10pt", margin: "0 0 2pt 0", color: "#555" }}>
+                  {item.startDate} – {item.endDate}
+                </p>
+              )}
+              {item.details && item.details.map((d, j) => (
+                <p key={j} style={{ fontSize: "10.5pt", margin: "0 0 3pt 18pt", fontWeight: 400 }}>
+                  • {d}
+                </p>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Projects */}
+      {projects.length > 0 && (
+        <div style={{ marginBottom: "10pt" }}>
+          <div
+            style={{
+              fontSize: "12pt",
+              fontWeight: 700,
+              textTransform: style === "aesthetic" ? "capitalize" : "uppercase",
+              letterSpacing: "0.5px",
+              borderBottom: "1px solid #ccc",
+              paddingBottom: "3pt",
+              marginBottom: "5pt",
+              color: "#333",
+            }}
+          >
+            {formatHeading("Projects")}
+          </div>
+          {projects.map((project, i) => (
+            <div key={i} style={{ marginBottom: "6pt" }}>
+              <p style={{ fontSize: "10.5pt", fontWeight: 700, margin: "0 0 2pt 0" }}>
+                {project.title}
+              </p>
+              {project.description && (
+                <p style={{ fontSize: "10.5pt", margin: "0 0 2pt 0" }}>{project.description}</p>
+              )}
+              {project.contribution && (
+                <p style={{ fontSize: "10.5pt", margin: "0 0 2pt 0", fontStyle: "italic" }}>{project.contribution}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* References */}
+      <div style={{ marginTop: "14pt", fontSize: "10.5pt", fontWeight: 400 }}>
+        References available on request
+      </div>
     </div>
   );
 };
@@ -119,9 +245,17 @@ export const WordPreviewModal = ({
   header,
   cvStyle,
 }: WordPreviewModalProps) => {
-  const model = useMemo(
-    () => buildDocumentModel(content, "cv", header, cvStyle),
-    [content, header, cvStyle]
+  const data = useMemo(
+    () =>
+      parseCVDataFromMarkdown(content, {
+        name: header.name,
+        role: header.role,
+        email: header.email,
+        phone: header.phone,
+        city: header.location,
+        linkedin: header.linkedin,
+      }),
+    [content, header]
   );
 
   return (
@@ -146,13 +280,10 @@ export const WordPreviewModal = ({
 
         <div
           className="flex-1 overflow-auto"
-          style={{
-            background: "#e5e7eb",
-            padding: "32px 0",
-          }}
+          style={{ background: "#e5e7eb", padding: "32px 0" }}
         >
           <div style={{ width: "fit-content", margin: "0 auto" }}>
-            <RenderPage model={model} />
+            <RenderPage data={data} style={cvStyle} />
           </div>
         </div>
       </DialogContent>
