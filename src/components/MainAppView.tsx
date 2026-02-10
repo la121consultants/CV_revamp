@@ -76,7 +76,7 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
   const [outputType, setOutputType] = useState<OutputType>('both');
   const [output, setOutput] = useState<TailoredOutput | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [processingStage, setProcessingStage] = useState<'analyzing' | 'processing' | 'generating'>('analyzing');
+  const [progress, setProgress] = useState(0);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [cvStyle, setCvStyle] = useState<CVStyle>("standard");
@@ -304,17 +304,22 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
 
   const simulateProcessing = useCallback(async () => {
     setIsProcessing(true);
+    setProgress(0);
     
     // Save user submission to database
     await saveSubmission();
     
-    setProcessingStage('analyzing');
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    setProcessingStage('processing');
+    // Stage 1: Initialising (0-10%)
+    setProgress(5);
+    await new Promise(resolve => setTimeout(resolve, 600));
+    setProgress(10);
+
+    // Stage 2: Analysing (10-40%)
+    setProgress(15);
 
     try {
-      const { data, error } = await supabase.functions.invoke("revamp-cv", {
+      // Start the actual API call
+      const apiPromise = supabase.functions.invoke("revamp-cv", {
         body: {
           cvText: cvData?.content || "",
           jobTitle: jobDetails.title,
@@ -326,12 +331,29 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
         },
       });
 
+      // Simulate progress while waiting for API
+      const progressInterval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 85) {
+            clearInterval(progressInterval);
+            return 85;
+          }
+          // Slow down as we approach higher values
+          const increment = prev < 40 ? 3 : prev < 70 ? 2 : 1;
+          return Math.min(prev + increment, 85);
+        });
+      }, 400);
+
+      const { data, error } = await apiPromise;
+      clearInterval(progressInterval);
+
       if (error) {
         const msg = String(error.message || "").toLowerCase();
         if (msg.includes("usage limit") || msg.includes("402")) {
           setShowUpgradeModal(true);
           toast({ title: "Daily limit reached", description: "Upgrade to unlock unlimited CV revamps.", variant: "destructive" });
           setIsProcessing(false);
+          setProgress(0);
           return;
         }
         throw error;
@@ -342,13 +364,20 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
           setShowUpgradeModal(true);
           toast({ title: "Daily limit reached", description: "Upgrade to unlock unlimited CV revamps.", variant: "destructive" });
           setIsProcessing(false);
+          setProgress(0);
           return;
         }
         throw new Error(data.error);
       }
 
-      setProcessingStage('generating');
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Stage 4: Formatting (70-90%)
+      setProgress(90);
+      await new Promise(resolve => setTimeout(resolve, 400));
+
+      // Stage 5: Final checks (90-100%)
+      setProgress(95);
+      await new Promise(resolve => setTimeout(resolve, 300));
+      setProgress(100);
 
       const result: TailoredOutput = {
         cv: data?.cv || `# ${jobDetails.title}\n\nYour tailored CV content will appear here.`,
@@ -375,9 +404,12 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
         }
       }
 
+      // Brief pause to show "Document Ready!" at 100%
+      await new Promise(resolve => setTimeout(resolve, 800));
+
       toast({
         title: "Success!",
-        description: "Your tailored documents are ready.",
+        description: "Your document is ready. Please review or download.",
       });
     } catch (err: any) {
       console.error("CV generation error:", err);
@@ -388,6 +420,7 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
       });
     } finally {
       setIsProcessing(false);
+      setProgress(0);
     }
   }, [jobDetails.title, jobDetails.description, jobDetails.personSpec, jobDetails.linkedinUrl, userDetails, cvData, outputType]);
 
@@ -582,7 +615,7 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
               exit={{ opacity: 0 }}
               className="max-w-md mx-auto"
             >
-              <ProcessingStatus stage={processingStage} />
+              <ProcessingStatus progress={progress} />
             </motion.div>
           ) : output ? (
             <motion.div
