@@ -12,6 +12,7 @@ import { ProcessingStatus } from "./ProcessingStatus";
 import { CVModeSelector, type CVBuildMode } from "./CVModeSelector";
 import { GuidedCVBuilder } from "./GuidedCVBuilder";
 import { UpgradeModal } from "./UpgradeModal";
+import { SavedCVs } from "./SavedCVs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import type {
@@ -247,6 +248,10 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
   };
 
   const simulateProcessing = useCallback(async () => {
+    // Check usage limit BEFORE processing — upgrade modal only appears here
+    const allowed = await checkUsageLimit();
+    if (!allowed) return;
+
     setIsProcessing(true);
     
     // Save user submission to database
@@ -300,6 +305,26 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
       };
 
       setOutput(result);
+
+      // Save CV for logged-in users
+      if (user) {
+        try {
+          await supabase.from("saved_cvs").insert({
+            user_id: user.id,
+            job_title: jobDetails.title,
+            job_description: jobDetails.description || null,
+            cv_content: result.cv,
+            cover_letter_content: result.coverLetter || null,
+            output_type: outputType,
+            cv_style: cvStyle,
+          } as any);
+        } catch (saveErr) {
+          console.error("Error saving CV:", saveErr);
+        }
+      }
+
+      // Consume usage after successful generation
+      await consumeUsage();
       
       toast({
         title: "Success!",
@@ -710,6 +735,13 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
                     </p>
                   )}
                 </div>
+
+                {/* Saved CVs for logged-in users */}
+                {user && (
+                  <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
+                    <SavedCVs />
+                  </div>
+                )}
               </div>
             </motion.div>
           ) : buildMode === "revamp" ? (
