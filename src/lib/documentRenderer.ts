@@ -3,8 +3,20 @@ import type { DocumentModel } from "@/types";
 const xmlEscape = (text: string) =>
   text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
+/** Sanitise text for safe use inside a PDF Type1 font text stream.
+ *  Replaces common Unicode chars with ASCII equivalents so headings stay readable. */
+const sanitiseForPdf = (text: string) =>
+  text
+    .replace(/[\u2018\u2019\u201A]/g, "'")
+    .replace(/[\u201C\u201D\u201E]/g, '"')
+    .replace(/[\u2013\u2014]/g, "-")
+    .replace(/\u2026/g, "...")
+    .replace(/\u2022/g, "*")
+    .replace(/[\u00A0]/g, " ")
+    .replace(/[^\x20-\x7E]/g, ""); // strip remaining non-ASCII
+
 const textEscape = (text: string) =>
-  text.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+  sanitiseForPdf(text).replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
 
 const wrapText = (text: string, maxChars: number) => {
   if (text.length <= maxChars) return [text];

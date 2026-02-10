@@ -231,8 +231,24 @@ const RenderPage = ({ data, style }: { data: CVData; style: CVStyle }) => {
       )}
 
       {/* References */}
-      <div style={{ marginTop: "14pt", fontSize: "10.5pt", fontWeight: 400 }}>
-        References available on request
+      <div style={{ marginBottom: "10pt" }}>
+        <div
+          style={{
+            fontSize: "12pt",
+            fontWeight: 700,
+            textTransform: style === "aesthetic" ? "capitalize" : "uppercase",
+            letterSpacing: "0.5px",
+            borderBottom: "1px solid #ccc",
+            paddingBottom: "3pt",
+            marginBottom: "5pt",
+            color: "#333",
+          }}
+        >
+          {formatHeading("References")}
+        </div>
+        <p style={{ fontSize: "10.5pt", margin: "0", fontWeight: 400 }}>
+          References available on request
+        </p>
       </div>
     </div>
   );
