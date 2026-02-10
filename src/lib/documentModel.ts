@@ -104,7 +104,12 @@ const sectionOrder = [
   "key skills",
   "key achievements",
   "work experience",
+  "employment",
+  "career history",
   "education",
+  "qualification",
+  "academic",
+  "training",
   "projects",
   "hobbies",
   "references",
@@ -216,7 +221,7 @@ const orderSections = (sections: DocumentSection[], header?: DocumentHeader) => 
     paragraphs: s.paragraphs.filter((p) => !isPersonalDetailLine(p)),
   }));
 
-  const experienceKeys = new Set(["work experience", "education"]);
+  const experienceKeys = new Set(["work experience", "education", "employment", "career history", "work history"]);
   const ordered: DocumentSection[] = [];
   const usedSections = new Set<DocumentSection>();
 

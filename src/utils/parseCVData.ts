@@ -81,19 +81,34 @@ const findSection = (sections: RawSection[], ...keywords: string[]) =>
 
 const parseExperience = (section: RawSection | undefined): ExperienceItem[] => {
   if (!section) return [];
-  // Try to extract structured entries from paragraphs + bullets
   const items: ExperienceItem[] = [];
   let currentItem: Partial<ExperienceItem> | null = null;
 
   const allLines = [...section.paragraphs, ...section.bullets.map((b) => `• ${b}`)];
 
+  // Broad date-range regex: matches "Month Year – Month Year/Present" or "Year – Year/Present"
+  const dateRangeRegex = /(\w+\s+\d{4}\s*[–—\-]\s*(?:\w+\s+\d{4}|Present|Current)|\d{4}\s*[–—\-]\s*(?:\d{4}|Present|Current))/i;
+
   for (const line of allLines) {
-    // Date pattern: anything with a date range like "Jan 2020 – Present" or "2018 - 2021"
+    // Check if this line contains a date range anywhere
+    const dateInLine = line.match(dateRangeRegex);
+
+    // Try the original pattern: "Role | dates"
     const dateMatch = line.match(/(.+?)\s*[|–—-]\s*(\w+\s*\d{4}\s*[–—-]\s*(?:\w+\s*\d{4}|Present|Current))/i);
     if (dateMatch) {
       if (currentItem?.role) items.push(buildExperienceItem(currentItem));
       const dates = dateMatch[2].split(/[–—-]/).map((d) => d.trim());
       currentItem = { role: clean(dateMatch[1]), startDate: dates[0] || "", endDate: dates[1] || "", bullets: [] };
+      continue;
+    }
+
+    // Line is purely a date range (dates on their own line)
+    if (dateInLine && clean(line.replace(dateRangeRegex, "")).length < 5) {
+      const dates = dateInLine[1].split(/[–—-]/).map((d) => d.trim());
+      if (currentItem) {
+        currentItem.startDate = dates[0] || currentItem.startDate || "";
+        currentItem.endDate = dates[1] || currentItem.endDate || "";
+      }
       continue;
     }
 
@@ -109,23 +124,35 @@ const parseExperience = (section: RawSection | undefined): ExperienceItem[] => {
       continue;
     }
 
-    // Fallback: treat as a new role if it looks like one
-    if (!line.startsWith("•") && line.length < 80 && line.length > 3) {
+    // Fallback: treat as a new role if it looks like one (short non-bullet line)
+    if (!line.startsWith("•") && line.length < 100 && line.length > 3) {
       if (currentItem?.role) items.push(buildExperienceItem(currentItem));
       currentItem = { role: clean(line), startDate: "", endDate: "", bullets: [] };
     }
   }
   if (currentItem?.role) items.push(buildExperienceItem(currentItem));
 
-  // If parsing yielded nothing useful, create a single entry from all bullets
-  if (items.length === 0 && section.bullets.length > 0) {
-    items.push({
-      company: "",
-      role: section.title,
-      startDate: "",
-      endDate: "",
-      bullets: section.bullets,
-    });
+  // Fallback: if structured parsing yielded nothing, create entries from raw content
+  if (items.length === 0) {
+    // Try paragraphs as role titles, bullets as descriptions
+    if (section.paragraphs.length > 0) {
+      for (const p of section.paragraphs) {
+        items.push({ company: "", role: clean(p), location: "", startDate: "", endDate: "", bullets: [] });
+      }
+      // Attach all bullets to the first item
+      if (items.length > 0 && section.bullets.length > 0) {
+        items[0].bullets = section.bullets.map(b => clean(b));
+      }
+    } else if (section.bullets.length > 0) {
+      items.push({
+        company: "",
+        role: section.title,
+        startDate: "",
+        endDate: "",
+        location: "",
+        bullets: section.bullets.map(b => clean(b)),
+      });
+    }
   }
 
   return items;
@@ -170,13 +197,17 @@ const parseEducation = (section: RawSection | undefined): EducationItem[] => {
   }
   if (current?.qualification) items.push(buildEducationItem(current));
 
-  if (items.length === 0 && section.bullets.length > 0) {
-    items.push({
-      institution: "",
-      qualification: section.bullets.join(", "),
-      startDate: "",
-      endDate: "",
-    });
+  // Fallback: if structured parsing yielded nothing, create entries from raw content
+  if (items.length === 0) {
+    if (section.paragraphs.length > 0) {
+      for (const p of section.paragraphs) {
+        items.push({ institution: "", qualification: clean(p), startDate: "", endDate: "" });
+      }
+    } else if (section.bullets.length > 0) {
+      for (const b of section.bullets) {
+        items.push({ institution: "", qualification: clean(b), startDate: "", endDate: "" });
+      }
+    }
   }
 
   return items;
