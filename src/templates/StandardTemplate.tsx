@@ -9,13 +9,6 @@ interface StandardTemplateProps {
 export const StandardTemplate = ({ data, theme }: StandardTemplateProps) => {
   const { personal, skills, experience, education, projects } = data;
 
-  const contactItems = [
-    personal.email,
-    personal.phone,
-    personal.location,
-    personal.linkedin,
-    personal.portfolio,
-  ].filter(Boolean);
 
   return (
     <section
@@ -38,9 +31,15 @@ export const StandardTemplate = ({ data, theme }: StandardTemplateProps) => {
         </h1>
         {personal.title && <p className={styles.title}>{personal.title}</p>}
         <div className={styles.contactRow}>
-          {contactItems.map((item, i) => (
-            <span key={i}>{item}</span>
-          ))}
+          {personal.email && <span>{personal.email}</span>}
+          {personal.phone && <span>{personal.phone}</span>}
+          {personal.location && <span>{personal.location}</span>}
+          {personal.linkedin && (
+            <a href={personal.linkedin.startsWith("http") ? personal.linkedin : `https://${personal.linkedin}`} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>
+              {personal.linkedin}
+            </a>
+          )}
+          {personal.portfolio && <span>{personal.portfolio}</span>}
         </div>
       </header>
 

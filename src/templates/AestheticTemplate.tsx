@@ -42,7 +42,11 @@ export const AestheticTemplate = ({ data, theme }: AestheticTemplateProps) => {
               {personal.email && <span>{personal.email}</span>}
               {personal.phone && <span>{personal.phone}</span>}
               {personal.location && <span>{personal.location}</span>}
-              {personal.linkedin && <span>{personal.linkedin}</span>}
+              {personal.linkedin && (
+                <a href={personal.linkedin.startsWith("http") ? personal.linkedin : `https://${personal.linkedin}`} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>
+                  {personal.linkedin}
+                </a>
+              )}
               {personal.portfolio && <span>{personal.portfolio}</span>}
             </div>
           </div>

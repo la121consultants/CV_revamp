@@ -9,13 +9,6 @@ interface SignatureTemplateProps {
 export const SignatureTemplate = ({ data, theme }: SignatureTemplateProps) => {
   const { personal, skills, experience, education, projects } = data;
 
-  const contactItems = [
-    personal.email,
-    personal.phone,
-    personal.location,
-    personal.linkedin,
-    personal.portfolio,
-  ].filter(Boolean);
 
   return (
     <section
@@ -42,9 +35,15 @@ export const SignatureTemplate = ({ data, theme }: SignatureTemplateProps) => {
 
       {/* Contact bar */}
       <div className={styles.contactBar}>
-        {contactItems.map((item, i) => (
-          <span key={i}>{item}</span>
-        ))}
+        {personal.email && <span>{personal.email}</span>}
+        {personal.phone && <span>{personal.phone}</span>}
+        {personal.location && <span>{personal.location}</span>}
+        {personal.linkedin && (
+          <a href={personal.linkedin.startsWith("http") ? personal.linkedin : `https://${personal.linkedin}`} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>
+            {personal.linkedin}
+          </a>
+        )}
+        {personal.portfolio && <span>{personal.portfolio}</span>}
       </div>
 
       {/* Body */}
