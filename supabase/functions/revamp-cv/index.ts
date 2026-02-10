@@ -111,12 +111,45 @@ LOCATION:
 SECTION CONTROL:
 8. Only include sections that already exist in the uploaded CV. Do NOT create new sections (e.g. do not add an Education section if one doesn't exist).
 
+MANDATORY SECTION ORDER (use only sections present in the uploaded CV, in this order):
+- Personal Profile / Professional Summary
+- Key Skills
+- Employment History / Work Experience
+- Education & Qualifications
+- Additional Information (if applicable)
+- References (always last — see rule below)
+
+FORMATTING REQUIREMENTS:
+9. Use clear Markdown headings (## Section Title) for each section.
+10. Section headers must be distinct and clearly separated.
+11. Use bullet points (- ) for lists. Each bullet must be concise and aligned.
+12. Maintain consistent spacing between sections — no overcrowding or uneven gaps.
+13. Body text must be regular weight. Headings should use ## for bold distinction.
+
+CONTENT QUALITY:
+14. NEVER repeat the same words, phrases, or sentence structures within or across sections.
+15. Vary language naturally while maintaining a professional tone throughout.
+16. Remove filler phrases and unnecessary repetition.
+17. Every bullet point must add new, unique value — no duplicated information.
+18. Use strong, varied action verbs to open bullet points.
+
+REFERENCES RULE:
+19. The phrase "References available on request" must appear EXACTLY ONCE as the final line of the CV.
+20. Do NOT include referee names, contact details, or any other reference information.
+21. Do NOT repeat the references line anywhere else in the document.
+
 IMPROVEMENTS ALLOWED:
-9. You MAY improve wording, structure, clarity, bullet point conciseness, and optimise phrasing for UK job applications.
-10. You may NOT change factual details, add roles/employers/education, or insert example content.
+22. You MAY improve wording, structure, clarity, bullet point conciseness, and optimise phrasing for UK job applications.
+23. You may NOT change factual details, add roles/employers/education, or insert example content.
+
+FINAL VALIDATION (do this before responding):
+- Confirm all section headers are correctly titled and in the mandatory order.
+- Confirm no repeated wording, phrases, or duplicated sections exist.
+- Confirm "References available on request" appears once and only at the end.
+- Confirm the document reads as professional and employer-ready.
 
 MISSING SECTION SUGGESTIONS:
-11. After rewriting, identify any commonly expected CV sections that are MISSING from the uploaded CV (e.g. Education, Skills, Certifications, Professional Summary). For each missing section, provide a suggested version based on the target job description and person specification — but clearly mark these as SUGGESTIONS the user can choose to add, NOT as part of the main CV.`;
+24. After rewriting, identify any commonly expected CV sections that are MISSING from the uploaded CV (e.g. Education, Skills, Certifications, Professional Summary). For each missing section, provide a suggested version based on the target job description and person specification — but clearly mark these as SUGGESTIONS the user can choose to add, NOT as part of the main CV.`;
 
     const userPrompt = `
 Candidate name: ${userName || "Not specified"}
@@ -130,8 +163,8 @@ ${jobDescription || "Not provided"}
 ${personSpec ? `Person specification:\n${personSpec}` : ""}
 
 Please produce a JSON object with the following keys:
-${wantCV ? `"cv": A professionally rewritten CV in Markdown format tailored to the target role. Use ONLY sections and information from the candidate's existing CV. Improve wording and structure but do NOT add new sections, roles, skills, or education not present in the original. The candidate's real name and location MUST appear exactly as provided.` : ""}
-${wantLetter ? `"coverLetter": A compelling cover letter in Markdown format addressed to the Hiring Manager for the target role. Use ONLY information from the candidate's existing CV. Highlight relevant experience. Use UK English. Use the candidate's real name.` : ""}
+${wantCV ? `"cv": A professionally rewritten CV in Markdown format tailored to the target role. Follow the mandatory section order. Use ONLY sections and information from the candidate's existing CV. Improve wording and structure but do NOT add new sections, roles, skills, or education not present in the original. The candidate's real name and location MUST appear exactly as provided. Ensure no repeated phrasing across bullets. End with "References available on request" as the final line.` : ""}
+${wantLetter ? `"coverLetter": A compelling cover letter in Markdown format addressed to the Hiring Manager for the target role. Use ONLY information from the candidate's existing CV. Highlight relevant experience. Use UK English. Use the candidate's real name. Vary sentence structure and avoid repetition.` : ""}
 "suggestions": An array of objects for any commonly expected CV sections that are MISSING from the uploaded CV. Each object should have: "section" (e.g. "Education", "Skills", "Certifications"), "reason" (why it would help for this role), and "suggestedContent" (draft wording based on the job description/person spec that the user could add). If no sections are missing, return an empty array.
 
 Return ONLY the JSON object, nothing else.`;

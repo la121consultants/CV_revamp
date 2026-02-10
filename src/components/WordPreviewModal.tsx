@@ -25,6 +25,7 @@ const formatHeading = (text: string, style?: string) => {
 
 const RenderPage = ({ model }: { model: DocumentModel }) => {
   const style = model.style ?? "standard";
+  const fontFamily = "Calibri, 'Segoe UI', Arial, Helvetica, sans-serif";
 
   return (
     <div
@@ -34,25 +35,26 @@ const RenderPage = ({ model }: { model: DocumentModel }) => {
         minHeight: "297mm",
         padding: "20mm",
         boxShadow: "0 4px 24px rgba(0,0,0,0.15), 0 1px 4px rgba(0,0,0,0.08)",
-        fontFamily: "Helvetica, Arial, sans-serif",
+        fontFamily,
         color: "#1a1a1a",
-        lineHeight: 1.4,
+        lineHeight: 1.5,
         boxSizing: "border-box",
+        fontSize: "10.5pt",
       }}
     >
       {/* Header */}
       {model.header && (
         <div
           style={{
-            textAlign: style === "signature" ? "left" : "center",
-            marginBottom: "16pt",
-            borderBottom: style === "signature" ? "2px solid #333" : style === "aesthetic" ? "2px solid #2563eb" : "1px solid #999",
-            paddingBottom: "10pt",
+            textAlign: "center",
+            marginBottom: "18pt",
+            paddingBottom: "12pt",
+            borderBottom: "1px solid #999",
           }}
         >
           <div
             style={{
-              fontSize: style === "signature" ? "22pt" : style === "aesthetic" ? "20pt" : "18pt",
+              fontSize: style === "signature" ? "18pt" : style === "aesthetic" ? "17pt" : "15pt",
               fontWeight: 700,
               letterSpacing: style === "signature" ? "1px" : "0",
               textTransform: style === "signature" ? "uppercase" : "none",
@@ -61,13 +63,14 @@ const RenderPage = ({ model }: { model: DocumentModel }) => {
           >
             {model.header.name}
           </div>
-          <div style={{ fontSize: "11pt", marginBottom: "2pt" }}>{model.header.phone}</div>
-          <div style={{ fontSize: "11pt", marginBottom: "2pt" }}>{model.header.email}</div>
+          <div style={{ fontSize: "10pt", marginBottom: "2pt", color: "#444" }}>
+            {model.header.phone}  |  {model.header.email}
+          </div>
           <div
             style={{
-              fontSize: style === "signature" ? "13pt" : "12pt",
-              fontWeight: 500,
-              marginTop: "4pt",
+              fontSize: "12pt",
+              fontWeight: 600,
+              marginTop: "6pt",
             }}
           >
             {model.header.role}
@@ -77,28 +80,29 @@ const RenderPage = ({ model }: { model: DocumentModel }) => {
 
       {/* Sections */}
       {model.sections.map((section, i) => (
-        <div key={i} style={{ marginBottom: "12pt" }}>
+        <div key={i} style={{ marginBottom: "10pt" }}>
           <div
             style={{
-              fontSize: style === "signature" ? "13pt" : style === "aesthetic" ? "13pt" : "12pt",
+              fontSize: "12pt",
               fontWeight: 700,
               textTransform: style === "aesthetic" ? "capitalize" : "uppercase",
               letterSpacing: "0.5px",
               borderBottom: "1px solid #ccc",
               paddingBottom: "3pt",
-              marginBottom: "6pt",
-              color: style === "aesthetic" ? "#2563eb" : "#333",
+              marginBottom: "5pt",
+              marginTop: i > 0 ? "10pt" : "0",
+              color: "#333",
             }}
           >
             {formatHeading(section.title, style)}
           </div>
           {section.paragraphs.map((p, j) => (
-            <p key={j} style={{ fontSize: "11pt", margin: "0 0 4pt 0" }}>
+            <p key={j} style={{ fontSize: "10.5pt", margin: "0 0 4pt 0", fontWeight: 400 }}>
               {p}
             </p>
           ))}
           {section.bullets.map((b, j) => (
-            <p key={`b-${j}`} style={{ fontSize: "11pt", margin: "0 0 3pt 14pt" }}>
+            <p key={`b-${j}`} style={{ fontSize: "10.5pt", margin: "0 0 3pt 18pt", fontWeight: 400 }}>
               • {b}
             </p>
           ))}
