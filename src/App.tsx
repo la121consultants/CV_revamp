@@ -14,6 +14,7 @@ import AdminResetPassword from "./pages/AdminResetPassword";
 import AdminSubmissionDetail from "./pages/AdminSubmissionDetail";
 import UserAuth from "./pages/UserAuth";
 import ResetPassword from "./pages/ResetPassword";
+import Subscription from "./pages/Subscription";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/subscription" element={<Subscription />} />
             <Route path="/login" element={<UserAuth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />

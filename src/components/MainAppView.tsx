@@ -625,55 +625,6 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              {userDetails.email && (
-                <div className="mb-6 rounded-xl border border-border bg-card p-4 shadow-sm">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Subscription</p>
-                      <div className="flex items-center gap-2">
-                        <p className="text-base font-semibold text-foreground">{planLabel}</p>
-                        {subscriptionInfo?.status === "active" && (
-                          <Badge variant="secondary">Unlimited</Badge>
-                        )}
-                      </div>
-                      {subscriptionInfo?.cancel_at_period_end && subscriptionInfo?.current_period_end && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Cancellation scheduled for {new Date(subscriptionInfo.current_period_end).toLocaleDateString("en-GB")}.
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {subscriptionInfo?.status === "active" ? (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="outline" size="sm">
-                              Cancel subscription
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Cancel your subscription?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Your plan will remain active until the end of the current billing period, and no further charges will occur.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Keep subscription</AlertDialogCancel>
-                              <AlertDialogAction onClick={handleCancelSubscription} disabled={isCancelling}>
-                                {isCancelling ? "Cancelling..." : "Confirm cancellation"}
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      ) : (
-                        <Button size="sm" onClick={() => setShowUpgradeModal(true)}>
-                          Upgrade
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
               <GuidedCVBuilder
                 userName={userDetails.fullName}
                 userEmail={userDetails.email}
@@ -708,58 +659,6 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
                     userDetails={userDetails}
                     onChange={setUserDetails}
                   />
-                  {userDetails.email && (
-                    <div className="mt-4 rounded-xl border border-border bg-muted/40 p-4">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                          <p className="text-xs text-muted-foreground">Subscription</p>
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm font-semibold text-foreground">{planLabel}</p>
-                            {isSubscriptionLoading && (
-                              <span className="text-xs text-muted-foreground">Checking...</span>
-                            )}
-                          </div>
-                          {subscriptionInfo?.status === "past_due" && (
-                            <p className="text-xs text-destructive mt-1">Payment issue — update your plan to restore access.</p>
-                          )}
-                          {subscriptionInfo?.cancel_at_period_end && subscriptionInfo?.current_period_end && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Cancellation scheduled for {new Date(subscriptionInfo.current_period_end).toLocaleDateString("en-GB")}.
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {subscriptionInfo?.status === "active" ? (
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="outline" size="sm">
-                                  Cancel subscription
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Cancel your subscription?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Your plan will remain active until the end of the current billing period, and no further charges will occur.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Keep subscription</AlertDialogCancel>
-                                  <AlertDialogAction onClick={handleCancelSubscription} disabled={isCancelling}>
-                                    {isCancelling ? "Cancelling..." : "Confirm cancellation"}
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          ) : (
-                            <Button size="sm" onClick={() => setShowUpgradeModal(true)}>
-                              Upgrade
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
 
                 {/* Step 2: Job Details */}
@@ -816,55 +715,6 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
               </div>
 
               <div className="space-y-8">
-                {userDetails.email && (
-                  <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <p className="text-xs text-muted-foreground">Subscription</p>
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-semibold text-foreground">{planLabel}</p>
-                          {subscriptionInfo?.status === "active" && (
-                            <Badge variant="secondary">Unlimited</Badge>
-                          )}
-                        </div>
-                        {subscriptionInfo?.cancel_at_period_end && subscriptionInfo?.current_period_end && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Cancellation scheduled for {new Date(subscriptionInfo.current_period_end).toLocaleDateString("en-GB")}.
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {subscriptionInfo?.status === "active" ? (
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="outline" size="sm">
-                                Cancel subscription
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Cancel your subscription?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Your plan will remain active until the end of the current billing period, and no further charges will occur.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Keep subscription</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleCancelSubscription} disabled={isCancelling}>
-                                  {isCancelling ? "Cancelling..." : "Confirm cancellation"}
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        ) : (
-                          <Button size="sm" onClick={() => setShowUpgradeModal(true)}>
-                            Upgrade
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
                 {/* Upload CV */}
                 <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
                   <h3 className="text-lg font-semibold text-foreground mb-4">Upload Your CV</h3>
