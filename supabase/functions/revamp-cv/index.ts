@@ -33,6 +33,33 @@ serve(async (req) => {
     const normalizedEmail = normalizeIdentifier(userEmail);
     const usageDate = getUsageDate();
 
+    // Check if user is admin/super_admin — skip usage limits
+    const { data: adminUser } = await supabaseAdmin
+      .from("profiles")
+      .select("user_id")
+      .eq("email", normalizedEmail)
+      .maybeSingle();
+
+    let isAdmin = false;
+    if (adminUser?.user_id) {
+      const { data: roleData } = await supabaseAdmin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", adminUser.user_id)
+        .in("role", ["super_admin", "admin"])
+        .limit(1);
+      isAdmin = !!(roleData && roleData.length > 0);
+    }
+
+    // Also check unlimited_access_grants
+    const { data: grantData } = await supabaseAdmin
+      .from("unlimited_access_grants")
+      .select("id")
+      .eq("user_email", normalizedEmail)
+      .eq("is_active", true)
+      .limit(1);
+    const hasUnlimitedGrant = !!(grantData && grantData.length > 0);
+
     const { data: subscriptionData } = await supabaseAdmin
       .from("subscriptions")
       .select("*")
@@ -40,9 +67,10 @@ serve(async (req) => {
       .maybeSingle();
 
     const hasActiveSub = isActiveSubscription(subscriptionData);
+    const skipUsageLimit = isAdmin || hasUnlimitedGrant || hasActiveSub;
 
     let currentUsage = 0;
-    if (!hasActiveSub) {
+    if (!skipUsageLimit) {
       const { data: usageData } = await supabaseAdmin
         .from("user_usage")
         .select("cv_revamp_count")
@@ -128,8 +156,7 @@ Return ONLY the JSON object, nothing else.`;
       result = { cv: rawContent, coverLetter: "" };
     }
 
-    // --- consume usage ---
-    if (!hasActiveSub) {
+    if (!skipUsageLimit) {
       if (currentUsage === 0) {
         await supabaseAdmin.from("user_usage").insert({
           user_identifier: normalizedEmail,
