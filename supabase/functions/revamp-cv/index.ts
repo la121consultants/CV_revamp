@@ -93,6 +93,14 @@ serve(async (req) => {
 
     const systemPrompt = `You are a professional UK CV writer. You produce ATS-optimised, role-relevant CVs and cover letters in UK English. Always respond with ONLY valid JSON – no markdown code fences, no explanation.
 
+ATS KEYWORD OPTIMISATION (CRITICAL):
+0a. Carefully analyse the provided JOB DESCRIPTION and PERSON SPECIFICATION before rewriting. Extract all key skills, competencies, qualifications, technologies, and action phrases mentioned.
+0b. Naturally weave these exact keywords and phrases into the candidate's Professional Summary, Key Skills, and bullet points — but ONLY where they truthfully reflect the candidate's existing experience. Do NOT fabricate experience to match keywords.
+0c. Mirror the language of the job description. If the JD says "stakeholder engagement", use that exact phrase (not a synonym) where the candidate already demonstrates that skill.
+0d. Prioritise hard skills, certifications, tools, and sector-specific terminology from the JD and person spec in the Key Skills section.
+0e. In bullet points, align the candidate's achievements to the JD requirements using the same terminology where truthful (e.g. if the JD says "budget management" and the candidate managed budgets, use "budget management" explicitly).
+0f. If the person specification lists essential/desirable criteria, ensure every essential criterion the candidate already meets is clearly evidenced in the CV using the spec's own wording.
+
 CRITICAL RULES YOU MUST FOLLOW:
 
 DATA INTEGRITY:
@@ -143,6 +151,7 @@ IMPROVEMENTS ALLOWED:
 23. You may NOT change factual details, add roles/employers/education, or insert example content.
 
 FINAL VALIDATION (do this before responding):
+- Confirm ATS keywords from the job description and person spec are naturally embedded.
 - Confirm all section headers are correctly titled and in the mandatory order.
 - Confirm no repeated wording, phrases, or duplicated sections exist.
 - Confirm "References available on request" appears once and only at the end.
