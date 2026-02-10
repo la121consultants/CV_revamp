@@ -12,6 +12,7 @@ import { ProcessingStatus } from "./ProcessingStatus";
 import { CVModeSelector, type CVBuildMode } from "./CVModeSelector";
 import { GuidedCVBuilder } from "./GuidedCVBuilder";
 import { UpgradeModal } from "./UpgradeModal";
+import { MissingSectionSuggestions } from "./MissingSectionSuggestions";
 import { SavedCVs } from "./SavedCVs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -352,6 +353,7 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
       const result: TailoredOutput = {
         cv: data?.cv || `# ${jobDetails.title}\n\nYour tailored CV content will appear here.`,
         coverLetter: data?.coverLetter || `Dear Hiring Manager,\n\nYour tailored cover letter will appear here.\n\nBest regards,\n${userDetails.fullName}`,
+        suggestions: data?.suggestions || [],
       };
 
       setOutput(result);
@@ -605,19 +607,35 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
                   subscriptionInfo?.plan_type === "annual"
                 }
               />
-              <AIChatBox
-                output={output}
-                onUpdateOutput={setOutput}
-                messages={messages}
-                onSendMessage={handleSendMessage}
-                isLoading={isChatLoading}
-                chatMode={chatMode}
-                onModeChange={setChatMode}
-                pendingAction={pendingAction}
-                onProceed={handleProceed}
-                onCancel={handleCancel}
-                onEditRequest={handleEditRequest}
-              />
+              <div className="space-y-0">
+                <AIChatBox
+                  output={output}
+                  onUpdateOutput={setOutput}
+                  messages={messages}
+                  onSendMessage={handleSendMessage}
+                  isLoading={isChatLoading}
+                  chatMode={chatMode}
+                  onModeChange={setChatMode}
+                  pendingAction={pendingAction}
+                  onProceed={handleProceed}
+                  onCancel={handleCancel}
+                  onEditRequest={handleEditRequest}
+                />
+                {output.suggestions && output.suggestions.length > 0 && (
+                  <MissingSectionSuggestions
+                    suggestions={output.suggestions}
+                    onAddSection={(suggestion) => {
+                      setOutput((prev) => {
+                        if (!prev) return prev;
+                        return {
+                          ...prev,
+                          cv: `${prev.cv}\n\n## ${suggestion.section}\n${suggestion.suggestedContent}`,
+                        };
+                      });
+                    }}
+                  />
+                )}
+              </div>
             </motion.div>
           ) : buildMode === "guided" ? (
             <motion.div
