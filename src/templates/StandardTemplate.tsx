@@ -137,7 +137,10 @@ export const StandardTemplate = ({ data, theme }: StandardTemplateProps) => {
       )}
 
       {/* 7. References – always last */}
-      <div className={styles.references}>References available on request</div>
+      <section className={styles.section}>
+        <div className={styles.sectionTitle}>References</div>
+        <p className={styles.references}>References available on request</p>
+      </section>
     </section>
   );
 };
