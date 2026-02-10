@@ -288,6 +288,7 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
           person_spec: jobDetails.personSpec || null,
           linkedin_url: jobDetails.linkedinUrl || null,
           cv_filename: cvData?.fileName || null,
+          cv_text: cvData?.content || null,
           output_type: outputType,
           service_type: buildMode === 'guided' ? 'AI Suggestions' : 'CV Revamp',
         });
