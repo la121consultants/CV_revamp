@@ -4,17 +4,17 @@ const xmlEscape = (text: string) =>
   text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 const paragraph = (text: string, bold = false, size = 21) => {
-  const rpr = bold ? `<w:rPr><w:b /><w:sz w:val="${size}" /></w:rPr>` : `<w:rPr><w:sz w:val="${size}" /></w:rPr>`;
-  return `<w:p><w:r>${rpr}<w:t xml:space="preserve">${xmlEscape(text)}</w:t></w:r></w:p>`;
+  const bTag = bold ? "<w:b/>" : "";
+  return `<w:p><w:r><w:rPr>${bTag}<w:sz w:val="${size}"/><w:szCs w:val="${size}"/><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/></w:rPr><w:t xml:space="preserve">${xmlEscape(text)}</w:t></w:r></w:p>`;
 };
 
 const heading = (text: string) =>
-  `<w:p><w:pPr><w:pStyle w:val="Heading2" /><w:spacing w:before="200" w:after="80" /></w:pPr><w:r><w:rPr><w:b /><w:sz w:val="22" /><w:caps /></w:rPr><w:t>${xmlEscape(
+  `<w:p><w:pPr><w:pStyle w:val="Heading2" /><w:spacing w:before="200" w:after="80" /></w:pPr><w:r><w:rPr><w:b/><w:sz w:val="24"/><w:szCs w:val="24"/><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/><w:color w:val="333333"/></w:rPr><w:t>${xmlEscape(
     text.toUpperCase()
   )}</w:t></w:r></w:p>`;
 
 const bulletItem = (text: string) =>
-  `<w:p><w:pPr><w:pStyle w:val="ListBullet" /><w:numPr><w:ilvl w:val="0" /><w:numId w:val="1" /></w:numPr></w:pPr><w:r><w:rPr><w:sz w:val="20" /></w:rPr><w:t xml:space="preserve">${xmlEscape(text)}</w:t></w:r></w:p>`;
+  `<w:p><w:pPr><w:pStyle w:val="ListBullet" /><w:numPr><w:ilvl w:val="0" /><w:numId w:val="1" /></w:numPr></w:pPr><w:r><w:rPr><w:sz w:val="21"/><w:szCs w:val="21"/><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/></w:rPr><w:t xml:space="preserve">${xmlEscape(text)}</w:t></w:r></w:p>`;
 
 const createDocumentXml = (data: CVData, templateName: string) => {
   const { personal, skills, experience, education } = data;
@@ -70,8 +70,8 @@ const createDocumentXml = (data: CVData, templateName: string) => {
   }
 
   // References
-  paragraphs.push(paragraph(""));
-  paragraphs.push(paragraph("References available on request", false, 19));
+  paragraphs.push(heading("References"));
+  paragraphs.push(paragraph("References available on request", false, 21));
 
   // A4: 11906 x 16838 twips, 20mm margins = 1134 twips
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
