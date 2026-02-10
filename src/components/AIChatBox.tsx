@@ -19,6 +19,7 @@ interface AIChatBoxProps {
   onProceed: () => void;
   onCancel: () => void;
   onEditRequest: () => void;
+  suggestions?: string[];
 }
 
 export const AIChatBox = ({ 
@@ -32,7 +33,8 @@ export const AIChatBox = ({
   pendingAction,
   onProceed,
   onCancel,
-  onEditRequest
+  onEditRequest,
+  suggestions: externalSuggestions
 }: AIChatBoxProps) => {
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -60,12 +62,14 @@ export const AIChatBox = ({
     onEditRequest();
   };
 
-  const suggestions = [
-    "Make the CV more concise",
-    "Add more action verbs",
-    "Emphasize leadership skills",
-    "Make the cover letter more personal",
-  ];
+  const suggestions = externalSuggestions && externalSuggestions.length > 0
+    ? externalSuggestions
+    : [
+        "Make the CV more concise",
+        "Add more action verbs",
+        "Emphasize leadership skills",
+        "Make the cover letter more personal",
+      ];
 
   return (
     <motion.div
@@ -128,52 +132,67 @@ export const AIChatBox = ({
             </div>
           </div>
         ) : (
-          <AnimatePresence>
-            {messages.map((message, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                {message.role === 'assistant' && (
+          <>
+            <AnimatePresence>
+              {messages.map((message, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  {message.role === 'assistant' && (
+                    <div className="w-8 h-8 rounded-lg bg-primary-light flex items-center justify-center flex-shrink-0">
+                      <Bot className="w-4 h-4 text-primary" />
+                    </div>
+                  )}
+                  <div className={`
+                    max-w-[80%] rounded-2xl px-4 py-3
+                    ${message.role === 'user' 
+                      ? 'bg-primary text-primary-foreground rounded-br-md' 
+                      : 'bg-muted text-foreground rounded-bl-md'
+                    }
+                  `}>
+                    <div className="prose prose-sm max-w-none">
+                      <ReactMarkdown>{message.content}</ReactMarkdown>
+                    </div>
+                  </div>
+                  {message.role === 'user' && (
+                    <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
+                      <User className="w-4 h-4 text-secondary-foreground" />
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+              {isLoading && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex gap-3"
+                >
                   <div className="w-8 h-8 rounded-lg bg-primary-light flex items-center justify-center flex-shrink-0">
                     <Bot className="w-4 h-4 text-primary" />
                   </div>
-                )}
-                <div className={`
-                  max-w-[80%] rounded-2xl px-4 py-3
-                  ${message.role === 'user' 
-                    ? 'bg-primary text-primary-foreground rounded-br-md' 
-                    : 'bg-muted text-foreground rounded-bl-md'
-                  }
-                `}>
-                  <div className="prose prose-sm max-w-none">
-                    <ReactMarkdown>{message.content}</ReactMarkdown>
+                  <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
+                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
                   </div>
-                </div>
-                {message.role === 'user' && (
-                  <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
-                    <User className="w-4 h-4 text-secondary-foreground" />
-                  </div>
-                )}
-              </motion.div>
-            ))}
-            {isLoading && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex gap-3"
-              >
-                <div className="w-8 h-8 rounded-lg bg-primary-light flex items-center justify-center flex-shrink-0">
-                  <Bot className="w-4 h-4 text-primary" />
-                </div>
-                <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
-                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                </div>
-              </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            {!isLoading && !pendingAction && (
+              <div className="flex flex-wrap gap-2 pt-2">
+                {suggestions.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    onClick={() => setInput(suggestion)}
+                    className="px-3 py-1.5 text-xs rounded-full bg-primary-light text-primary hover:bg-primary/20 transition-colors"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
             )}
-          </AnimatePresence>
+          </>
         )}
         {pendingAction && (
           <div className="border border-dashed border-primary/40 rounded-xl p-4 bg-background/60 space-y-3">
