@@ -66,9 +66,16 @@ const parseSections = (text: string): RawSection[] => {
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, "").trim();
 
+/** Titles that represent repeated personal/contact detail blocks to be excluded */
+const personalDetailTitles = new Set([
+  "personal details", "contact details", "contact information", "contact",
+  "personal information", "personal", "details",
+]);
+
 const findSection = (sections: RawSection[], ...keywords: string[]) =>
   sections.find((s) => {
     const n = norm(s.title);
+    if (personalDetailTitles.has(n)) return false; // skip personal details sections
     return keywords.some((k) => n.includes(k));
   });
 

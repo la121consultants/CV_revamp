@@ -175,25 +175,45 @@ const normalizeTitle = (title: string) =>
     .trim();
 
 const orderSections = (sections: DocumentSection[], header?: DocumentHeader) => {
+  // Filter out sections that are just repeated personal/contact details
+  const personalDetailTitles = new Set([
+    "personal details", "contact details", "contact information", "contact",
+    "personal information", "personal", "details",
+  ]);
+
+  const isPersonalDetailContent = (section: DocumentSection) => {
+    const n = normalizeTitle(section.title);
+    if (personalDetailTitles.has(n)) return true;
+    // Also catch unnamed sections that are just name/email/phone lines
+    if (header && section.paragraphs.length <= 5 && section.bullets.length === 0) {
+      const text = section.paragraphs.join(" ").toLowerCase();
+      const headerName = header.name?.toLowerCase() || "";
+      if (headerName && text.includes(headerName) && (text.includes("@") || text.includes("07"))) return true;
+    }
+    return false;
+  };
+
+  const filtered = sections.filter((s) => !isPersonalDetailContent(s));
+
   const sectionMap = new Map<string, DocumentSection>();
-  sections.forEach((section) => {
+  filtered.forEach((section) => {
     sectionMap.set(normalizeTitle(section.title), section);
   });
 
   const experienceKeys = new Set(["work experience", "education"]);
   const ordered: DocumentSection[] = [];
   sectionOrder.forEach((key) => {
-    if (key === "references") return; // handle references at the end
+    if (key === "references") return;
     const found = sectionMap.get(key);
     if (found) {
-      // Sort experience & education blocks in reverse chronological order
       ordered.push(experienceKeys.has(key) ? sortExperienceBullets(found) : found);
     }
   });
 
   const usedTitles = new Set(ordered.map((section) => normalizeTitle(section.title)));
-  usedTitles.add("references"); // exclude references from unordered pass
-  sections.forEach((section) => {
+  usedTitles.add("references");
+  personalDetailTitles.forEach((t) => usedTitles.add(t));
+  filtered.forEach((section) => {
     const normalized = normalizeTitle(section.title);
     if (!usedTitles.has(normalized)) {
       ordered.push(section);
