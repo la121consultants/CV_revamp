@@ -165,10 +165,17 @@ const sortExperienceBullets = (section: DocumentSection): DocumentSection => {
     return diff !== 0 ? diff : b.startTimestamp - a.startTimestamp;
   });
 
+  // Enforce max 6 bullets per role block
+  const MAX_BULLETS = 6;
+  const capped = blocks.map(bl => ({
+    ...bl,
+    bullets: bl.bullets.slice(0, MAX_BULLETS),
+  }));
+
   return {
     title: section.title,
-    paragraphs: blocks.flatMap(bl => bl.paragraphs),
-    bullets: blocks.flatMap(bl => bl.bullets),
+    paragraphs: capped.flatMap(bl => bl.paragraphs),
+    bullets: capped.flatMap(bl => bl.bullets),
   };
 };
 

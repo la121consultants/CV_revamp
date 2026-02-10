@@ -193,10 +193,12 @@ const parseExperience = (section: RawSection | undefined): ExperienceItem[] => {
       continue;
     }
 
-    // Bullet point → attach to current role
+    // Bullet point → attach to current role (respect limit)
     if (tagged.type === "bullet" && currentItem) {
       currentItem.bullets = currentItem.bullets || [];
-      currentItem.bullets.push(tagged.text);
+      if (currentItem.bullets.length < MAX_BULLETS_PER_ROLE) {
+        currentItem.bullets.push(tagged.text);
+      }
       continue;
     }
 
@@ -217,12 +219,12 @@ const parseExperience = (section: RawSection | undefined): ExperienceItem[] => {
         items.push({ company: "", role: clean(p), location: "", startDate: "", endDate: "", bullets: [] });
       }
       if (items.length > 0 && bullets.length > 0) {
-        items[0].bullets = bullets.map(b => clean(b));
+        items[0].bullets = bullets.map(b => clean(b)).slice(0, MAX_BULLETS_PER_ROLE);
       }
     } else if (bullets.length > 0) {
       items.push({
         company: "", role: section.title, startDate: "", endDate: "", location: "",
-        bullets: bullets.map(b => clean(b)),
+        bullets: bullets.map(b => clean(b)).slice(0, MAX_BULLETS_PER_ROLE),
       });
     }
   }
@@ -230,13 +232,16 @@ const parseExperience = (section: RawSection | undefined): ExperienceItem[] => {
   return items;
 };
 
+/** Max bullet points per role – enforce strict limit */
+const MAX_BULLETS_PER_ROLE = 6;
+
 const buildExperienceItem = (partial: Partial<ExperienceItem>): ExperienceItem => ({
   company: partial.company || "",
   role: partial.role || "",
   location: "",
   startDate: partial.startDate || "",
   endDate: partial.endDate || "",
-  bullets: partial.bullets || [],
+  bullets: (partial.bullets || []).slice(0, MAX_BULLETS_PER_ROLE),
 });
 
 const parseEducation = (section: RawSection | undefined): EducationItem[] => {
