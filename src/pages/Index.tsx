@@ -63,14 +63,9 @@ const Index = () => {
                         color: "secondary",
                       },
                       {
-                        title: "Bulk Tailoring Extension",
-                        description: "Power users can tailor resumes for every open job tab with our Chrome extension.",
-                        color: "primary",
-                      },
-                      {
                         title: "Job URL Auto-Extraction",
                         description: "Drop a job URL and let the tool capture role details instantly.",
-                        color: "secondary",
+                        color: "primary",
                       },
                     ].map((feature, index) => (
                       <motion.div
