@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CVPreview } from "@/components/CVPreview";
-import { sampleCVData } from "@/types/cv";
+import { emptyCVData } from "@/utils/parseCVData";
 import type { CVStyle } from "@/types";
 
 interface CVBuilderProps {
@@ -46,7 +46,7 @@ export const CVBuilder = ({ onBack }: CVBuilderProps) => {
 
         {/* CV Preview Component */}
         <CVPreview
-          data={sampleCVData}
+          data={emptyCVData}
           selectedTemplate={selectedTemplate}
           onTemplateChange={setSelectedTemplate}
         />

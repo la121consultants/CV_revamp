@@ -6,7 +6,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StandardTemplate } from "@/templates/StandardTemplate";
 import { AestheticTemplate } from "@/templates/AestheticTemplate";
 import { SignatureTemplate } from "@/templates/SignatureTemplate";
-import { sampleCVData, type CVData, type CVTheme } from "@/types/cv";
+import { type CVData, type CVTheme } from "@/types/cv";
+import { emptyCVData } from "@/utils/parseCVData";
 import type { CVStyle } from "@/types";
 import { exportToDOCX } from "@/utils/exportToDOCX";
 import { exportToPDF } from "@/utils/exportToPDF";
@@ -21,7 +22,7 @@ interface CVPreviewProps {
 }
 
 export const CVPreview = ({ 
-  data = sampleCVData, 
+  data = emptyCVData, 
   selectedTemplate, 
   onTemplateChange,
   canDownload = false,
