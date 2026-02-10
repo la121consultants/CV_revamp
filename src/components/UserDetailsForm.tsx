@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { User, Mail, Phone } from "lucide-react";
+import { User, Mail, Phone, MapPin, Linkedin } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import type { UserDetails } from "@/types";
@@ -50,18 +50,51 @@ export const UserDetailsForm = ({ userDetails, onChange }: UserDetailsFormProps)
         </div>
       </div>
 
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="phone" className="flex items-center gap-2 text-foreground">
+            <Phone className="w-4 h-4 text-primary" />
+            Phone Number
+            <span className="text-xs text-muted-foreground">(Optional)</span>
+          </Label>
+          <Input
+            id="phone"
+            type="tel"
+            placeholder="+44 7123 456789"
+            value={userDetails.phone}
+            onChange={(e) => onChange({ ...userDetails, phone: e.target.value })}
+            className="h-11"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="city" className="flex items-center gap-2 text-foreground">
+            <MapPin className="w-4 h-4 text-primary" />
+            City / Location
+            <span className="text-xs text-muted-foreground">(Optional)</span>
+          </Label>
+          <Input
+            id="city"
+            placeholder="London, UK"
+            value={userDetails.city}
+            onChange={(e) => onChange({ ...userDetails, city: e.target.value })}
+            className="h-11"
+          />
+        </div>
+      </div>
+
       <div className="space-y-2">
-        <Label htmlFor="phone" className="flex items-center gap-2 text-foreground">
-          <Phone className="w-4 h-4 text-primary" />
-          Phone Number
+        <Label htmlFor="linkedin" className="flex items-center gap-2 text-foreground">
+          <Linkedin className="w-4 h-4 text-primary" />
+          LinkedIn Profile URL
           <span className="text-xs text-muted-foreground">(Optional)</span>
         </Label>
         <Input
-          id="phone"
-          type="tel"
-          placeholder="+44 7123 456789"
-          value={userDetails.phone}
-          onChange={(e) => onChange({ ...userDetails, phone: e.target.value })}
+          id="linkedin"
+          type="url"
+          placeholder="https://linkedin.com/in/yourprofile"
+          value={userDetails.linkedin}
+          onChange={(e) => onChange({ ...userDetails, linkedin: e.target.value })}
           className="h-11"
         />
       </div>

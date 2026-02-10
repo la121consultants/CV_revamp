@@ -64,7 +64,7 @@ const RenderPage = ({ model }: { model: DocumentModel }) => {
             {model.header.name}
           </div>
           <div style={{ fontSize: "10pt", marginBottom: "2pt", color: "#444" }}>
-            {model.header.phone}  |  {model.header.email}
+            {[model.header.email, model.header.phone, model.header.location, model.header.linkedin].filter(Boolean).join("  |  ")}
           </div>
           <div
             style={{

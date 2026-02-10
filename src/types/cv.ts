@@ -21,6 +21,12 @@ export interface EducationItem {
   details?: string[];
 }
 
+export interface ProjectItem {
+  title: string;
+  description: string;
+  contribution?: string;
+}
+
 export interface CVData {
   personal: {
     firstName: string;
@@ -36,6 +42,7 @@ export interface CVData {
   skills: SkillItem[];
   experience: ExperienceItem[];
   education: EducationItem[];
+  projects: ProjectItem[];
 }
 
 export interface CVTheme {

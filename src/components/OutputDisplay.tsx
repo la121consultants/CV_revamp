@@ -101,6 +101,8 @@ export const OutputDisplay = ({
       role: header.role,
       email: header.email,
       phone: header.phone,
+      city: header.location,
+      linkedin: header.linkedin,
     });
   }, [output.cv, header]);
 

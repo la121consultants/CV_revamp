@@ -15,6 +15,8 @@ export interface UserDetails {
   fullName: string;
   email: string;
   phone: string;
+  city: string;
+  linkedin: string;
 }
 
 export interface SectionSuggestion {
@@ -47,6 +49,8 @@ export interface DocumentHeader {
   phone: string;
   email: string;
   role: string;
+  location?: string;
+  linkedin?: string;
 }
 
 export interface DocumentSection {

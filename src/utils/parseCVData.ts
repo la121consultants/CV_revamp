@@ -1,4 +1,4 @@
-import type { CVData, ExperienceItem, EducationItem } from "@/types/cv";
+import type { CVData, ExperienceItem, EducationItem, ProjectItem } from "@/types/cv";
 
 /**
  * Parse generated CV markdown text into structured CVData for template rendering.
@@ -183,6 +183,35 @@ const buildEducationItem = (partial: Partial<EducationItem>): EducationItem => (
   details: partial.details,
 });
 
+const parseProjects = (section: RawSection | undefined): ProjectItem[] => {
+  if (!section) return [];
+  const items: ProjectItem[] = [];
+  const allLines = [...section.paragraphs, ...section.bullets];
+  let current: Partial<ProjectItem> | null = null;
+
+  for (const line of allLines) {
+    // Short lines are likely project titles
+    if (line.length < 80 && !line.startsWith("•")) {
+      if (current?.title) items.push({ title: current.title, description: current.description || "", contribution: current.contribution });
+      current = { title: clean(line), description: "" };
+    } else if (current) {
+      if (!current.description) {
+        current.description = clean(line);
+      } else {
+        current.contribution = clean(line);
+      }
+    } else {
+      items.push({ title: clean(line), description: "" });
+    }
+  }
+  if (current?.title) items.push({ title: current.title, description: current.description || "", contribution: current.contribution });
+
+  if (items.length === 0 && section.bullets.length > 0) {
+    items.push({ title: section.title, description: section.bullets.join(". ") });
+  }
+  return items;
+};
+
 export const parseCVDataFromMarkdown = (
   markdown: string,
   header?: { name?: string; role?: string; email?: string; phone?: string; city?: string; linkedin?: string; portfolio?: string }
@@ -194,6 +223,7 @@ export const parseCVDataFromMarkdown = (
   const skillsSection = findSection(sections, "skill", "competenc", "expertise");
   const experienceSection = findSection(sections, "experience", "work history", "employment", "career history");
   const educationSection = findSection(sections, "education", "qualification", "academic");
+  const projectsSection = findSection(sections, "project", "placement", "internship");
 
   const summary = summarySection
     ? [...summarySection.paragraphs, ...summarySection.bullets].join(" ")
@@ -204,6 +234,8 @@ export const parseCVDataFromMarkdown = (
         .map((name) => ({ name: clean(name) }))
         .filter((s) => s.name.length > 1)
     : [];
+
+  const projects = parseProjects(projectsSection);
 
   return {
     personal: {
@@ -220,6 +252,7 @@ export const parseCVDataFromMarkdown = (
     skills,
     experience: parseExperience(experienceSection),
     education: parseEducation(educationSection),
+    projects,
   };
 };
 
@@ -237,4 +270,5 @@ export const emptyCVData: CVData = {
   skills: [],
   experience: [],
   education: [],
+  projects: [],
 };
