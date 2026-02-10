@@ -13,6 +13,7 @@ import { CVModeSelector, type CVBuildMode } from "./CVModeSelector";
 import { GuidedCVBuilder } from "./GuidedCVBuilder";
 import { UpgradeModal } from "./UpgradeModal";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import type {
   CVData,
   JobDescription,
@@ -56,6 +57,7 @@ type SubscriptionInfo = {
 };
 
 export const MainAppView = ({ onBack }: MainAppViewProps) => {
+  const { user } = useAuth();
   const [buildMode, setBuildMode] = useState<CVBuildMode | null>(null);
   const [cvData, setCvData] = useState<CVData | null>(null);
   const [jobDetails, setJobDetails] = useState<JobDescription>({ 
@@ -65,8 +67,8 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
     linkedinUrl: ''
   });
   const [userDetails, setUserDetails] = useState<UserDetails>({
-    fullName: '',
-    email: '',
+    fullName: user?.user_metadata?.full_name || '',
+    email: user?.email || '',
     phone: ''
   });
   const [outputType, setOutputType] = useState<OutputType>('both');
