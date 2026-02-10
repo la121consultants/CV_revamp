@@ -18,6 +18,14 @@
   --cv-border: #d1d5db;
 }
 
+.section {
+  page-break-inside: avoid;
+}
+
+.item {
+  page-break-inside: avoid;
+}
+
 /* ── Dark header banner ── */
 .header {
   background: var(--cv-primary);
@@ -62,7 +70,7 @@
 
 /* ── Body ── */
 .body {
-  padding: 14px 20mm 20mm;
+  padding: 14px 20mm 15mm;
 }
 
 .section {

@@ -20,6 +20,14 @@
   --cv-muted: #4b5563;
 }
 
+.section {
+  page-break-inside: avoid;
+}
+
+.experienceItem {
+  page-break-inside: avoid;
+}
+
 .layout {
   display: grid;
   grid-template-columns: 68mm 1fr;
@@ -100,7 +108,7 @@
 
 /* ── Right main content ── */
 .main {
-  padding: 20mm 20mm 20mm 16px;
+  padding: 20mm 20mm 15mm 16px;
 }
 
 .section {

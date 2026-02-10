@@ -36,7 +36,7 @@ const RenderPage = ({ data, style }: { data: CVData; style: CVStyle }) => {
       style={{
         width: "210mm",
         minHeight: "297mm",
-        padding: "20mm 20mm 30mm",
+        padding: "20mm 20mm 15mm",
         boxShadow: "0 4px 24px rgba(0,0,0,0.15), 0 1px 4px rgba(0,0,0,0.08)",
         fontFamily,
         color: "#1a1a1a",
