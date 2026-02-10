@@ -15,8 +15,10 @@ import {
   Calendar,
   Eye,
   UserCog,
-  Crown
+  Crown,
+  BarChart3
 } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminUserManagement } from "@/components/AdminUserManagement";
 import { UnlimitedAccessManagement } from "@/components/UnlimitedAccessManagement";
@@ -294,6 +296,26 @@ const AdminDashboard = () => {
     return { total: submissions.length, newCount, inReviewCount, completedCount };
   }, [submissions]);
 
+  // Daily users chart data (last 30 days)
+  const dailyUsersData = useMemo(() => {
+    const days = 30;
+    const now = new Date();
+    const counts: Record<string, number> = {};
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      counts[d.toISOString().split("T")[0]] = 0;
+    }
+    for (const s of submissions) {
+      const day = new Date(s.created_at).toISOString().split("T")[0];
+      if (day in counts) counts[day]++;
+    }
+    return Object.entries(counts).map(([date, count]) => ({
+      date: new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short" }),
+      users: count,
+    }));
+  }, [submissions]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -375,6 +397,37 @@ const AdminDashboard = () => {
             </motion.div>
           ))}
         </div>
+
+        {/* Daily Users Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-card rounded-xl border border-border p-6 mb-8"
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <BarChart3 className="w-5 h-5 text-primary" />
+            <h3 className="text-lg font-semibold text-foreground">Users Per Day (Last 30 Days)</h3>
+          </div>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={dailyUsersData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} interval="preserveStartEnd" />
+                <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px",
+                    color: "hsl(var(--foreground))",
+                  }}
+                />
+                <Bar dataKey="users" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </motion.div>
 
         {/* Tabbed Content - Show to all admins */}
         {isAdmin && (
