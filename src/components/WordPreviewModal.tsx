@@ -21,7 +21,7 @@ interface WordPreviewModalProps {
 
 const RenderPage = ({ data, style }: { data: CVData; style: CVStyle }) => {
   const fontFamily = "Calibri, 'Segoe UI', Arial, Helvetica, sans-serif";
-  const { personal, skills, experience, education, projects } = data;
+  const { personal, skills, experience, education, training, projects } = data;
 
   const formatHeading = (text: string) => {
     if (style === "aesthetic") return text.replace(/\b\w/g, (c) => c.toUpperCase());
@@ -178,6 +178,43 @@ const RenderPage = ({ data, style }: { data: CVData; style: CVStyle }) => {
             {formatHeading("Education")}
           </div>
           {education.map((item, i) => (
+            <div key={i} style={{ marginBottom: "6pt" }}>
+              <p style={{ fontSize: "10.5pt", fontWeight: 700, margin: "0 0 2pt 0" }}>
+                {item.qualification} — {item.institution}
+              </p>
+              {(item.startDate || item.endDate) && (
+                <p style={{ fontSize: "10pt", margin: "0 0 2pt 0", color: "#555" }}>
+                  {item.startDate} – {item.endDate}
+                </p>
+              )}
+              {item.details && item.details.map((d, j) => (
+                <p key={j} style={{ fontSize: "10.5pt", margin: "0 0 3pt 18pt", fontWeight: 400 }}>
+                  • {d}
+                </p>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Training */}
+      {training.length > 0 && (
+        <div style={{ marginBottom: "10pt" }}>
+          <div
+            style={{
+              fontSize: "12pt",
+              fontWeight: 700,
+              textTransform: style === "aesthetic" ? "capitalize" : "uppercase",
+              letterSpacing: "0.5px",
+              borderBottom: "1px solid #ccc",
+              paddingBottom: "3pt",
+              marginBottom: "5pt",
+              color: "#000000",
+            }}
+          >
+            {formatHeading("Training")}
+          </div>
+          {training.map((item, i) => (
             <div key={i} style={{ marginBottom: "6pt" }}>
               <p style={{ fontSize: "10.5pt", fontWeight: 700, margin: "0 0 2pt 0" }}>
                 {item.qualification} — {item.institution}

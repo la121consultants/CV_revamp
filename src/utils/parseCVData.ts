@@ -1,4 +1,4 @@
-import type { CVData, ExperienceItem, EducationItem, ProjectItem } from "@/types/cv";
+import type { CVData, ExperienceItem, EducationItem, TrainingItem, ProjectItem } from "@/types/cv";
 
 /**
  * Parse generated CV markdown text into structured CVData for template rendering.
@@ -376,7 +376,8 @@ export const parseCVDataFromMarkdown = (
   const summarySection = findSection(cleanedSections, "professional summary", "summary", "profile", "about");
   const skillsSection = findSection(cleanedSections, "skill", "competenc", "expertise");
   const experienceSection = findAllSections(cleanedSections, "experience", "work history", "employment", "career history");
-  const educationSection = findAllSections(cleanedSections, "education", "qualification", "academic", "training");
+  const educationSection = findSection(cleanedSections, "education", "qualification", "academic");
+  const trainingSection = findSection(cleanedSections, "training");
   const projectsSection = findAllSections(cleanedSections, "project", "placement", "internship");
 
   const summaryParagraphs = summarySection ? getParagraphs(summarySection) : [];
@@ -390,6 +391,11 @@ export const parseCVDataFromMarkdown = (
     .filter((s) => s.name.length > 1);
 
   const projects = parseProjects(projectsSection);
+
+  const parseTraining = (section: RawSection | undefined): TrainingItem[] => {
+    if (!section) return [];
+    return parseEducation(section) as TrainingItem[];
+  };
 
   return {
     personal: {
@@ -406,6 +412,7 @@ export const parseCVDataFromMarkdown = (
     skills,
     experience: sortReverseChronological(parseExperience(experienceSection)),
     education: sortReverseChronological(parseEducation(educationSection)),
+    training: sortReverseChronological(parseTraining(trainingSection)),
     projects,
   };
 };
@@ -424,5 +431,6 @@ export const emptyCVData: CVData = {
   skills: [],
   experience: [],
   education: [],
+  training: [],
   projects: [],
 };

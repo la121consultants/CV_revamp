@@ -7,7 +7,7 @@ interface AestheticTemplateProps {
 }
 
 export const AestheticTemplate = ({ data, theme }: AestheticTemplateProps) => {
-  const { personal, skills, experience, education, projects } = data;
+  const { personal, skills, experience, education, training, projects } = data;
 
   return (
     <section
@@ -106,6 +106,31 @@ export const AestheticTemplate = ({ data, theme }: AestheticTemplateProps) => {
             <div className={styles.section}>
               <div className={styles.sectionTitle}>Education</div>
               {education.map((item, index) => (
+                <div key={index} className={styles.experienceItem}>
+                  <div className={styles.itemHeader}>
+                    <span>{item.qualification}</span>
+                    <span>
+                      {item.startDate} – {item.endDate}
+                    </span>
+                  </div>
+                  <div className={styles.itemSub}>{item.institution}</div>
+                  {item.details && item.details.length > 0 && (
+                    <ul className={styles.bullets}>
+                      {item.details.map((detail, di) => (
+                        <li key={di}>{detail}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))}
+          </div>
+          )}
+
+          {/* 5b. Training */}
+          {training.length > 0 && (
+            <div className={styles.section}>
+              <div className={styles.sectionTitle}>Training</div>
+              {training.map((item, index) => (
                 <div key={index} className={styles.experienceItem}>
                   <div className={styles.itemHeader}>
                     <span>{item.qualification}</span>

@@ -216,6 +216,7 @@ export const GuidedCVBuilder = ({
       skills,
       experience,
       education,
+      training: [],
       projects: [],
     };
   };
