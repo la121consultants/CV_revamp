@@ -256,11 +256,30 @@ export const parseCVDataFromMarkdown = (
   const sections = parseSections(markdown);
   const [firstName = "", lastName = ""] = (header?.name || "").split(/\s+/, 2);
 
-  const summarySection = findSection(sections, "professional summary", "summary", "profile", "about");
-  const skillsSection = findSection(sections, "skill", "competenc", "expertise");
-  const experienceSection = findSection(sections, "experience", "work history", "employment", "career history");
-  const educationSection = findSection(sections, "education", "qualification", "academic", "training");
-  const projectsSection = findSection(sections, "project", "placement", "internship");
+  /** Detect lines that are just personal details (name + phone/email) embedded in section content */
+  const isPersonalDetailLine = (line: string): boolean => {
+    const l = line.toLowerCase();
+    if (/@/.test(l) && /\d{5,}/.test(l.replace(/\s/g, ""))) return true;
+    if (header?.name) {
+      const nameWords = header.name.toLowerCase().split(/\s+/);
+      const matchesName = nameWords.every(w => l.includes(w));
+      if (matchesName && l.length < 200 && (/\d{5,}/.test(l.replace(/\s/g, "")) || /@/.test(l))) return true;
+    }
+    return false;
+  };
+
+  /** Clean sections by stripping embedded personal detail lines */
+  const cleanedSections = sections.map(s => ({
+    ...s,
+    paragraphs: s.paragraphs.filter(p => !isPersonalDetailLine(p)),
+    bullets: s.bullets.filter(b => !isPersonalDetailLine(b)),
+  }));
+
+  const summarySection = findSection(cleanedSections, "professional summary", "summary", "profile", "about");
+  const skillsSection = findSection(cleanedSections, "skill", "competenc", "expertise");
+  const experienceSection = findSection(cleanedSections, "experience", "work history", "employment", "career history");
+  const educationSection = findSection(cleanedSections, "education", "qualification", "academic", "training");
+  const projectsSection = findSection(cleanedSections, "project", "placement", "internship");
 
   const summary = summarySection
     ? [...summarySection.paragraphs, ...summarySection.bullets].join(" ")
