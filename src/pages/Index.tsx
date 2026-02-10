@@ -9,6 +9,7 @@ import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { ReviewsSection } from "@/components/ReviewsSection";
 import { Footer } from "@/components/Footer";
+import { CareerSupportCTA } from "@/components/CareerSupportCTA";
 import { MainAppView } from "@/components/MainAppView";
 import { Button } from "@/components/ui/button";
 
@@ -313,6 +314,9 @@ const Index = () => {
                   </div>
                 </div>
               </section>
+
+              {/* Career Support CTA */}
+              <CareerSupportCTA />
 
               {/* FAQ */}
               <section id="faq" className="py-20 bg-background">

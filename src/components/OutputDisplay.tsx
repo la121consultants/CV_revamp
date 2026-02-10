@@ -10,6 +10,7 @@ import type { CVStyle, DocumentHeader, TailoredOutput, OutputType } from "@/type
 import { renderDocumentRequest, downloadDocumentRequest } from "@/lib/documentApi";
 import { toast } from "@/hooks/use-toast";
 import { WordPreviewModal } from "@/components/WordPreviewModal";
+import { CareerSupportCTA } from "@/components/CareerSupportCTA";
 
 interface OutputDisplayProps {
   output: TailoredOutput;
@@ -221,6 +222,8 @@ export const OutputDisplay = ({
           )}
         </AnimatePresence>
       </Tabs>
+
+      <CareerSupportCTA compact />
     </motion.div>
   );
 };
