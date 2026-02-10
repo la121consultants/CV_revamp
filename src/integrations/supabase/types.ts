@@ -113,33 +113,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_usage: {
-        Row: {
-          created_at: string
-          cv_revamp_count: number
-          id: string
-          updated_at: string
-          usage_date: string
-          user_identifier: string
-        }
-        Insert: {
-          created_at?: string
-          cv_revamp_count?: number
-          id?: string
-          updated_at?: string
-          usage_date: string
-          user_identifier: string
-        }
-        Update: {
-          created_at?: string
-          cv_revamp_count?: number
-          id?: string
-          updated_at?: string
-          usage_date?: string
-          user_identifier?: string
-        }
-        Relationships: []
-      }
       user_submissions: {
         Row: {
           city: string | null
@@ -200,6 +173,30 @@ export type Database = {
           service_type?: string | null
           status?: string | null
           target_role?: string | null
+        }
+        Relationships: []
+      }
+      user_usage: {
+        Row: {
+          created_at: string
+          cv_revamp_count: number
+          id: string
+          usage_date: string
+          user_identifier: string
+        }
+        Insert: {
+          created_at?: string
+          cv_revamp_count?: number
+          id?: string
+          usage_date?: string
+          user_identifier: string
+        }
+        Update: {
+          created_at?: string
+          cv_revamp_count?: number
+          id?: string
+          usage_date?: string
+          user_identifier?: string
         }
         Relationships: []
       }

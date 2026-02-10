@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -12,9 +13,9 @@ interface UpgradeModalProps {
 }
 
 export const UpgradeModal = ({ open, onOpenChange, userEmail }: UpgradeModalProps) => {
-  const [isLoading, setIsLoading] = useState<"monthly" | "annual" | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleCheckout = async (planType: "monthly" | "annual") => {
+  const handleCheckout = async () => {
     if (!userEmail) {
       toast({
         title: "Email required",
@@ -24,10 +25,10 @@ export const UpgradeModal = ({ open, onOpenChange, userEmail }: UpgradeModalProp
       return;
     }
 
-    setIsLoading(planType);
+    setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-checkout-session", {
-        body: { planType, userEmail },
+        body: { planType: "monthly", userEmail },
       });
 
       if (error) {
@@ -47,56 +48,60 @@ export const UpgradeModal = ({ open, onOpenChange, userEmail }: UpgradeModalProp
         variant: "destructive",
       });
     } finally {
-      setIsLoading(null);
+      setIsLoading(false);
     }
   };
 
+  const features = [
+    "Unlimited CV revamps per day",
+    "Unlimited AI suggestions",
+    "All CV templates & colour palettes",
+    "PDF & Word downloads",
+    "AI cover letter generation",
+    "Cancel anytime",
+  ];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Upgrade to Unlimited CV Revamps</DialogTitle>
+          <DialogTitle>Upgrade to Unlimited</DialogTitle>
           <DialogDescription>
-            Choose a plan that fits you best. Cancel anytime — no further charges after cancellation.
+            You've used your free daily CV generation. Upgrade for unlimited access.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-xl border border-border p-5 space-y-3 bg-background">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-foreground">Monthly</h3>
-              <Badge variant="secondary">Cancel anytime</Badge>
-            </div>
-            <p className="text-3xl font-bold text-foreground">£16.99</p>
-            <p className="text-sm text-muted-foreground">per month</p>
-            <Button
-              className="w-full"
-              onClick={() => handleCheckout("monthly")}
-              disabled={isLoading !== null}
-            >
-              {isLoading === "monthly" ? "Redirecting..." : "Upgrade Monthly"}
-            </Button>
+        <div className="rounded-xl border border-primary/40 p-6 space-y-4 bg-primary/5">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-foreground">Monthly Plan</h3>
+            <Badge className="bg-primary text-primary-foreground">Most Popular</Badge>
+          </div>
+          <div className="flex items-baseline gap-1">
+            <span className="text-4xl font-bold text-foreground">$9.99</span>
+            <span className="text-muted-foreground">/ month</span>
           </div>
 
-          <div className="rounded-xl border border-primary/40 p-5 space-y-3 bg-primary/5">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-foreground">Annual</h3>
-              <Badge className="bg-primary text-primary-foreground">Best value</Badge>
-            </div>
-            <p className="text-3xl font-bold text-foreground">£149</p>
-            <p className="text-sm text-muted-foreground">per year</p>
-            <Button
-              className="w-full"
-              onClick={() => handleCheckout("annual")}
-              disabled={isLoading !== null}
-            >
-              {isLoading === "annual" ? "Redirecting..." : "Upgrade Annual"}
-            </Button>
-          </div>
+          <ul className="space-y-2">
+            {features.map((feature) => (
+              <li key={feature} className="flex items-center gap-2 text-sm text-foreground">
+                <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                {feature}
+              </li>
+            ))}
+          </ul>
+
+          <Button
+            className="w-full"
+            size="lg"
+            onClick={handleCheckout}
+            disabled={isLoading}
+          >
+            {isLoading ? "Redirecting..." : "Upgrade Now — $9.99/mo"}
+          </Button>
         </div>
 
-        <p className="text-xs text-muted-foreground">
-          No further charges after cancellation. You keep unlimited access until the current billing period ends.
+        <p className="text-xs text-muted-foreground text-center">
+          Cancel anytime. No further charges after cancellation.
         </p>
       </DialogContent>
     </Dialog>

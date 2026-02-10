@@ -103,7 +103,7 @@ const AdminDashboard = () => {
     }
 
     const { data, error } = await supabase
-      .from("subscriptions")
+      .from("subscriptions" as any)
       .select("*")
       .in("user_identifier", emails);
 
@@ -112,7 +112,7 @@ const AdminDashboard = () => {
       return;
     }
 
-    const mapped = (data as SubscriptionInfo[]).reduce<Record<string, SubscriptionInfo>>((acc, subscription) => {
+    const mapped = ((data || []) as unknown as SubscriptionInfo[]).reduce<Record<string, SubscriptionInfo>>((acc, subscription) => {
       acc[subscription.user_identifier] = subscription;
       return acc;
     }, {});

@@ -245,89 +245,75 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
   };
 
   const simulateProcessing = useCallback(async () => {
-    const allowed = await checkUsageLimit();
-    if (!allowed) return;
-
     setIsProcessing(true);
     
     // Save user submission to database
     await saveSubmission();
     
     setProcessingStage('analyzing');
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
     setProcessingStage('processing');
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setProcessingStage('generating');
-    await new Promise(resolve => setTimeout(resolve, 1500));
 
-    const simulatedOutput: TailoredOutput = {
-      cv: `# ${jobDetails.title}
+    try {
+      const { data, error } = await supabase.functions.invoke("revamp-cv", {
+        body: {
+          cvText: cvData?.content || "",
+          jobTitle: jobDetails.title,
+          jobDescription: jobDetails.description || "",
+          personSpec: jobDetails.personSpec || "",
+          userName: userDetails.fullName,
+          userEmail: userDetails.email,
+          outputType,
+        },
+      });
 
-## Professional Summary
-Experienced professional with a proven track record in delivering results. Skilled in adapting to new challenges and driving innovation.
+      if (error) {
+        const msg = String(error.message || "").toLowerCase();
+        if (msg.includes("usage limit") || msg.includes("402")) {
+          setShowUpgradeModal(true);
+          toast({ title: "Daily limit reached", description: "Upgrade to unlock unlimited CV revamps.", variant: "destructive" });
+          setIsProcessing(false);
+          return;
+        }
+        throw error;
+      }
 
-## Key Skills
-- **Leadership**: Demonstrated ability to lead cross-functional teams
-- **Communication**: Excellent written and verbal communication skills
-- **Problem Solving**: Strong analytical and critical thinking abilities
-- **Technical Expertise**: Proficient in industry-standard tools and methodologies
+      if (data?.error) {
+        if (data.error.includes("Usage limit") || data.error.includes("upgrade")) {
+          setShowUpgradeModal(true);
+          toast({ title: "Daily limit reached", description: "Upgrade to unlock unlimited CV revamps.", variant: "destructive" });
+          setIsProcessing(false);
+          return;
+        }
+        throw new Error(data.error);
+      }
 
-## Professional Experience
+      setProcessingStage('generating');
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-### Current Position
-*Tailored based on job requirements*
+      const result: TailoredOutput = {
+        cv: data?.cv || `# ${jobDetails.title}\n\nYour tailored CV content will appear here.`,
+        coverLetter: data?.coverLetter || `Dear Hiring Manager,\n\nYour tailored cover letter will appear here.\n\nBest regards,\n${userDetails.fullName}`,
+      };
 
-Successfully implemented strategic initiatives that align with the role's requirements. Key achievements include:
-- Delivered projects on time and within budget
-- Collaborated with stakeholders to achieve business objectives
-- Drove continuous improvement initiatives
-
-## Education
-Relevant qualifications aligned with position requirements.
-
----
-*This CV has been tailored for the ${jobDetails.title} position*`,
+      setOutput(result);
       
-      coverLetter: `Dear Hiring Manager,
-
-I am writing to express my strong interest in the **${jobDetails.title}** position. After carefully reviewing the job description, I am confident that my skills and experience make me an excellent candidate for this role.
-
-## Why I'm a Great Fit
-
-Throughout my career, I have developed a comprehensive skill set that directly aligns with your requirements. My experience has equipped me with:
-
-- **Relevant Industry Experience**: I bring hands-on experience that matches the core responsibilities outlined in your job description.
-- **Proven Track Record**: I have consistently delivered results and exceeded expectations in similar roles.
-- **Adaptability**: I thrive in dynamic environments and quickly adapt to new challenges.
-
-## What I Can Bring to Your Team
-
-I am particularly excited about this opportunity because it aligns perfectly with my career goals and expertise. I am eager to contribute to your organization's success by:
-
-- Applying my skills to drive meaningful results
-- Collaborating effectively with team members
-- Bringing fresh perspectives and innovative solutions
-
-I would welcome the opportunity to discuss how my background and skills would benefit your team. Thank you for considering my application.
-
-Best regards,
-${userDetails.fullName}
-
----
-*This cover letter has been tailored for the ${jobDetails.title} position*`
-    };
-
-    setOutput(simulatedOutput);
-    setIsProcessing(false);
-    await consumeUsage();
-    
-    toast({
-      title: "Success!",
-      description: "Your tailored documents are ready.",
-    });
-  }, [jobDetails.title, jobDetails.description, jobDetails.personSpec, jobDetails.linkedinUrl, userDetails, cvData, outputType, checkUsageLimit, consumeUsage]);
+      toast({
+        title: "Success!",
+        description: "Your tailored documents are ready.",
+      });
+    } catch (err: any) {
+      console.error("CV generation error:", err);
+      toast({
+        title: "Generation failed",
+        description: err.message || "Unable to generate your CV. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [jobDetails.title, jobDetails.description, jobDetails.personSpec, jobDetails.linkedinUrl, userDetails, cvData, outputType]);
 
   const handleSendMessage = async (message: string) => {
     setMessages((prev) => [...prev, { role: "user", content: message }]);
