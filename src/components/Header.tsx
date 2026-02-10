@@ -31,6 +31,9 @@ export const Header = () => {
           <a href="#how-it-works" className="hidden md:block text-sm text-muted-foreground hover:text-foreground transition-colors">
             How it Works
           </a>
+          <button onClick={() => navigate("/subscription")} className="hidden md:block text-sm text-muted-foreground hover:text-foreground transition-colors">
+            Subscription
+          </button>
           {user ? (
             <div className="flex items-center gap-2">
               <span className="hidden sm:inline text-sm text-muted-foreground truncate max-w-[150px]">
