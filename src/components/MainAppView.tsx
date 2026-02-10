@@ -9,8 +9,7 @@ import { OutputTypeSelector } from "./OutputTypeSelector";
 import { OutputDisplay } from "./OutputDisplay";
 import { AIChatBox } from "./AIChatBox";
 import { ProcessingStatus } from "./ProcessingStatus";
-import { CVModeSelector, type CVBuildMode } from "./CVModeSelector";
-import { GuidedCVBuilder } from "./GuidedCVBuilder";
+import type { CVBuildMode } from "./CVModeSelector";
 import { UpgradeModal } from "./UpgradeModal";
 import { MissingSectionSuggestions } from "./MissingSectionSuggestions";
 import { SavedCVs } from "./SavedCVs";
@@ -299,7 +298,7 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
           cv_filename: cvData?.fileName || null,
           cv_text: cvData?.content || null,
           output_type: outputType,
-          service_type: buildMode === 'guided' ? 'AI Suggestions' : 'CV Revamp',
+          service_type: 'CV Revamp',
         });
 
       if (error) {
@@ -636,10 +635,6 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
           <Button
             variant="ghost"
             onClick={() => {
-              if (buildMode === "guided" && !output) {
-                setBuildMode(null);
-                return;
-              }
               if (buildMode && !output) {
                 setBuildMode(null);
                 return;
@@ -652,7 +647,7 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
             {buildMode && !output ? "Back" : "Back to Home"}
           </Button>
 
-          {(output || buildMode === "guided") && (
+          {output && (
             <Button variant="outline" onClick={handleReset} className="gap-2">
               <RotateCcw className="w-4 h-4" />
               Start Over
@@ -725,22 +720,6 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
                 )}
               </div>
             </motion.div>
-          ) : buildMode === "guided" ? (
-            <motion.div
-              key="guided"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <GuidedCVBuilder
-                userName={userDetails.fullName}
-                userEmail={userDetails.email}
-                userPhone={userDetails.phone}
-                jobTitle={jobDetails.title}
-                jobDescription={jobDetails.description}
-                onUsageLimit={() => setShowUpgradeModal(true)}
-              />
-            </motion.div>
           ) : !buildMode ? (
             <motion.div
               key="input"
@@ -777,18 +756,19 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
                   />
                 </div>
 
-                {/* Step 3: Choose Mode */}
+                {/* Step 3: Continue */}
                 <div className="pt-4">
                   {hasBasicDetails ? (
-                    <CVModeSelector
-                      onSelect={(mode) => {
-                        if (mode === "guided") {
-                          setBuildMode("guided");
-                        } else {
-                          setBuildMode("revamp");
-                        }
-                      }}
-                    />
+                    <div className="text-center">
+                      <Button
+                        size="lg"
+                        className="gap-2 gradient-primary text-primary-foreground shadow-primary px-8"
+                        onClick={() => setBuildMode("revamp")}
+                      >
+                        <Sparkles className="w-5 h-5" />
+                        Continue with AI CV Revamp
+                      </Button>
+                    </div>
                   ) : (
                     <p className="text-center text-sm text-muted-foreground">
                       Please fill in your details and job title to continue
