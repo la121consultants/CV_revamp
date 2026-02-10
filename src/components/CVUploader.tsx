@@ -2,12 +2,40 @@ import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Upload, FileText, X, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
 import type { CVData } from "@/types";
 
 interface CVUploaderProps {
   onUpload: (cvData: CVData) => void;
   cvData: CVData | null;
   onClear: () => void;
+}
+
+async function extractTextFromPDF(file: File): Promise<string> {
+  const pdfjsLib = await import("pdfjs-dist");
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const pages: string[] = [];
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const textContent = await page.getTextContent();
+    const pageText = textContent.items
+      .map((item: any) => item.str)
+      .join(" ");
+    pages.push(pageText);
+  }
+
+  return pages.join("\n\n");
+}
+
+async function extractTextFromDOCX(file: File): Promise<string> {
+  const mammoth = await import("mammoth");
+  const arrayBuffer = await file.arrayBuffer();
+  const result = await mammoth.extractRawText({ arrayBuffer });
+  return result.value;
 }
 
 export const CVUploader = ({ onUpload, cvData, onClear }: CVUploaderProps) => {
@@ -18,20 +46,48 @@ export const CVUploader = ({ onUpload, cvData, onClear }: CVUploaderProps) => {
     setIsProcessing(true);
     
     try {
-      const fileType = file.name.endsWith('.pdf') ? 'pdf' 
-        : file.name.endsWith('.docx') ? 'docx' 
+      const ext = file.name.split('.').pop()?.toLowerCase() || '';
+      const fileType: CVData['fileType'] = ext === 'pdf' ? 'pdf' 
+        : (ext === 'docx' || ext === 'doc') ? 'docx' 
         : 'txt';
       
-      // For now, read as text. In production, you'd parse PDF/DOCX properly
-      const content = await file.text();
-      
+      let content = '';
+
+      if (fileType === 'pdf') {
+        content = await extractTextFromPDF(file);
+      } else if (fileType === 'docx') {
+        content = await extractTextFromDOCX(file);
+      } else {
+        content = await file.text();
+      }
+
+      if (!content || content.trim().length < 20) {
+        toast({
+          title: "Could not extract text",
+          description: "The file appears empty or unreadable. Try pasting your CV text instead.",
+          variant: "destructive",
+        });
+        setIsProcessing(false);
+        return;
+      }
+
       onUpload({
         fileName: file.name,
         content,
         fileType,
       });
+
+      toast({
+        title: "CV uploaded successfully",
+        description: `Extracted ${content.split(/\s+/).length} words from ${file.name}`,
+      });
     } catch (error) {
       console.error('Error processing file:', error);
+      toast({
+        title: "Upload failed",
+        description: "Could not read the file. Please try a different format or paste your CV text.",
+        variant: "destructive",
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -79,7 +135,7 @@ export const CVUploader = ({ onUpload, cvData, onClear }: CVUploaderProps) => {
             <div>
               <p className="font-medium text-foreground">{cvData.fileName}</p>
               <p className="text-sm text-muted-foreground">
-                {cvData.fileType.toUpperCase()} • Ready to process
+                {cvData.fileType.toUpperCase()} • {cvData.content.split(/\s+/).length} words extracted • Ready to process
               </p>
             </div>
           </div>
@@ -132,7 +188,7 @@ export const CVUploader = ({ onUpload, cvData, onClear }: CVUploaderProps) => {
         </div>
         
         <h3 className="text-lg font-semibold text-foreground mb-2">
-          {isProcessing ? 'Processing...' : 'Upload Your CV'}
+          {isProcessing ? 'Extracting text from your CV...' : 'Upload Your CV'}
         </h3>
         <p className="text-sm text-muted-foreground mb-4">
           Drag and drop or click to browse
