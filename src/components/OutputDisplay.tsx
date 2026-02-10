@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FileText, Mail, Copy, Check, Download } from "lucide-react";
+import { FileText, Mail, Copy, Check, Download, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ReactMarkdown from "react-markdown";
@@ -9,6 +9,7 @@ import { sampleCVData } from "@/types/cv";
 import type { CVStyle, DocumentHeader, TailoredOutput, OutputType } from "@/types";
 import { renderDocumentRequest, downloadDocumentRequest } from "@/lib/documentApi";
 import { toast } from "@/hooks/use-toast";
+import { WordPreviewModal } from "@/components/WordPreviewModal";
 
 interface OutputDisplayProps {
   output: TailoredOutput;
@@ -30,6 +31,7 @@ export const OutputDisplay = ({
   onDownloadBlocked,
 }: OutputDisplayProps) => {
   const [copiedLetter, setCopiedLetter] = useState(false);
+  const [showWordPreview, setShowWordPreview] = useState(false);
   const [isDownloading, setIsDownloading] = useState<{ cv: boolean; letter: boolean }>({
     cv: false,
     letter: false,
@@ -151,6 +153,24 @@ export const OutputDisplay = ({
                   onTemplateChange={onStyleChange}
                   canDownload={canDownload}
                   onDownloadBlocked={onDownloadBlocked}
+                />
+                <div className="flex justify-center mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowWordPreview(true)}
+                    className="gap-2"
+                  >
+                    <Eye className="w-4 h-4" />
+                    Preview as Word
+                  </Button>
+                </div>
+                <WordPreviewModal
+                  open={showWordPreview}
+                  onOpenChange={setShowWordPreview}
+                  content={output.cv}
+                  header={header}
+                  cvStyle={cvStyle}
                 />
               </div>
             </TabsContent>
