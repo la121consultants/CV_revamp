@@ -7,7 +7,7 @@ serve(async (req) => {
   }
 
   try {
-    const { currentCV, currentCoverLetter, userMessage, jobTitle, outputType } = await req.json();
+    const { currentCV, currentCoverLetter, userMessage, jobTitle, jobDescription, personSpec, outputType } = await req.json();
 
     if (!currentCV && !currentCoverLetter) {
       return new Response(
@@ -25,6 +25,11 @@ serve(async (req) => {
     const hasLetter = outputType === "coverLetter" || outputType === "both";
 
     const systemPrompt = `You are a professional UK CV refinement assistant. The user has already generated a CV and/or cover letter. They are now asking you to make specific improvements.
+
+ATS KEYWORD ALIGNMENT:
+0a. When making any change, ensure the updated text uses keywords and terminology from the target job description where they truthfully match the candidate's experience.
+0b. Mirror exact phrases from the job description (e.g. "stakeholder engagement", "continuous improvement", "safeguarding") rather than using synonyms, where the candidate demonstrably has that skill.
+0c. When improving bullet points, prioritise adding ATS-friendly action verbs and sector-specific terms from the target role.
 
 CRITICAL RULES:
 1. Apply ONLY the changes the user requests. Do not rewrite sections they didn't mention.
@@ -56,7 +61,8 @@ ${hasLetter && currentCoverLetter ? `CURRENT COVER LETTER:\n${currentCoverLetter
 USER REQUEST: ${userMessage}
 
 Target role: ${jobTitle || "Not specified"}
-
+${jobDescription ? `\nJOB DESCRIPTION (use keywords from this to align the CV for ATS):\n${jobDescription}\n` : ""}
+${personSpec ? `\nPERSON SPECIFICATION (ensure essential criteria are evidenced using this spec's terminology):\n${personSpec}\n` : ""}
 Apply the requested changes and return the complete updated document(s) as JSON.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

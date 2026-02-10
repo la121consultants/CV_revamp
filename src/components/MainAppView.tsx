@@ -441,6 +441,8 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
           currentCoverLetter: output.coverLetter,
           userMessage: message,
           jobTitle: jobDetails.title,
+          jobDescription: jobDetails.description,
+          personSpec: jobDetails.personSpec,
           outputType,
         },
       });
