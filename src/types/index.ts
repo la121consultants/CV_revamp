@@ -17,9 +17,16 @@ export interface UserDetails {
   phone: string;
 }
 
+export interface SectionSuggestion {
+  section: string;
+  reason: string;
+  suggestedContent: string;
+}
+
 export interface TailoredOutput {
   cv: string;
   coverLetter: string;
+  suggestions?: SectionSuggestion[];
 }
 
 export interface Message {

@@ -94,14 +94,29 @@ serve(async (req) => {
     const systemPrompt = `You are a professional UK CV writer. You produce ATS-optimised, role-relevant CVs and cover letters in UK English. Always respond with ONLY valid JSON – no markdown code fences, no explanation.
 
 CRITICAL RULES YOU MUST FOLLOW:
-1. Use ONLY the candidate's actual name exactly as provided. NEVER invent names or use placeholder names. NEVER use "Alex Mitchell" or any other fabricated name.
-2. All personal details (name, location, job titles, employment history, dates, education, skills, certifications) must match the uploaded CV exactly.
-3. Use the candidate's location exactly as provided — do NOT change, generalise, or assume a different city or country.
-4. Do NOT add information not present in the uploaded CV — no invented employers, qualifications, responsibilities, or metrics.
-5. You MAY improve wording, structure, clarity, bullet point conciseness, and optimise phrasing for UK job applications.
-6. You may NOT change factual details, add roles/employers/education, or insert example content.
-7. If any detail is missing or unclear, leave it unchanged rather than guessing.
-8. The final CV must contain ZERO references to any name other than the candidate's own name.`;
+
+DATA INTEGRITY:
+1. Use ONLY the content from the candidate's uploaded CV. Do NOT add education, qualifications, certifications, skills, roles, employers, responsibilities, metrics, or dates that are not already present.
+2. Do NOT infer or assume missing information. If something is unclear or absent, leave it unchanged.
+
+NAME & IDENTITY:
+3. Use ONLY the candidate's name exactly as shown on the uploaded CV.
+4. NEVER use "Alex Mitchell" or any other placeholder/fabricated name. Remove it entirely if it appears.
+5. Do not introduce any other person's name.
+
+LOCATION:
+6. Use the candidate's location exactly as written in the uploaded CV.
+7. Do NOT modify, generalise, or add a location.
+
+SECTION CONTROL:
+8. Only include sections that already exist in the uploaded CV. Do NOT create new sections (e.g. do not add an Education section if one doesn't exist).
+
+IMPROVEMENTS ALLOWED:
+9. You MAY improve wording, structure, clarity, bullet point conciseness, and optimise phrasing for UK job applications.
+10. You may NOT change factual details, add roles/employers/education, or insert example content.
+
+MISSING SECTION SUGGESTIONS:
+11. After rewriting, identify any commonly expected CV sections that are MISSING from the uploaded CV (e.g. Education, Skills, Certifications, Professional Summary). For each missing section, provide a suggested version based on the target job description and person specification — but clearly mark these as SUGGESTIONS the user can choose to add, NOT as part of the main CV.`;
 
     const userPrompt = `
 Candidate name: ${userName || "Not specified"}
@@ -115,8 +130,9 @@ ${jobDescription || "Not provided"}
 ${personSpec ? `Person specification:\n${personSpec}` : ""}
 
 Please produce a JSON object with the following keys:
-${wantCV ? `"cv": A full, professionally rewritten CV in Markdown format tailored to the target role. Use ONLY the information from the candidate's existing CV. Include sections: Professional Summary, Key Skills, Professional Experience (with bullet-point achievements using action verbs), Education. Use UK English. The candidate's real name and location MUST appear exactly as provided.` : ""}
+${wantCV ? `"cv": A professionally rewritten CV in Markdown format tailored to the target role. Use ONLY sections and information from the candidate's existing CV. Improve wording and structure but do NOT add new sections, roles, skills, or education not present in the original. The candidate's real name and location MUST appear exactly as provided.` : ""}
 ${wantLetter ? `"coverLetter": A compelling cover letter in Markdown format addressed to the Hiring Manager for the target role. Use ONLY information from the candidate's existing CV. Highlight relevant experience. Use UK English. Use the candidate's real name.` : ""}
+"suggestions": An array of objects for any commonly expected CV sections that are MISSING from the uploaded CV. Each object should have: "section" (e.g. "Education", "Skills", "Certifications"), "reason" (why it would help for this role), and "suggestedContent" (draft wording based on the job description/person spec that the user could add). If no sections are missing, return an empty array.
 
 Return ONLY the JSON object, nothing else.`;
 
@@ -151,7 +167,7 @@ Return ONLY the JSON object, nothing else.`;
     const rawContent = data.choices?.[0]?.message?.content || "";
 
     // Parse JSON from response
-    let result: { cv?: string; coverLetter?: string };
+    let result: { cv?: string; coverLetter?: string; suggestions?: Array<{ section: string; reason: string; suggestedContent: string }> };
     try {
       const cleaned = rawContent
         .replace(/```json\s*/gi, "")
@@ -162,8 +178,7 @@ Return ONLY the JSON object, nothing else.`;
       if (jsonStart === -1 || jsonEnd === -1) throw new Error("No JSON found");
       result = JSON.parse(cleaned.substring(jsonStart, jsonEnd + 1));
     } catch {
-      // Fallback: treat entire response as CV
-      result = { cv: rawContent, coverLetter: "" };
+      result = { cv: rawContent, coverLetter: "", suggestions: [] };
     }
 
     if (!skipUsageLimit) {
