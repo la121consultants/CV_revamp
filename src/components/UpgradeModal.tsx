@@ -45,7 +45,7 @@ export const UpgradeModal = ({ open, onOpenChange, userEmail }: UpgradeModalProp
       if (error) throw error;
       if (!data?.url) throw new Error("Unable to start checkout.");
 
-      window.location.href = data.url;
+      window.open(data.url, "_blank");
     } catch (err: any) {
       console.error("Checkout error:", err);
       toast({
