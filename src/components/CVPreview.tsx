@@ -314,23 +314,24 @@ export const CVPreview = ({
         </Button>
       </div>
 
-      {/* CV Preview */}
+      {/* CV Preview — scaled to fit container width */}
       <motion.div
         key={selectedTemplate}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="overflow-auto rounded-lg border border-border shadow-lg bg-white"
-        style={{ maxHeight: "80vh" }}
+        className="overflow-hidden rounded-lg border border-border shadow-lg bg-white"
       >
-        <div 
-          id="cv-preview" 
+        <div
+          id="cv-preview"
           className="origin-top-left"
-          style={{ 
-            transform: "scale(0.6)", 
-            transformOrigin: "top center",
+          style={{
             width: "210mm",
-            margin: "0 auto"
+            /* scale(0.5) gives ~105 mm ≈ 397 px which fits most panels;
+               height is proportional so the full A4 page is visible */
+            transform: "scale(0.5)",
+            transformOrigin: "top left",
+            marginBottom: "-148.5mm", /* 297mm × (1-0.5) to collapse blank space */
           }}
         >
           {renderTemplate()}

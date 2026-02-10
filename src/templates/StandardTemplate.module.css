@@ -1,4 +1,4 @@
-/* STANDARD TEMPLATE - Sidebar + header, ATS-friendly */
+/* STANDARD TEMPLATE - Classic single-column, traditional ATS-friendly */
 /* A4: 210mm x 297mm, 20mm margins */
 
 .page {
@@ -10,119 +10,102 @@
   background: #ffffff;
   color: #1f2937;
   font-family: "Calibri", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  font-size: 11pt;
-  line-height: 1.4;
+  font-size: 10.5pt;
+  line-height: 1.45;
   box-sizing: border-box;
   overflow: hidden;
   --cv-primary: #111827;
-  --cv-primary-contrast: #ffffff;
-  --cv-primary-light: #f3f4f6;
-  --cv-sidebar: #ffffff;
-  --cv-sidebar-text: #1f2937;
-  --cv-border: #e5e7eb;
+  --cv-accent: #2563eb;
   --cv-muted: #4b5563;
+  --cv-border: #d1d5db;
 }
 
-/* Header Section */
+/* ── Header ── */
 .header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  background: transparent;
-  color: var(--cv-primary);
-  padding: 0 0 8px 0;
-  border-bottom: 1px solid var(--cv-border);
+  text-align: center;
+  padding-bottom: 10px;
   margin-bottom: 12px;
+  border-bottom: 2px solid var(--cv-primary);
 }
 
 .name {
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 700;
-  margin: 0 0 4px 0;
   color: var(--cv-primary);
-  letter-spacing: -0.02em;
+  margin: 0 0 2px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .title {
   font-size: 12px;
   color: var(--cv-muted);
-  margin: 0 0 8px 0;
+  margin: 0 0 8px;
   font-weight: 500;
+  letter-spacing: 0.02em;
 }
 
-.headerAccent {
+.contactRow {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 9.5px;
+  color: var(--cv-muted);
+}
+
+.contactRow span {
+  white-space: nowrap;
+}
+
+.divider {
   display: none;
 }
 
-.layout {
-  display: grid;
-  grid-template-columns: 32% 1fr;
-  gap: 14px;
-  height: 100%;
-}
-
-.sidebar {
-  background: var(--cv-sidebar);
-  color: var(--cv-sidebar-text);
-  padding: 0 12px 0 0;
-  border-right: 1px solid var(--cv-border);
-  border-radius: 0;
-}
-
-.contactList {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 10.5px;
-  color: var(--cv-sidebar-text);
-}
-
-.contactList span {
-  word-break: break-word;
-}
-
-/* Section Styles */
+/* ── Sections ── */
 .section {
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .sectionTitle {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #111827;
-  padding-bottom: 4px;
-  margin-bottom: 8px;
+  color: var(--cv-primary);
+  padding-bottom: 3px;
+  margin-bottom: 6px;
   border-bottom: 1px solid var(--cv-border);
 }
 
 .summary {
-  font-size: 11px;
-  line-height: 1.6;
-  color: #374151;
-  text-align: left;
-}
-
-/* Skills List */
-.skillList {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
   font-size: 10.5px;
+  line-height: 1.55;
+  color: #374151;
 }
 
-.skillList span {
-  color: var(--cv-sidebar-text);
-  padding-bottom: 2px;
+/* ── Skills (inline pills) ── */
+.skillRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
 }
 
-/* Experience & Education Items */
-.gridItem {
-  margin-bottom: 12px;
+.skillRow span {
+  font-size: 9.5px;
+  background: #f3f4f6;
+  color: #374151;
+  padding: 2px 8px;
+  border-radius: 3px;
+  border: 1px solid var(--cv-border);
 }
 
-.gridItem:last-child {
+/* ── Experience & Education ── */
+.item {
+  margin-bottom: 10px;
+}
+
+.item:last-child {
   margin-bottom: 0;
 }
 
@@ -130,49 +113,48 @@
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  font-size: 11px;
+  font-size: 10.5px;
 }
 
 .itemHeader > span:first-child {
   font-weight: 600;
-  color: #111827;
+  color: var(--cv-primary);
 }
 
 .itemHeader > span:last-child {
-  font-size: 10px;
+  font-size: 9.5px;
   color: var(--cv-muted);
-  font-weight: 400;
 }
 
 .itemSub {
-  font-size: 10.5px;
+  font-size: 10px;
   color: var(--cv-muted);
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 .bullets {
-  margin: 6px 0 0;
+  margin: 4px 0 0;
   padding-left: 16px;
-  font-size: 10.5px;
+  font-size: 10px;
   line-height: 1.5;
   color: #374151;
 }
 
 .bullets li {
-  margin-bottom: 3px;
+  margin-bottom: 2px;
 }
 
 .bullets li:last-child {
   margin-bottom: 0;
 }
 
-/* References */
+/* ── References ── */
 .references {
-  font-size: 10.5px;
+  font-size: 10px;
   color: var(--cv-muted);
   font-style: italic;
-  margin-top: 14px;
-  padding-top: 10px;
+  margin-top: 12px;
+  padding-top: 8px;
   border-top: 1px solid var(--cv-border);
 }
 
