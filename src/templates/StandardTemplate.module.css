@@ -5,7 +5,7 @@
   width: 210mm;
   min-height: 297mm;
   margin: 0 auto;
-  padding: 20mm;
+  padding: 20mm 20mm 15mm;
   background: #ffffff;
   color: #1f2937;
   font-family: "Calibri", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
@@ -16,6 +16,14 @@
   --cv-accent: #2563eb;
   --cv-muted: #4b5563;
   --cv-border: #d1d5db;
+}
+
+.section {
+  page-break-inside: avoid;
+}
+
+.item {
+  page-break-inside: avoid;
 }
 
 /* ── Header ── */
