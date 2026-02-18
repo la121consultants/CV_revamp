@@ -20,7 +20,7 @@ serve(async (req) => {
       apiVersion: "2025-08-27.basil",
     });
 
-    const origin = req.headers.get("origin") || "";
+    const origin = req.headers.get("origin") || Deno.env.get("APP_BASE_URL") || req.headers.get("referer")?.replace(/\/$/, "") || "";
 
     // Try to get authenticated user (optional for one-off payments)
     let userEmail: string | undefined;
