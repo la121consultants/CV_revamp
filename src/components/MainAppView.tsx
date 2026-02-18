@@ -355,8 +355,20 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
       clearInterval(progressInterval);
 
       if (error) {
+        // Check if it's a usage limit error (402 from edge function)
         const msg = String(error.message || "").toLowerCase();
-        if (msg.includes("usage limit") || msg.includes("402")) {
+        const isUsageLimit = msg.includes("usage limit") || msg.includes("402") || msg.includes("non-2xx");
+        
+        // Also check the response body for usage limit errors
+        let responseBody: any = null;
+        try {
+          if (error.context && typeof error.context.json === "function") {
+            responseBody = await error.context.json();
+          }
+        } catch { /* ignore */ }
+        
+        const bodyError = String(responseBody?.error || "").toLowerCase();
+        if (isUsageLimit || bodyError.includes("usage limit") || bodyError.includes("upgrade")) {
           setShowUpgradeModal(true);
           toast({ title: "Daily limit reached", description: "Upgrade to unlock unlimited CV revamps.", variant: "destructive" });
           setIsProcessing(false);
