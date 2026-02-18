@@ -357,18 +357,24 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
       if (error) {
         // Check if it's a usage limit error (402 from edge function)
         const msg = String(error.message || "").toLowerCase();
-        const isUsageLimit = msg.includes("usage limit") || msg.includes("402") || msg.includes("non-2xx");
         
-        // Also check the response body for usage limit errors
-        let responseBody: any = null;
+        // Try to read the response body for the actual error message
+        let bodyError = "";
         try {
           if (error.context && typeof error.context.json === "function") {
-            responseBody = await error.context.json();
+            const responseBody = await error.context.json();
+            bodyError = String(responseBody?.error || "").toLowerCase();
           }
         } catch { /* ignore */ }
-        
-        const bodyError = String(responseBody?.error || "").toLowerCase();
-        if (isUsageLimit || bodyError.includes("usage limit") || bodyError.includes("upgrade")) {
+
+        const isUsageLimit =
+          msg.includes("usage limit") ||
+          msg.includes("402") ||
+          msg.includes("non-2xx") ||
+          bodyError.includes("usage limit") ||
+          bodyError.includes("upgrade");
+
+        if (isUsageLimit) {
           setShowUpgradeModal(true);
           toast({ title: "Free CV revamp allowance used for the day", description: "Upgrade your plan to unlock unlimited CV revamps." });
           setIsProcessing(false);
@@ -379,9 +385,10 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
       }
 
       if (data?.error) {
-        if (data.error.includes("Usage limit") || data.error.includes("upgrade")) {
+        const errMsg = String(data.error).toLowerCase();
+        if (errMsg.includes("usage limit") || errMsg.includes("upgrade")) {
           setShowUpgradeModal(true);
-          toast({ title: "Daily limit reached", description: "Upgrade to unlock unlimited CV revamps.", variant: "destructive" });
+          toast({ title: "Free CV revamp allowance used for the day", description: "Upgrade your plan to unlock unlimited CV revamps." });
           setIsProcessing(false);
           setProgress(0);
           return;
