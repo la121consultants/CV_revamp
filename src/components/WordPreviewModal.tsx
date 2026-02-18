@@ -8,8 +8,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { parseCVDataFromMarkdown } from "@/utils/parseCVData";
+import { StandardTemplate } from "@/templates/StandardTemplate";
+import { AestheticTemplate } from "@/templates/AestheticTemplate";
+import { SignatureTemplate } from "@/templates/SignatureTemplate";
 import type { CVStyle, DocumentHeader } from "@/types";
-import type { CVData } from "@/types/cv";
+import type { CVData, CVTheme } from "@/types/cv";
 
 interface WordPreviewModalProps {
   open: boolean;
@@ -19,276 +22,25 @@ interface WordPreviewModalProps {
   cvStyle: CVStyle;
 }
 
-const RenderPage = ({ data, style }: { data: CVData; style: CVStyle }) => {
-  const fontFamily = "Calibri, 'Segoe UI', Arial, Helvetica, sans-serif";
-  const { personal, skills, experience, education, training, projects } = data;
+const defaultTheme: CVTheme = {
+  primary: "#1f3a5f",
+  primaryContrast: "#ffffff",
+  primaryLight: "#d6e2f2",
+  sidebar: "#eef1f4",
+  sidebarText: "#1f2937",
+  border: "#cbd5e1",
+  muted: "#6b7280",
+};
 
-  const formatHeading = (text: string) => {
-    if (style === "aesthetic") return text.replace(/\b\w/g, (c) => c.toUpperCase());
-    return text.toUpperCase();
-  };
-
-  const contactParts = [personal.email, personal.phone, personal.location, personal.linkedin].filter(Boolean);
-
-  return (
-    <div
-      className="bg-white mx-auto mb-8 relative"
-      style={{
-        width: "210mm",
-        minHeight: "297mm",
-        padding: "20mm 20mm 15mm",
-        boxShadow: "0 4px 24px rgba(0,0,0,0.15), 0 1px 4px rgba(0,0,0,0.08)",
-        fontFamily,
-        color: "#1a1a1a",
-        lineHeight: 1.5,
-        boxSizing: "border-box",
-        fontSize: "10.5pt",
-      }}
-    >
-      {/* Header */}
-      <div
-        style={{
-          textAlign: "center",
-          marginBottom: "18pt",
-          paddingBottom: "12pt",
-          borderBottom: "1px solid #999",
-        }}
-      >
-        <div
-          style={{
-            fontSize: style === "signature" ? "18pt" : style === "aesthetic" ? "17pt" : "15pt",
-            fontWeight: 700,
-            letterSpacing: style === "signature" ? "1px" : "0",
-            textTransform: style === "signature" ? "uppercase" : "none",
-            marginBottom: "4pt",
-          }}
-        >
-          {personal.firstName} {personal.lastName}
-        </div>
-        {contactParts.length > 0 && (
-          <div style={{ fontSize: "10pt", marginBottom: "2pt", color: "#444" }}>
-            {contactParts.join("  |  ")}
-          </div>
-        )}
-        {personal.title && (
-          <div style={{ fontSize: "12pt", fontWeight: 600, marginTop: "6pt" }}>
-            {personal.title}
-          </div>
-        )}
-      </div>
-
-      {/* Professional Summary */}
-      {personal.summary && (
-        <div style={{ marginBottom: "10pt" }}>
-          <div
-            style={{
-              fontSize: "12pt",
-              fontWeight: 700,
-              textTransform: style === "aesthetic" ? "capitalize" : "uppercase",
-              letterSpacing: "0.5px",
-              borderBottom: "1px solid #ccc",
-              paddingBottom: "3pt",
-              marginBottom: "5pt",
-            color: "#000000",
-            }}
-          >
-            {formatHeading("Professional Summary")}
-          </div>
-          <p style={{ fontSize: "10.5pt", margin: "0 0 4pt 0", fontWeight: 400 }}>
-            {personal.summary}
-          </p>
-        </div>
-      )}
-
-      {/* Key Skills */}
-      {skills.length > 0 && (
-        <div style={{ marginBottom: "10pt" }}>
-          <div
-            style={{
-              fontSize: "12pt",
-              fontWeight: 700,
-              textTransform: style === "aesthetic" ? "capitalize" : "uppercase",
-              letterSpacing: "0.5px",
-              borderBottom: "1px solid #ccc",
-              paddingBottom: "3pt",
-              marginBottom: "5pt",
-             color: "#000000",
-            }}
-          >
-            {formatHeading("Key Skills")}
-          </div>
-          {skills.map((skill, i) => (
-            <p key={i} style={{ fontSize: "10.5pt", margin: "0 0 3pt 18pt", fontWeight: 400 }}>
-              • {skill.name}
-            </p>
-          ))}
-        </div>
-      )}
-
-      {/* Work Experience */}
-      {experience.length > 0 && (
-        <div style={{ marginBottom: "10pt" }}>
-          <div
-            style={{
-              fontSize: "12pt",
-              fontWeight: 700,
-              textTransform: style === "aesthetic" ? "capitalize" : "uppercase",
-              letterSpacing: "0.5px",
-              borderBottom: "1px solid #ccc",
-              paddingBottom: "3pt",
-              marginBottom: "5pt",
-              color: "#000000",
-            }}
-          >
-            {formatHeading("Work Experience")}
-          </div>
-          {experience.map((item, i) => (
-            <div key={i} style={{ marginBottom: "8pt" }}>
-              <p style={{ fontSize: "10.5pt", fontWeight: 700, margin: "0 0 2pt 0" }}>
-                {item.role} — {item.company}{item.location ? ` (${item.location})` : ""}
-              </p>
-              <p style={{ fontSize: "10pt", margin: "0 0 3pt 0", color: "#555" }}>
-                {item.startDate} – {item.endDate}
-              </p>
-              {item.bullets.map((b, j) => (
-                <p key={j} style={{ fontSize: "10.5pt", margin: "0 0 3pt 18pt", fontWeight: 400 }}>
-                  • {b}
-                </p>
-              ))}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Education */}
-      {education.length > 0 && (
-        <div style={{ marginBottom: "10pt" }}>
-          <div
-            style={{
-              fontSize: "12pt",
-              fontWeight: 700,
-              textTransform: style === "aesthetic" ? "capitalize" : "uppercase",
-              letterSpacing: "0.5px",
-              borderBottom: "1px solid #ccc",
-              paddingBottom: "3pt",
-              marginBottom: "5pt",
-              color: "#000000",
-            }}
-          >
-            {formatHeading("Education")}
-          </div>
-          {education.map((item, i) => (
-            <div key={i} style={{ marginBottom: "6pt" }}>
-              <p style={{ fontSize: "10.5pt", fontWeight: 700, margin: "0 0 2pt 0" }}>
-                {item.qualification} — {item.institution}
-              </p>
-              {(item.startDate || item.endDate) && (
-                <p style={{ fontSize: "10pt", margin: "0 0 2pt 0", color: "#555" }}>
-                  {item.startDate} – {item.endDate}
-                </p>
-              )}
-              {item.details && item.details.map((d, j) => (
-                <p key={j} style={{ fontSize: "10.5pt", margin: "0 0 3pt 18pt", fontWeight: 400 }}>
-                  • {d}
-                </p>
-              ))}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Training */}
-      {training.length > 0 && (
-        <div style={{ marginBottom: "10pt" }}>
-          <div
-            style={{
-              fontSize: "12pt",
-              fontWeight: 700,
-              textTransform: style === "aesthetic" ? "capitalize" : "uppercase",
-              letterSpacing: "0.5px",
-              borderBottom: "1px solid #ccc",
-              paddingBottom: "3pt",
-              marginBottom: "5pt",
-              color: "#000000",
-            }}
-          >
-            {formatHeading("Training")}
-          </div>
-          {training.map((item, i) => (
-            <div key={i} style={{ marginBottom: "6pt" }}>
-              <p style={{ fontSize: "10.5pt", fontWeight: 700, margin: "0 0 2pt 0" }}>
-                {item.qualification} — {item.institution}
-              </p>
-              {(item.startDate || item.endDate) && (
-                <p style={{ fontSize: "10pt", margin: "0 0 2pt 0", color: "#555" }}>
-                  {item.startDate} – {item.endDate}
-                </p>
-              )}
-              {item.details && item.details.map((d, j) => (
-                <p key={j} style={{ fontSize: "10.5pt", margin: "0 0 3pt 18pt", fontWeight: 400 }}>
-                  • {d}
-                </p>
-              ))}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Projects */}
-      {projects.length > 0 && (
-        <div style={{ marginBottom: "10pt" }}>
-          <div
-            style={{
-              fontSize: "12pt",
-              fontWeight: 700,
-              textTransform: style === "aesthetic" ? "capitalize" : "uppercase",
-              letterSpacing: "0.5px",
-              borderBottom: "1px solid #ccc",
-              paddingBottom: "3pt",
-              marginBottom: "5pt",
-              color: "#000000",
-            }}
-          >
-            {formatHeading("Projects")}
-          </div>
-          {projects.map((project, i) => (
-            <div key={i} style={{ marginBottom: "6pt" }}>
-              <p style={{ fontSize: "10.5pt", fontWeight: 700, margin: "0 0 2pt 0" }}>
-                {project.title}
-              </p>
-              {project.description && (
-                <p style={{ fontSize: "10.5pt", margin: "0 0 2pt 0" }}>{project.description}</p>
-              )}
-              {project.contribution && (
-                <p style={{ fontSize: "10.5pt", margin: "0 0 2pt 0", fontStyle: "italic" }}>{project.contribution}</p>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* References */}
-      <div style={{ marginBottom: "10pt" }}>
-        <div
-          style={{
-            fontSize: "12pt",
-            fontWeight: 700,
-            textTransform: style === "aesthetic" ? "capitalize" : "uppercase",
-            letterSpacing: "0.5px",
-            borderBottom: "1px solid #ccc",
-            paddingBottom: "3pt",
-            marginBottom: "5pt",
-              color: "#000000",
-            }}
-          >
-            {formatHeading("References")}
-        </div>
-        <p style={{ fontSize: "10.5pt", margin: "0", fontWeight: 400 }}>
-          References available on request
-        </p>
-      </div>
-    </div>
-  );
+const renderTemplate = (data: CVData, style: CVStyle) => {
+  switch (style) {
+    case "aesthetic":
+      return <AestheticTemplate data={data} theme={defaultTheme} />;
+    case "signature":
+      return <SignatureTemplate data={data} theme={defaultTheme} />;
+    default:
+      return <StandardTemplate data={data} theme={defaultTheme} />;
+  }
 };
 
 export const WordPreviewModal = ({
@@ -335,8 +87,15 @@ export const WordPreviewModal = ({
           className="flex-1 overflow-auto"
           style={{ background: "#e5e7eb", padding: "32px 0" }}
         >
-          <div style={{ width: "fit-content", margin: "0 auto" }}>
-            <RenderPage data={data} style={cvStyle} />
+          <div
+            className="mx-auto bg-white"
+            style={{
+              width: "210mm",
+              minHeight: "297mm",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.15), 0 1px 4px rgba(0,0,0,0.08)",
+            }}
+          >
+            {renderTemplate(data, cvStyle)}
           </div>
         </div>
       </DialogContent>
