@@ -53,7 +53,8 @@ const Subscription = () => {
   }, [fetchSubscription]);
 
   const handleCheckout = async (mode: "payment" | "subscription") => {
-    if (!user) {
+    // Subscriptions require login; one-off payments do not
+    if (mode === "subscription" && !user) {
       toast({ title: "Sign in required", description: "Please sign in to subscribe." });
       navigate("/login?redirect=/subscription");
       return;

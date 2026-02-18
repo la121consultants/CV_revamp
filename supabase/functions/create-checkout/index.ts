@@ -13,47 +13,60 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const supabaseClient = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-  );
-
   try {
-    const authHeader = req.headers.get("Authorization")!;
-    const token = authHeader.replace("Bearer ", "");
-    const { data } = await supabaseClient.auth.getUser(token);
-    const user = data.user;
-    if (!user?.email) throw new Error("User not authenticated");
-
     const { mode } = await req.json(); // "payment" or "subscription"
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
     });
 
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    const origin = req.headers.get("origin") || "";
+
+    // Try to get authenticated user (optional for one-off payments)
+    let userEmail: string | undefined;
     let customerId: string | undefined;
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
+
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader && authHeader !== "Bearer ") {
+      const supabaseClient = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+      );
+      const token = authHeader.replace("Bearer ", "");
+      const { data } = await supabaseClient.auth.getUser(token);
+      userEmail = data.user?.email ?? undefined;
     }
 
-    const origin = req.headers.get("origin") || "";
+    // Subscription mode requires authentication
+    if (mode === "subscription" && !userEmail) {
+      throw new Error("Sign in required for subscriptions.");
+    }
+
+    // Look up existing Stripe customer if we have an email
+    if (userEmail) {
+      const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
+      if (customers.data.length > 0) {
+        customerId = customers.data[0].id;
+      }
+    }
+
     let session;
 
     if (mode === "subscription") {
       session = await stripe.checkout.sessions.create({
         customer: customerId,
-        customer_email: customerId ? undefined : user.email,
+        customer_email: customerId ? undefined : userEmail,
         line_items: [{ price: "price_1SzBOxGTySjrCnV1uAYNvw70", quantity: 1 }],
         mode: "subscription",
         success_url: `${origin}/?checkout=success`,
         cancel_url: `${origin}/?checkout=cancelled`,
       });
     } else {
-      // One-off £1 payment
+      // One-off £1 payment — works for guests too
       session = await stripe.checkout.sessions.create({
         customer: customerId,
-        customer_email: customerId ? undefined : user.email,
+        customer_email: customerId ? undefined : userEmail,
+        // If no email at all, Stripe Checkout will collect it
         line_items: [{ price: "price_1SzBObGTySjrCnV120e7z3B8", quantity: 1 }],
         mode: "payment",
         success_url: `${origin}/?checkout=success&type=oneoff`,
