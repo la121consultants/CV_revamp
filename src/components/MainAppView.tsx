@@ -370,7 +370,7 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
         const bodyError = String(responseBody?.error || "").toLowerCase();
         if (isUsageLimit || bodyError.includes("usage limit") || bodyError.includes("upgrade")) {
           setShowUpgradeModal(true);
-          toast({ title: "Daily limit reached", description: "Upgrade to unlock unlimited CV revamps.", variant: "destructive" });
+          toast({ title: "Free CV revamp allowance used for the day", description: "Upgrade your plan to unlock unlimited CV revamps." });
           setIsProcessing(false);
           setProgress(0);
           return;
