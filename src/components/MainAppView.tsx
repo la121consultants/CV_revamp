@@ -439,11 +439,17 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
       });
     } catch (err: any) {
       console.error("CV generation error:", err);
-      toast({
-        title: "Generation failed",
-        description: err.message || "Unable to generate your CV. Please try again.",
-        variant: "destructive",
-      });
+      const catchMsg = String(err?.message || "").toLowerCase();
+      if (catchMsg.includes("usage limit") || catchMsg.includes("402") || catchMsg.includes("non-2xx")) {
+        setShowUpgradeModal(true);
+        toast({ title: "Free CV revamp allowance used for the day", description: "Upgrade your plan to unlock unlimited CV revamps." });
+      } else {
+        toast({
+          title: "Generation failed",
+          description: err.message || "Unable to generate your CV. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsProcessing(false);
       setProgress(0);
