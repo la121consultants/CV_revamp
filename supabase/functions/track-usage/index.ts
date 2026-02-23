@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders, getSupabaseAdmin, getUsageDate, isActiveSubscription, normalizeIdentifier } from "../_shared/usage.ts";
+import { requireAuth } from "../_shared/auth.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -7,16 +8,12 @@ serve(async (req) => {
   }
 
   try {
-    const { userEmail, mode } = await req.json();
+    const authResult = await requireAuth(req);
+    if (authResult instanceof Response) return authResult;
 
-    if (!userEmail) {
-      return new Response(
-        JSON.stringify({ error: "User email is required." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const { mode } = await req.json();
 
-    const normalizedEmail = normalizeIdentifier(userEmail);
+    const normalizedEmail = normalizeIdentifier(authResult.email);
     const supabaseAdmin = getSupabaseAdmin();
 
     const { data: subscriptionData, error: subscriptionError } = await supabaseAdmin
@@ -83,7 +80,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("track-usage error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: "An error occurred. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

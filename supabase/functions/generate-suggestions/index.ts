@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getSupabaseAdmin, getUsageDate, isActiveSubscription, normalizeIdentifier, corsHeaders } from "../_shared/usage.ts";
+import { requireAuth } from "../_shared/auth.ts";
 
 const sectionPrompts: Record<string, string> = {
   summary: `Generate exactly 3 professional summary sentences for a CV. Each should be:
@@ -44,18 +45,14 @@ serve(async (req) => {
   }
 
   try {
-    const { section, jobTitle, jobDescription, existingContent, userName, userEmail } = await req.json();
+    const authResult = await requireAuth(req);
+    if (authResult instanceof Response) return authResult;
+
+    const { section, jobTitle, jobDescription, existingContent, userName } = await req.json();
 
     if (!section || !sectionPrompts[section]) {
       return new Response(
         JSON.stringify({ error: "Invalid section. Must be one of: summary, skills, experience, education, additional" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    if (!userEmail) {
-      return new Response(
-        JSON.stringify({ error: "User email is required for usage tracking." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -66,7 +63,7 @@ serve(async (req) => {
     }
 
     const supabaseAdmin = getSupabaseAdmin();
-    const normalizedEmail = normalizeIdentifier(userEmail);
+    const normalizedEmail = normalizeIdentifier(authResult.email);
     const usageDate = getUsageDate();
 
     const { data: subscriptionData, error: subscriptionError } = await supabaseAdmin
@@ -151,16 +148,13 @@ ${sectionPrompts[section]}`;
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "[]";
 
-    // Parse the JSON array from the response
     let suggestions: string[];
     try {
-      // Strip markdown code blocks if present
       const cleaned = content.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
       suggestions = JSON.parse(cleaned);
       if (!Array.isArray(suggestions)) throw new Error("Not an array");
       suggestions = suggestions.slice(0, 3).map((s: any) => String(s));
     } catch {
-      // Fallback: split by newlines
       suggestions = content
         .split("\n")
         .map((line: string) => line.replace(/^[\d\-\*\.\)]+\s*/, "").trim())
@@ -198,7 +192,7 @@ ${sectionPrompts[section]}`;
   } catch (e) {
     console.error("generate-suggestions error:", e);
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      JSON.stringify({ error: "An error occurred. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

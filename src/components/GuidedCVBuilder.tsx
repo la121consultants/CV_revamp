@@ -90,7 +90,6 @@ export const GuidedCVBuilder = ({
             jobDescription,
             existingContent: sectionContent[section] || "",
             userName,
-            userEmail,
           },
         });
 

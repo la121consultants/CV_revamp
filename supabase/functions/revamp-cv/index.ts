@@ -6,6 +6,7 @@ import {
   isActiveSubscription,
   normalizeIdentifier,
 } from "../_shared/usage.ts";
+import { requireAuth } from "../_shared/auth.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -13,12 +14,15 @@ serve(async (req) => {
   }
 
   try {
-    const { cvText, jobTitle, jobDescription, personSpec, userName, userEmail, outputType } =
+    const authResult = await requireAuth(req);
+    if (authResult instanceof Response) return authResult;
+
+    const { cvText, jobTitle, jobDescription, personSpec, userName, outputType } =
       await req.json();
 
-    if (!userEmail || !jobTitle) {
+    if (!jobTitle) {
       return new Response(
-        JSON.stringify({ error: "Email and job title are required." }),
+        JSON.stringify({ error: "Job title is required." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -30,7 +34,7 @@ serve(async (req) => {
 
     // --- usage guard ---
     const supabaseAdmin = getSupabaseAdmin();
-    const normalizedEmail = normalizeIdentifier(userEmail);
+    const normalizedEmail = normalizeIdentifier(authResult.email);
     const usageDate = getUsageDate();
 
     // Check if user is admin/super_admin — skip usage limits
@@ -246,7 +250,7 @@ Return ONLY the JSON object, nothing else.`;
   } catch (e) {
     console.error("revamp-cv error:", e);
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      JSON.stringify({ error: "An error occurred. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
