@@ -110,9 +110,7 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
     if (!email) return;
     setIsSubscriptionLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("get-subscription", {
-        body: { userEmail: email },
-      });
+      const { data, error } = await supabase.functions.invoke("get-subscription");
 
       if (error) throw error;
       if (data?.subscription) {
@@ -216,7 +214,7 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
 
     try {
       const { data, error } = await supabase.functions.invoke("track-usage", {
-        body: { userEmail: userDetails.email, mode: "check" },
+        body: { mode: "check" },
       });
 
       if (error) throw error;
@@ -249,7 +247,7 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
     if (!userDetails.email) return;
     try {
       await supabase.functions.invoke("track-usage", {
-        body: { userEmail: userDetails.email, mode: "consume" },
+        body: { mode: "consume" },
       });
     } catch (err) {
       console.error("Usage consume error:", err);
@@ -260,9 +258,7 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
     if (!userDetails.email) return;
     setIsCancelling(true);
     try {
-      const { data, error } = await supabase.functions.invoke("cancel-subscription", {
-        body: { userEmail: userDetails.email },
-      });
+      const { data, error } = await supabase.functions.invoke("cancel-subscription");
       if (error) throw error;
       if (data?.success) {
         toast({
@@ -333,7 +329,6 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
           jobDescription: jobDetails.description || "",
           personSpec: jobDetails.personSpec || "",
           userName: userDetails.fullName,
-          userEmail: userDetails.email,
           outputType,
         },
       });

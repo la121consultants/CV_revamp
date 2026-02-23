@@ -35,9 +35,7 @@ const Subscription = () => {
       return;
     }
     try {
-      const { data, error } = await supabase.functions.invoke("get-subscription", {
-        body: { userEmail: user.email },
-      });
+      const { data, error } = await supabase.functions.invoke("get-subscription");
       if (!error && data?.subscription) {
         setSubscriptionInfo(data.subscription);
       }
@@ -78,9 +76,7 @@ const Subscription = () => {
     if (!user?.email) return;
     setIsCancelling(true);
     try {
-      const { data, error } = await supabase.functions.invoke("cancel-subscription", {
-        body: { userEmail: user.email },
-      });
+      const { data, error } = await supabase.functions.invoke("cancel-subscription");
       if (error) throw error;
       if (data?.success) {
         toast({ title: "Cancellation scheduled", description: "Your subscription will cancel at the end of the current billing period." });

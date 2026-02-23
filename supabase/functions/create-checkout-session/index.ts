@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders, getSupabaseAdmin, normalizeIdentifier } from "../_shared/usage.ts";
 import { getPriceIdForPlan, getStripeClient } from "../_shared/stripe.ts";
+import { requireAuth } from "../_shared/auth.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -8,7 +9,10 @@ serve(async (req) => {
   }
 
   try {
-    const { planType, userEmail } = await req.json();
+    const authResult = await requireAuth(req);
+    if (authResult instanceof Response) return authResult;
+
+    const { planType } = await req.json();
 
     if (!planType || (planType !== "monthly" && planType !== "annual")) {
       return new Response(
@@ -17,16 +21,9 @@ serve(async (req) => {
       );
     }
 
-    if (!userEmail) {
-      return new Response(
-        JSON.stringify({ error: "User email is required." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     const stripe = getStripeClient();
     const supabaseAdmin = getSupabaseAdmin();
-    const normalizedEmail = normalizeIdentifier(userEmail);
+    const normalizedEmail = normalizeIdentifier(authResult.email);
 
     const { data: existingSubscription, error: subscriptionError } = await supabaseAdmin
       .from("subscriptions")
@@ -67,7 +64,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("create-checkout-session error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: "An error occurred. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
