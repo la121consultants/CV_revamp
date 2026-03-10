@@ -306,6 +306,9 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
   };
 
   const simulateProcessing = useCallback(async () => {
+    const canProceed = await checkUsageLimit();
+    if (!canProceed) return;
+
     setIsProcessing(true);
     setProgress(0);
     
@@ -407,6 +410,7 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
       };
 
       setOutput(result);
+      await consumeUsage();
 
       // Save CV for logged-in users
       if (user) {
@@ -449,7 +453,7 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
       setIsProcessing(false);
       setProgress(0);
     }
-  }, [jobDetails.title, jobDetails.description, jobDetails.personSpec, jobDetails.linkedinUrl, userDetails, cvData, outputType]);
+  }, [jobDetails.title, jobDetails.description, jobDetails.personSpec, jobDetails.linkedinUrl, userDetails, cvData, outputType, checkUsageLimit, consumeUsage]);
 
   const applyChatChangesViaAI = async (message: string) => {
     if (!output) return;
