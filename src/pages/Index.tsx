@@ -12,6 +12,7 @@ import { Footer } from "@/components/Footer";
 import { CareerSupportCTA } from "@/components/CareerSupportCTA";
 import { MainAppView } from "@/components/MainAppView";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const audienceTiles = [
   { icon: GraduationCap, title: "Students & Graduates", desc: "Stand out from day one with a polished, role-targeted CV." },
@@ -75,6 +76,15 @@ const faqs = [
 const Index = () => {
   const [view, setView] = useState<'home' | 'app'>('home');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const navigate = useNavigate();
+
+  const handlePricingCta = (planName: string) => {
+    if (planName === "Free") {
+      setView("app");
+      return;
+    }
+    navigate("/subscription");
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -300,7 +310,7 @@ const Index = () => {
                           ))}
                         </ul>
                         <Button
-                          onClick={() => setView('app')}
+                          onClick={() => handlePricingCta(plan.name)}
                           className={`w-full h-11 font-semibold ${
                             plan.popular
                               ? "gradient-secondary shadow-secondary hover:opacity-90 text-white"
