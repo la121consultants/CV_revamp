@@ -36,12 +36,15 @@ export const Header = () => {
           <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
             How It Works
           </a>
-          <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
-            Pricing
-          </a>
-          <button onClick={() => navigate("/subscription")} className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
-            My Plan
-          </button>
+          {user ? (
+            <button onClick={() => navigate("/subscription")} className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+              My Plan
+            </button>
+          ) : (
+            <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+              Pricing
+            </a>
+          )}
           {user ? (
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground truncate max-w-[120px]">
@@ -86,15 +89,20 @@ export const Header = () => {
           <a href="#features" className="block text-sm text-muted-foreground px-2 py-1" onClick={() => setMobileOpen(false)}>Features</a>
           <a href="#who-its-for" className="block text-sm text-muted-foreground px-2 py-1" onClick={() => setMobileOpen(false)}>Who It's For</a>
           <a href="#how-it-works" className="block text-sm text-muted-foreground px-2 py-1" onClick={() => setMobileOpen(false)}>How It Works</a>
-          <a href="#pricing" className="block text-sm text-muted-foreground px-2 py-1" onClick={() => setMobileOpen(false)}>Pricing</a>
           {user ? (
-            <Button variant="ghost" size="sm" onClick={async () => { await signOut(); navigate("/"); setMobileOpen(false); }}>
-              <LogOut className="w-4 h-4 mr-1" /> Sign Out
-            </Button>
+            <>
+              <button className="block text-sm text-muted-foreground px-2 py-1" onClick={() => { navigate("/subscription"); setMobileOpen(false); }}>My Plan</button>
+              <Button variant="ghost" size="sm" onClick={async () => { await signOut(); navigate("/"); setMobileOpen(false); }}>
+                <LogOut className="w-4 h-4 mr-1" /> Sign Out
+              </Button>
+            </>
           ) : (
-            <Button variant="outline" size="sm" onClick={() => { navigate("/login"); setMobileOpen(false); }}>
-              <LogIn className="w-4 h-4 mr-1" /> Sign In
-            </Button>
+            <>
+              <a href="#pricing" className="block text-sm text-muted-foreground px-2 py-1" onClick={() => setMobileOpen(false)}>Pricing</a>
+              <Button variant="outline" size="sm" onClick={() => { navigate("/login"); setMobileOpen(false); }}>
+                <LogIn className="w-4 h-4 mr-1" /> Sign In
+              </Button>
+            </>
           )}
         </motion.div>
       )}
