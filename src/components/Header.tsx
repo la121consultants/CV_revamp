@@ -36,12 +36,15 @@ export const Header = () => {
           <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
             How It Works
           </a>
-          <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
-            Pricing
-          </a>
-          <button onClick={() => navigate("/subscription")} className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
-            My Plan
-          </button>
+          {user ? (
+            <button onClick={() => navigate("/subscription")} className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+              My Plan
+            </button>
+          ) : (
+            <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+              Pricing
+            </a>
+          )}
           {user ? (
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground truncate max-w-[120px]">
