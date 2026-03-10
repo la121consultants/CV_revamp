@@ -92,14 +92,17 @@ export const Header = () => {
           {user ? (
             <>
               <button className="block text-sm text-muted-foreground px-2 py-1" onClick={() => { navigate("/subscription"); setMobileOpen(false); }}>My Plan</button>
-          {user ? (
-            <Button variant="ghost" size="sm" onClick={async () => { await signOut(); navigate("/"); setMobileOpen(false); }}>
-              <LogOut className="w-4 h-4 mr-1" /> Sign Out
-            </Button>
+              <Button variant="ghost" size="sm" onClick={async () => { await signOut(); navigate("/"); setMobileOpen(false); }}>
+                <LogOut className="w-4 h-4 mr-1" /> Sign Out
+              </Button>
+            </>
           ) : (
-            <Button variant="outline" size="sm" onClick={() => { navigate("/login"); setMobileOpen(false); }}>
-              <LogIn className="w-4 h-4 mr-1" /> Sign In
-            </Button>
+            <>
+              <a href="#pricing" className="block text-sm text-muted-foreground px-2 py-1" onClick={() => setMobileOpen(false)}>Pricing</a>
+              <Button variant="outline" size="sm" onClick={() => { navigate("/login"); setMobileOpen(false); }}>
+                <LogIn className="w-4 h-4 mr-1" /> Sign In
+              </Button>
+            </>
           )}
         </motion.div>
       )}
