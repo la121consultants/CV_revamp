@@ -10,7 +10,7 @@ export const Footer = () => {
           {/* Brand */}
           <div className="md:col-span-1">
             <div className="flex items-center gap-3 mb-4">
-              <img src={logo} alt="LA121 CV Revamp Tool" className="h-10 w-auto brightness-0 invert" />
+              <img src={logo} alt="LA121 CV Revamp Tool" className="h-10 w-auto" />
               <div>
                 <p className="font-display font-bold text-white text-lg">LA121 CV Revamp</p>
                 <p className="text-[10px] text-white/40 uppercase tracking-wider">By LA121 Consultants</p>
