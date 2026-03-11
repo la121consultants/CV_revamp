@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Lock, AlertCircle, ArrowLeft, Eye, EyeOff } from "lucide-react";
@@ -23,6 +23,14 @@ const UserAuth = () => {
   const location = useLocation();
 
   const redirectTo = new URLSearchParams(location.search).get("redirect") || "/";
+  const requestedMode = new URLSearchParams(location.search).get("mode");
+
+  useEffect(() => {
+    if (requestedMode === "signup") {
+      setMode("signup");
+      setMessage("Payment received — create your account to activate access instantly.");
+    }
+  }, [requestedMode]);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();

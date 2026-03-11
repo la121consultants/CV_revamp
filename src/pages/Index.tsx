@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { 
   FileText, Mail, Brain, Target, BarChart3, FileCheck, 
@@ -12,6 +12,10 @@ import { Footer } from "@/components/Footer";
 import { CareerSupportCTA } from "@/components/CareerSupportCTA";
 import { MainAppView } from "@/components/MainAppView";
 import { Button } from "@/components/ui/button";
+import { useLocation, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const audienceTiles = [
   { icon: GraduationCap, title: "Students & Graduates", desc: "Stand out from day one with a polished, role-targeted CV." },
@@ -75,6 +79,50 @@ const faqs = [
 const Index = () => {
   const [view, setView] = useState<'home' | 'app'>('home');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState<"Pay Per CV" | "Unlimited" | null>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const checkoutStatus = params.get("checkout");
+    if (checkoutStatus === "success" && !user) {
+      toast({
+        title: "Payment successful",
+        description: "Create your account now so your purchase is saved and ready to use.",
+      });
+      navigate(`/login?mode=signup&redirect=${encodeURIComponent("/?checkout=success")}`, { replace: true });
+    }
+  }, [location.search, navigate, user]);
+
+  const handlePricingCta = async (planName: string) => {
+    if (planName === "Free") {
+      setView("app");
+      return;
+    }
+
+    const mode = planName === "Pay Per CV" ? "payment" : "subscription";
+    setIsCheckoutLoading(planName as "Pay Per CV" | "Unlimited");
+
+    try {
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { mode },
+      });
+
+      if (error) throw error;
+      if (!data?.url) throw new Error("Unable to start checkout.");
+
+      window.location.href = data.url;
+    } catch (err: any) {
+      toast({
+        title: "Checkout failed",
+        description: err.message || "Unable to start checkout.",
+        variant: "destructive",
+      });
+      setIsCheckoutLoading(null);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -300,14 +348,15 @@ const Index = () => {
                           ))}
                         </ul>
                         <Button
-                          onClick={() => setView('app')}
+                          onClick={() => handlePricingCta(plan.name)}
+                          disabled={isCheckoutLoading !== null && isCheckoutLoading !== plan.name}
                           className={`w-full h-11 font-semibold ${
                             plan.popular
                               ? "gradient-secondary shadow-secondary hover:opacity-90 text-white"
                               : "bg-white/10 hover:bg-white/20 text-white border border-white/20"
                           }`}
                         >
-                          {plan.cta}
+                          {isCheckoutLoading === plan.name ? "Redirecting..." : plan.cta}
                         </Button>
                       </motion.div>
                     ))}

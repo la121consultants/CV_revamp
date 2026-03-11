@@ -7,36 +7,18 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Check, CreditCard, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
 
 interface UpgradeModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  userEmail: string;
 }
 
-export const UpgradeModal = ({ open, onOpenChange, userEmail }: UpgradeModalProps) => {
+export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
   const [isLoading, setIsLoading] = useState<"oneoff" | "subscription" | null>(null);
-  const { user } = useAuth();
-  const navigate = useNavigate();
-
   const handleCheckout = async (mode: "payment" | "subscription") => {
-    // Subscriptions require login; one-off payments do not
-    if (mode === "subscription" && !user) {
-      toast({
-        title: "Sign in required",
-        description: "Please sign in or create an account to subscribe.",
-      });
-      onOpenChange(false);
-      navigate("/login?redirect=/");
-      return;
-    }
-
     setIsLoading(mode === "payment" ? "oneoff" : "subscription");
     try {
       const { data, error } = await supabase.functions.invoke("create-checkout", {
@@ -46,7 +28,7 @@ export const UpgradeModal = ({ open, onOpenChange, userEmail }: UpgradeModalProp
       if (error) throw error;
       if (!data?.url) throw new Error("Unable to start checkout.");
 
-      window.open(data.url, "_blank");
+      window.location.href = data.url;
     } catch (err: any) {
       console.error("Checkout error:", err);
       toast({
