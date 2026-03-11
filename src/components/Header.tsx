@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { LogIn, LogOut, Menu, X } from "lucide-react";
+import { LogIn, LogOut, Menu, X, FilePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -33,9 +33,20 @@ export const Header = () => {
           <a href="/#who-its-for" className={navLinkClass}>Who It's For</a>
           <a href="/#how-it-works" className={navLinkClass}>How It Works</a>
           {user ? (
-            <button onClick={() => navigate("/subscription")} className={navLinkClass}>
-              My Plan
-            </button>
+            <>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => navigate("/?view=app")}
+                className="gap-1.5"
+              >
+                <FilePlus className="w-4 h-4" />
+                Build New CV
+              </Button>
+              <button onClick={() => navigate("/subscription")} className={navLinkClass}>
+                My Plan
+              </button>
+            </>
           ) : (
             <a href="/#pricing" className={navLinkClass}>Pricing</a>
           )}
@@ -85,6 +96,9 @@ export const Header = () => {
           <a href="/#how-it-works" className="block text-sm text-muted-foreground px-2 py-1" onClick={() => setMobileOpen(false)}>How It Works</a>
           {user ? (
             <>
+              <Button variant="default" size="sm" className="mx-2 gap-1.5" onClick={() => { navigate("/?view=app"); setMobileOpen(false); }}>
+                <FilePlus className="w-4 h-4" /> Build New CV
+              </Button>
               <button className="block text-sm text-muted-foreground px-2 py-1" onClick={() => { navigate("/subscription"); setMobileOpen(false); }}>My Plan</button>
               <Button variant="ghost" size="sm" onClick={async () => { await signOut(); navigate("/"); setMobileOpen(false); }}>
                 <LogOut className="w-4 h-4 mr-1" /> Sign Out
