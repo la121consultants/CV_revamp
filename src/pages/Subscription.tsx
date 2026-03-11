@@ -28,7 +28,7 @@ const Subscription = () => {
   const [isCancelling, setIsCancelling] = useState(false);
   const [subscriptionInfo, setSubscriptionInfo] = useState<any>(null);
   const [isCheckingSubscription, setIsCheckingSubscription] = useState(true);
-  const [dailyUsage, setDailyUsage] = useState<{ used: number; limit: number | null } | null>(null);
+  const [dailyUsage, setDailyUsage] = useState<{ used: number; limit: number | null; remainingText: string } | null>(null);
 
   const fetchSubscription = useCallback(async () => {
     if (!user?.email) {
@@ -55,12 +55,13 @@ const Subscription = () => {
       });
       if (!error && data) {
         if (data.planType) {
-          // Subscribed user — unlimited
-          setDailyUsage({ used: 0, limit: null });
+          const used = Number(data.usedToday ?? 0);
+          setDailyUsage({ used, limit: null, remainingText: "Unlimited" });
         } else if (data.remaining !== undefined) {
-          setDailyUsage({ used: 1 - data.remaining, limit: 1 });
+          const used = Number(data.usedToday ?? 1 - data.remaining);
+          setDailyUsage({ used, limit: 1, remainingText: `${Math.max(0, data.remaining)} left` });
         } else if (!data.allowed) {
-          setDailyUsage({ used: 1, limit: 1 });
+          setDailyUsage({ used: 1, limit: 1, remainingText: "0 left" });
         }
       }
     } catch {
@@ -150,14 +151,18 @@ const Subscription = () => {
                   </div>
                   {/* Daily usage info */}
                   {dailyUsage && (
-                    <div className="rounded-lg border border-border bg-muted/50 px-4 py-2.5 text-center">
-                      <p className="text-xs text-muted-foreground mb-0.5">CVs Today</p>
+                    <div className="rounded-lg border border-border bg-muted/50 px-4 py-2.5 text-center min-w-44">
+                      <p className="text-xs text-muted-foreground mb-0.5">Trials Today</p>
                       {dailyUsage.limit === null ? (
-                        <p className="text-lg font-bold text-primary">Unlimited</p>
+                        <>
+                          <p className="text-lg font-bold text-primary">Unlimited left</p>
+                          <p className="text-xs text-muted-foreground">Used: {dailyUsage.used} / Unlimited</p>
+                        </>
                       ) : (
-                        <p className="text-lg font-bold text-foreground">
-                          {Math.max(0, dailyUsage.limit - dailyUsage.used)}<span className="text-sm font-normal text-muted-foreground">/{dailyUsage.limit} left</span>
-                        </p>
+                        <>
+                          <p className="text-lg font-bold text-foreground">{dailyUsage.remainingText}</p>
+                          <p className="text-xs text-muted-foreground">Used: {dailyUsage.used} / {dailyUsage.limit}</p>
+                        </>
                       )}
                     </div>
                   )}

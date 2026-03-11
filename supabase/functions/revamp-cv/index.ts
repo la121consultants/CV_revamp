@@ -7,6 +7,7 @@ import {
   normalizeIdentifier,
 } from "../_shared/usage.ts";
 import { requireAuth } from "../_shared/auth.ts";
+import { errorResponse } from "../_shared/errors.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -21,15 +22,12 @@ serve(async (req) => {
       await req.json();
 
     if (!jobTitle) {
-      return new Response(
-        JSON.stringify({ error: "Job title is required." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return errorResponse("ERR_2002_INVALID_REQUEST", "Job title is required.");
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+      return errorResponse("ERR_2005_SERVICE_MISCONFIGURED");
     }
 
     // --- usage guard ---
@@ -84,10 +82,7 @@ serve(async (req) => {
 
       currentUsage = usageData?.cv_revamp_count ?? 0;
       if (currentUsage >= 1) {
-        return new Response(
-          JSON.stringify({ error: "Usage limit reached. Please upgrade your plan." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return errorResponse("ERR_2001_USAGE_LIMIT_REACHED", "Usage limit reached. Please upgrade your plan.");
       }
     }
 
@@ -202,12 +197,9 @@ Return ONLY the JSON object, nothing else.`;
       const errText = await response.text();
       console.error("AI gateway error:", response.status, errText);
       if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again shortly." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return errorResponse("ERR_2004_RATE_LIMITED", "Rate limit exceeded. Please try again shortly.");
       }
-      throw new Error(`AI gateway returned ${response.status}`);
+      return errorResponse("ERR_2006_UPSTREAM_FAILURE", `AI gateway returned ${response.status}`);
     }
 
     const data = await response.json();
@@ -249,9 +241,6 @@ Return ONLY the JSON object, nothing else.`;
     });
   } catch (e) {
     console.error("revamp-cv error:", e);
-    return new Response(
-      JSON.stringify({ error: "An error occurred. Please try again." }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return errorResponse("ERR_2500_INTERNAL_ERROR");
   }
 });

@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { CVData, SkillItem, ExperienceItem, EducationItem } from "@/types/cv";
 import type { CVStyle } from "@/types";
 import { toast } from "@/hooks/use-toast";
+import { parseFunctionError } from "@/lib/errorTracker";
 
 type SectionId = "summary" | "skills" | "experience" | "education" | "additional";
 
@@ -94,12 +95,13 @@ export const GuidedCVBuilder = ({
         });
 
         if (response.error) {
-          if (response.error.message?.toLowerCase().includes("usage limit")) {
-            toast({ title: "Usage limit reached", description: "Please upgrade your plan for more AI suggestions.", variant: "destructive" });
+          const parsedError = await parseFunctionError(response.error);
+          if (parsedError.code === "ERR_2001_USAGE_LIMIT_REACHED") {
+            toast({ title: "Daily free trial limit reached", description: parsedError.customerMessage, variant: "destructive" });
             onUsageLimit?.();
             return;
           }
-          throw new Error(response.error.message);
+          throw new Error(parsedError.customerMessage);
         }
 
         if (response.data?.error) {
@@ -121,12 +123,13 @@ export const GuidedCVBuilder = ({
         setAddedSuggestions((prev) => ({ ...prev, [section]: new Set() }));
       } catch (err: any) {
         console.error("Error generating suggestions:", err);
-        if (String(err?.message || "").toLowerCase().includes("usage limit")) {
+        const parsedError = await parseFunctionError(err);
+        if (parsedError.code === "ERR_2001_USAGE_LIMIT_REACHED") {
           onUsageLimit?.();
         }
         toast({
           title: "Error",
-          description: err.message || "Failed to generate suggestions",
+          description: parsedError.customerMessage,
           variant: "destructive",
         });
       } finally {

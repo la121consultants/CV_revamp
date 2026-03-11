@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { corsHeaders } from "./usage.ts";
+import { errorResponse } from "./errors.ts";
 
 export interface AuthenticatedUser {
   id: string;
@@ -13,10 +13,7 @@ export interface AuthenticatedUser {
 export async function requireAuth(req: Request): Promise<AuthenticatedUser | Response> {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader || authHeader === "Bearer ") {
-    return new Response(
-      JSON.stringify({ error: "Authentication required" }),
-      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return errorResponse("ERR_2003_AUTH_REQUIRED");
   }
 
   const supabaseClient = createClient(
@@ -28,10 +25,7 @@ export async function requireAuth(req: Request): Promise<AuthenticatedUser | Res
   const { data, error } = await supabaseClient.auth.getUser(token);
 
   if (error || !data.user || !data.user.email) {
-    return new Response(
-      JSON.stringify({ error: "Invalid or expired authentication token" }),
-      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return errorResponse("ERR_2007_INVALID_AUTH_TOKEN");
   }
 
   return { id: data.user.id, email: data.user.email };

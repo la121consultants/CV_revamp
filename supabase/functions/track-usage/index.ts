@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders, getSupabaseAdmin, getUsageDate, isActiveSubscription, normalizeIdentifier } from "../_shared/usage.ts";
 import { requireAuth } from "../_shared/auth.ts";
+import { errorResponse } from "../_shared/errors.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -26,13 +27,6 @@ serve(async (req) => {
       throw subscriptionError;
     }
 
-    if (isActiveSubscription(subscriptionData)) {
-      return new Response(
-        JSON.stringify({ allowed: true, planType: subscriptionData?.plan_type ?? "monthly", status: subscriptionData?.status ?? "active" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     const usageDate = getUsageDate();
     const { data: usageData, error: usageError } = await supabaseAdmin
       .from("user_usage")
@@ -46,11 +40,22 @@ serve(async (req) => {
     }
 
     const currentUsage = usageData?.cv_revamp_count ?? 0;
-    if (currentUsage >= 1) {
+
+    if (isActiveSubscription(subscriptionData)) {
       return new Response(
-        JSON.stringify({ allowed: false, reason: "Usage limit reached." }),
-        { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({
+          allowed: true,
+          planType: subscriptionData?.plan_type ?? "monthly",
+          status: subscriptionData?.status ?? "active",
+          usedToday: currentUsage,
+          remaining: null,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    if (currentUsage >= 1) {
+      return errorResponse("ERR_2001_USAGE_LIMIT_REACHED", "Usage limit reached.");
     }
 
     if (mode === "consume") {
@@ -74,14 +79,11 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ allowed: true, remaining: 1 - currentUsage }),
+      JSON.stringify({ allowed: true, remaining: 1 - currentUsage, usedToday: currentUsage }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
     console.error("track-usage error:", error);
-    return new Response(
-      JSON.stringify({ error: "An error occurred. Please try again." }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return errorResponse("ERR_2500_INTERNAL_ERROR");
   }
 });
