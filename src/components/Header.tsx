@@ -97,9 +97,9 @@ export const Header = () => {
           animate={{ opacity: 1, height: "auto" }}
           className="md:hidden border-t border-border/50 mt-3 pt-4 pb-2 space-y-3"
         >
-          <a href="#features" className="block text-sm text-muted-foreground px-2 py-1" onClick={() => setMobileOpen(false)}>Features</a>
-          <a href="#who-its-for" className="block text-sm text-muted-foreground px-2 py-1" onClick={() => setMobileOpen(false)}>Who It's For</a>
-          <a href="#how-it-works" className="block text-sm text-muted-foreground px-2 py-1" onClick={() => setMobileOpen(false)}>How It Works</a>
+          <button className="block text-sm text-muted-foreground px-2 py-1" onClick={() => handleAnchorClick("#features")}>Features</button>
+          <button className="block text-sm text-muted-foreground px-2 py-1" onClick={() => handleAnchorClick("#who-its-for")}>Who It's For</button>
+          <button className="block text-sm text-muted-foreground px-2 py-1" onClick={() => handleAnchorClick("#how-it-works")}>How It Works</button>
           {user ? (
             <>
               <button className="block text-sm text-muted-foreground px-2 py-1" onClick={() => { navigate("/subscription"); setMobileOpen(false); }}>My Plan</button>
@@ -109,7 +109,7 @@ export const Header = () => {
             </>
           ) : (
             <>
-              <a href="#pricing" className="block text-sm text-muted-foreground px-2 py-1" onClick={() => setMobileOpen(false)}>Pricing</a>
+              <button className="block text-sm text-muted-foreground px-2 py-1" onClick={() => handleAnchorClick("#pricing")}>Pricing</button>
               <Button variant="outline" size="sm" onClick={() => { navigate("/login"); setMobileOpen(false); }}>
                 <LogIn className="w-4 h-4 mr-1" /> Sign In
               </Button>
