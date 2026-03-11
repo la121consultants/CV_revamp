@@ -28,6 +28,7 @@ const Subscription = () => {
   const [isCancelling, setIsCancelling] = useState(false);
   const [subscriptionInfo, setSubscriptionInfo] = useState<any>(null);
   const [isCheckingSubscription, setIsCheckingSubscription] = useState(true);
+  const [dailyUsage, setDailyUsage] = useState<{ used: number; limit: number | null } | null>(null);
 
   const fetchSubscription = useCallback(async () => {
     if (!user?.email) {
@@ -46,9 +47,31 @@ const Subscription = () => {
     }
   }, [user?.email]);
 
+  const fetchUsage = useCallback(async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase.functions.invoke("track-usage", {
+        body: { mode: "check" },
+      });
+      if (!error && data) {
+        if (data.planType) {
+          // Subscribed user — unlimited
+          setDailyUsage({ used: 0, limit: null });
+        } else if (data.remaining !== undefined) {
+          setDailyUsage({ used: 1 - data.remaining, limit: 1 });
+        } else if (!data.allowed) {
+          setDailyUsage({ used: 1, limit: 1 });
+        }
+      }
+    } catch {
+      // silently fail
+    }
+  }, [user]);
+
   useEffect(() => {
     fetchSubscription();
-  }, [fetchSubscription]);
+    fetchUsage();
+  }, [fetchSubscription, fetchUsage]);
 
   const handleCheckout = async (mode: "payment" | "subscription") => {
     setIsLoading(mode === "payment" ? "oneoff" : "subscription");
