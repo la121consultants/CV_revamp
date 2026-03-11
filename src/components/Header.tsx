@@ -2,14 +2,25 @@ import { motion } from "framer-motion";
 import { LogIn, LogOut, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useState, useCallback } from "react";
 import logo from "@/assets/logo.png";
 
 export const Header = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleAnchorClick = useCallback((hash: string) => {
+    setMobileOpen(false);
+    if (location.pathname !== "/") {
+      navigate("/" + hash);
+    } else {
+      const el = document.querySelector(hash);
+      el?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [location.pathname, navigate]);
 
   return (
     <motion.header
@@ -27,23 +38,23 @@ export const Header = () => {
         </div>
         
         <nav className="hidden md:flex items-center gap-6">
-          <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+          <button onClick={() => handleAnchorClick("#features")} className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
             Features
-          </a>
-          <a href="#who-its-for" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+          </button>
+          <button onClick={() => handleAnchorClick("#who-its-for")} className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
             Who It's For
-          </a>
-          <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+          </button>
+          <button onClick={() => handleAnchorClick("#how-it-works")} className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
             How It Works
-          </a>
+          </button>
           {user ? (
             <button onClick={() => navigate("/subscription")} className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
               My Plan
             </button>
           ) : (
-            <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+            <button onClick={() => handleAnchorClick("#pricing")} className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
               Pricing
-            </a>
+            </button>
           )}
           {user ? (
             <div className="flex items-center gap-2">
@@ -86,9 +97,9 @@ export const Header = () => {
           animate={{ opacity: 1, height: "auto" }}
           className="md:hidden border-t border-border/50 mt-3 pt-4 pb-2 space-y-3"
         >
-          <a href="#features" className="block text-sm text-muted-foreground px-2 py-1" onClick={() => setMobileOpen(false)}>Features</a>
-          <a href="#who-its-for" className="block text-sm text-muted-foreground px-2 py-1" onClick={() => setMobileOpen(false)}>Who It's For</a>
-          <a href="#how-it-works" className="block text-sm text-muted-foreground px-2 py-1" onClick={() => setMobileOpen(false)}>How It Works</a>
+          <button className="block text-sm text-muted-foreground px-2 py-1" onClick={() => handleAnchorClick("#features")}>Features</button>
+          <button className="block text-sm text-muted-foreground px-2 py-1" onClick={() => handleAnchorClick("#who-its-for")}>Who It's For</button>
+          <button className="block text-sm text-muted-foreground px-2 py-1" onClick={() => handleAnchorClick("#how-it-works")}>How It Works</button>
           {user ? (
             <>
               <button className="block text-sm text-muted-foreground px-2 py-1" onClick={() => { navigate("/subscription"); setMobileOpen(false); }}>My Plan</button>
@@ -98,7 +109,7 @@ export const Header = () => {
             </>
           ) : (
             <>
-              <a href="#pricing" className="block text-sm text-muted-foreground px-2 py-1" onClick={() => setMobileOpen(false)}>Pricing</a>
+              <button className="block text-sm text-muted-foreground px-2 py-1" onClick={() => handleAnchorClick("#pricing")}>Pricing</button>
               <Button variant="outline" size="sm" onClick={() => { navigate("/login"); setMobileOpen(false); }}>
                 <LogIn className="w-4 h-4 mr-1" /> Sign In
               </Button>
