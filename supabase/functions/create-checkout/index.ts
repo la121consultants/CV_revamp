@@ -22,7 +22,7 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || Deno.env.get("APP_BASE_URL") || req.headers.get("referer")?.replace(/\/$/, "") || "";
 
-    // Try to get authenticated user (optional for one-off payments)
+    // Try to get authenticated user (optional for all checkout modes)
     let userEmail: string | undefined;
     let customerId: string | undefined;
 
@@ -35,11 +35,6 @@ serve(async (req) => {
       const token = authHeader.replace("Bearer ", "");
       const { data } = await supabaseClient.auth.getUser(token);
       userEmail = data.user?.email ?? undefined;
-    }
-
-    // Subscription mode requires authentication
-    if (mode === "subscription" && !userEmail) {
-      throw new Error("Sign in required for subscriptions.");
     }
 
     // Look up existing Stripe customer if we have an email

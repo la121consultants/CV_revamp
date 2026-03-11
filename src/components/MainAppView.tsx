@@ -872,7 +872,6 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
         <UpgradeModal
           open={showUpgradeModal}
           onOpenChange={setShowUpgradeModal}
-          userEmail={userDetails.email}
         />
       </div>
     </div>

@@ -51,12 +51,6 @@ const Subscription = () => {
   }, [fetchSubscription]);
 
   const handleCheckout = async (mode: "payment" | "subscription") => {
-    // Subscriptions require login; one-off payments do not
-    if (mode === "subscription" && !user) {
-      toast({ title: "Sign in required", description: "Please sign in to subscribe." });
-      navigate("/login?redirect=/subscription");
-      return;
-    }
     setIsLoading(mode === "payment" ? "oneoff" : "subscription");
     try {
       const { data, error } = await supabase.functions.invoke("create-checkout", {
@@ -64,7 +58,7 @@ const Subscription = () => {
       });
       if (error) throw error;
       if (!data?.url) throw new Error("Unable to start checkout.");
-      window.open(data.url, "_blank");
+      window.location.href = data.url;
     } catch (err: any) {
       toast({ title: "Checkout failed", description: err.message || "Unable to start checkout.", variant: "destructive" });
     } finally {
