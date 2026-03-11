@@ -33,9 +33,20 @@ export const Header = () => {
           <a href="/#who-its-for" className={navLinkClass}>Who It's For</a>
           <a href="/#how-it-works" className={navLinkClass}>How It Works</a>
           {user ? (
-            <button onClick={() => navigate("/subscription")} className={navLinkClass}>
-              My Plan
-            </button>
+            <>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => navigate("/?view=app")}
+                className="gap-1.5"
+              >
+                <FilePlus className="w-4 h-4" />
+                Build New CV
+              </Button>
+              <button onClick={() => navigate("/subscription")} className={navLinkClass}>
+                My Plan
+              </button>
+            </>
           ) : (
             <a href="/#pricing" className={navLinkClass}>Pricing</a>
           )}
