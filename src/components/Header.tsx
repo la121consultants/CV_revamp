@@ -38,23 +38,23 @@ export const Header = () => {
         </div>
         
         <nav className="hidden md:flex items-center gap-6">
-          <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+          <button onClick={() => handleAnchorClick("#features")} className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
             Features
-          </a>
-          <a href="#who-its-for" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+          </button>
+          <button onClick={() => handleAnchorClick("#who-its-for")} className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
             Who It's For
-          </a>
-          <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+          </button>
+          <button onClick={() => handleAnchorClick("#how-it-works")} className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
             How It Works
-          </a>
+          </button>
           {user ? (
             <button onClick={() => navigate("/subscription")} className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
               My Plan
             </button>
           ) : (
-            <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+            <button onClick={() => handleAnchorClick("#pricing")} className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
               Pricing
-            </a>
+            </button>
           )}
           {user ? (
             <div className="flex items-center gap-2">
