@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getSupabaseAdmin, getUsageDate, isActiveSubscription, normalizeIdentifier, corsHeaders } from "../_shared/usage.ts";
 import { requireAuth } from "../_shared/auth.ts";
+import { errorResponse } from "../_shared/errors.ts";
 
 const sectionPrompts: Record<string, string> = {
   summary: `Generate exactly 3 professional summary sentences for a CV. Each should be:
@@ -51,15 +52,15 @@ serve(async (req) => {
     const { section, jobTitle, jobDescription, existingContent, userName } = await req.json();
 
     if (!section || !sectionPrompts[section]) {
-      return new Response(
-        JSON.stringify({ error: "Invalid section. Must be one of: summary, skills, experience, education, additional" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      return errorResponse(
+        "ERR_2002_INVALID_REQUEST",
+        "Invalid section. Must be one of: summary, skills, experience, education, additional"
       );
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+      return errorResponse("ERR_2005_SERVICE_MISCONFIGURED");
     }
 
     const supabaseAdmin = getSupabaseAdmin();
@@ -93,10 +94,7 @@ serve(async (req) => {
 
       currentUsageCount = usageData?.cv_revamp_count ?? 0;
       if (currentUsageCount >= 1) {
-        return new Response(
-          JSON.stringify({ error: "Usage limit reached. Please upgrade your plan." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return errorResponse("ERR_2001_USAGE_LIMIT_REACHED", "Usage limit reached. Please upgrade your plan.");
       }
     }
 
@@ -129,20 +127,14 @@ ${sectionPrompts[section]}`;
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again shortly." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return errorResponse("ERR_2004_RATE_LIMITED", "Rate limit exceeded. Please try again shortly.");
       }
       if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Usage limit reached. Please upgrade your plan." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return errorResponse("ERR_2001_USAGE_LIMIT_REACHED", "Usage limit reached. Please upgrade your plan.");
       }
       const errText = await response.text();
       console.error("AI gateway error:", response.status, errText);
-      throw new Error("AI gateway error");
+      return errorResponse("ERR_2006_UPSTREAM_FAILURE", "AI gateway error");
     }
 
     const data = await response.json();
@@ -191,9 +183,6 @@ ${sectionPrompts[section]}`;
     });
   } catch (e) {
     console.error("generate-suggestions error:", e);
-    return new Response(
-      JSON.stringify({ error: "An error occurred. Please try again." }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return errorResponse("ERR_2500_INTERNAL_ERROR");
   }
 });

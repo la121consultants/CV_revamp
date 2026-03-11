@@ -28,6 +28,7 @@ import type {
   DocumentHeader,
 } from "@/types";
 import { toast } from "@/hooks/use-toast";
+import { parseFunctionError } from "@/lib/errorTracker";
 import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
@@ -230,13 +231,13 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
       return true;
     } catch (err: any) {
       console.error("Usage check error:", err);
-      const message = String(err?.message || "").toLowerCase();
-      if (message.includes("usage limit") || message.includes("402")) {
+      const parsedError = await parseFunctionError(err);
+      if (parsedError.code === "ERR_2001_USAGE_LIMIT_REACHED") {
         setShowUpgradeModal(true);
       }
       toast({
-        title: "Error",
-        description: err.message || "Unable to verify usage limits.",
+        title: "Unable to verify usage",
+        description: parsedError.customerMessage,
         variant: "destructive",
       });
       return false;
@@ -353,33 +354,19 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
       clearInterval(progressInterval);
 
       if (error) {
-        // Check if it's a usage limit error (402 from edge function)
-        const msg = String(error.message || "").toLowerCase();
-        
-        // Try to read the response body for the actual error message
-        let bodyError = "";
-        try {
-          if (error.context && typeof error.context.json === "function") {
-            const responseBody = await error.context.json();
-            bodyError = String(responseBody?.error || "").toLowerCase();
-          }
-        } catch { /* ignore */ }
-
-        const isUsageLimit =
-          msg.includes("usage limit") ||
-          msg.includes("402") ||
-          msg.includes("non-2xx") ||
-          bodyError.includes("usage limit") ||
-          bodyError.includes("upgrade");
-
-        if (isUsageLimit) {
+        const parsedError = await parseFunctionError(error);
+        if (parsedError.code === "ERR_2001_USAGE_LIMIT_REACHED") {
           setShowUpgradeModal(true);
-          toast({ title: "Free CV revamp allowance used for the day", description: "Upgrade your plan to unlock unlimited CV revamps." });
+          toast({
+            title: "Daily free trial limit reached",
+            description: parsedError.customerMessage,
+            variant: "destructive",
+          });
           setIsProcessing(false);
           setProgress(0);
           return;
         }
-        throw error;
+        throw new Error(parsedError.customerMessage);
       }
 
       if (data?.error) {
@@ -438,14 +425,14 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
       });
     } catch (err: any) {
       console.error("CV generation error:", err);
-      const catchMsg = String(err?.message || "").toLowerCase();
-      if (catchMsg.includes("usage limit") || catchMsg.includes("402") || catchMsg.includes("non-2xx")) {
+      const parsedError = await parseFunctionError(err);
+      if (parsedError.code === "ERR_2001_USAGE_LIMIT_REACHED") {
         setShowUpgradeModal(true);
-        toast({ title: "Free CV revamp allowance used for the day", description: "Upgrade your plan to unlock unlimited CV revamps." });
+        toast({ title: "Daily free trial limit reached", description: parsedError.customerMessage, variant: "destructive" });
       } else {
         toast({
           title: "Generation failed",
-          description: err.message || "Unable to generate your CV. Please try again.",
+          description: parsedError.customerMessage,
           variant: "destructive",
         });
       }
