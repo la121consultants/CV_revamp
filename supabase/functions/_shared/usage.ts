@@ -37,3 +37,21 @@ export type SubscriptionRecord = {
 
 export const isActiveSubscription = (subscription: SubscriptionRecord | null) =>
   Boolean(subscription && subscription.status === "active");
+
+export type GlobalAppSettings = {
+  free_mode_enabled: boolean;
+  free_mode_banner: string | null;
+};
+
+export const getGlobalAppSettings = async (supabaseAdmin: ReturnType<typeof getSupabaseAdmin>): Promise<GlobalAppSettings> => {
+  const { data } = await supabaseAdmin
+    .from("app_settings")
+    .select("free_mode_enabled, free_mode_banner")
+    .eq("id", "global")
+    .maybeSingle();
+
+  return {
+    free_mode_enabled: Boolean(data?.free_mode_enabled),
+    free_mode_banner: data?.free_mode_banner ?? null,
+  };
+};

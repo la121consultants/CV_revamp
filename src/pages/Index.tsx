@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { 
   FileText, Mail, Brain, Target, BarChart3, FileCheck, 
   GraduationCap, Briefcase, Baby, Rocket, Plane, Users2, ArrowUpRight, 
-  ArrowRight, Check, Sparkles, ChevronDown, ChevronUp, Shield, Zap, Star
+  ArrowRight, Check, Sparkles, ChevronDown, ChevronUp, Shield, Zap, Star, Megaphone
 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
@@ -86,6 +86,7 @@ const Index = () => {
   const [view, setView] = useState<'home' | 'app'>(initialView);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState<"Pay Per CV" | "Unlimited" | null>(null);
+  const [freeModeBanner, setFreeModeBanner] = useState<string | null>(null);
 
   // Sync view with URL param
   useEffect(() => {
@@ -94,6 +95,25 @@ const Index = () => {
       setView("app");
     }
   }, [location.search]);
+
+
+  useEffect(() => {
+    const fetchBanner = async () => {
+      const { data } = await supabase
+        .from("app_settings")
+        .select("free_mode_enabled, free_mode_banner")
+        .eq("id", "global")
+        .maybeSingle();
+
+      if (data?.free_mode_enabled) {
+        setFreeModeBanner(data.free_mode_banner || "We’re celebrating — free unlimited CV revamps are live today.");
+      } else {
+        setFreeModeBanner(null);
+      }
+    };
+
+    fetchBanner();
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -149,6 +169,17 @@ const Index = () => {
               exit={{ opacity: 0 }}
             >
               <Hero onGetStarted={() => setView('app')} />
+
+              {freeModeBanner && (
+                <section className="bg-primary/10 border-y border-primary/20">
+                  <div className="container mx-auto px-4 py-3">
+                    <p className="text-sm text-primary font-medium flex items-center gap-2">
+                      <Megaphone className="w-4 h-4" />
+                      {freeModeBanner}
+                    </p>
+                  </div>
+                </section>
+              )}
 
               {/* Who It's For */}
               <section id="who-its-for" className="py-20 bg-card">
