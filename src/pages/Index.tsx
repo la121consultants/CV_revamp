@@ -77,12 +77,15 @@ const faqs = [
 ];
 
 const Index = () => {
-  const [view, setView] = useState<'home' | 'app'>('home');
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [isCheckoutLoading, setIsCheckoutLoading] = useState<"Pay Per CV" | "Unlimited" | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+
+  const params = new URLSearchParams(location.search);
+  const initialView = params.get("view") === "app" ? "app" : "home";
+  const [view, setView] = useState<'home' | 'app'>(initialView);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState<"Pay Per CV" | "Unlimited" | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
