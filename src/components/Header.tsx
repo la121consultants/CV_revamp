@@ -96,6 +96,9 @@ export const Header = () => {
           <a href="/#how-it-works" className="block text-sm text-muted-foreground px-2 py-1" onClick={() => setMobileOpen(false)}>How It Works</a>
           {user ? (
             <>
+              <Button variant="default" size="sm" className="mx-2 gap-1.5" onClick={() => { navigate("/?view=app"); setMobileOpen(false); }}>
+                <FilePlus className="w-4 h-4" /> Build New CV
+              </Button>
               <button className="block text-sm text-muted-foreground px-2 py-1" onClick={() => { navigate("/subscription"); setMobileOpen(false); }}>My Plan</button>
               <Button variant="ghost" size="sm" onClick={async () => { await signOut(); navigate("/"); setMobileOpen(false); }}>
                 <LogOut className="w-4 h-4 mr-1" /> Sign Out
