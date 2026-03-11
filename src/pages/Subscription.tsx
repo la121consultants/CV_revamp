@@ -148,6 +148,19 @@ const Subscription = () => {
                       </p>
                     )}
                   </div>
+                  {/* Daily usage info */}
+                  {dailyUsage && (
+                    <div className="rounded-lg border border-border bg-muted/50 px-4 py-2.5 text-center">
+                      <p className="text-xs text-muted-foreground mb-0.5">CVs Today</p>
+                      {dailyUsage.limit === null ? (
+                        <p className="text-lg font-bold text-primary">Unlimited</p>
+                      ) : (
+                        <p className="text-lg font-bold text-foreground">
+                          {Math.max(0, dailyUsage.limit - dailyUsage.used)}<span className="text-sm font-normal text-muted-foreground">/{dailyUsage.limit} left</span>
+                        </p>
+                      )}
+                    </div>
+                  )}
                   {isSubscribed && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
