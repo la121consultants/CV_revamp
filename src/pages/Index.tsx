@@ -87,6 +87,14 @@ const Index = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState<"Pay Per CV" | "Unlimited" | null>(null);
 
+  // Sync view with URL param
+  useEffect(() => {
+    const p = new URLSearchParams(location.search);
+    if (p.get("view") === "app") {
+      setView("app");
+    }
+  }, [location.search]);
+
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const checkoutStatus = params.get("checkout");
