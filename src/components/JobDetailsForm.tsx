@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { Briefcase, Users, Link, ExternalLink } from "lucide-react";
 import { Label } from "@/components/ui/label";
@@ -10,10 +9,11 @@ import type { JobDescription } from "@/types";
 interface JobDetailsFormProps {
   jobDetails: JobDescription;
   onChange: (details: JobDescription) => void;
+  inputMethod: "manual" | "linkedin";
+  onInputMethodChange: (method: "manual" | "linkedin") => void;
 }
 
-export const JobDetailsForm = ({ jobDetails, onChange }: JobDetailsFormProps) => {
-  const [inputMethod, setInputMethod] = useState<"manual" | "linkedin">("manual");
+export const JobDetailsForm = ({ jobDetails, onChange, inputMethod, onInputMethodChange }: JobDetailsFormProps) => {
 
   const handleLinkedInUrl = (url: string) => {
     onChange({ ...jobDetails, linkedinUrl: url });
@@ -26,7 +26,7 @@ export const JobDetailsForm = ({ jobDetails, onChange }: JobDetailsFormProps) =>
       transition={{ delay: 0.1 }}
       className="space-y-6"
     >
-      <Tabs value={inputMethod} onValueChange={(v) => setInputMethod(v as "manual" | "linkedin")} className="w-full">
+      <Tabs value={inputMethod} onValueChange={(v) => onInputMethodChange(v as "manual" | "linkedin")} className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-4">
           <TabsTrigger value="manual" className="gap-2">
             <Briefcase className="w-4 h-4" />
@@ -42,7 +42,7 @@ export const JobDetailsForm = ({ jobDetails, onChange }: JobDetailsFormProps) =>
           <div className="space-y-3">
             <Label htmlFor="linkedin-url" className="flex items-center gap-2 text-foreground">
               <ExternalLink className="w-4 h-4 text-primary" />
-              LinkedIn Job URL
+              LinkedIn Job URL <span className="text-destructive">*</span>
             </Label>
             <Input
               id="linkedin-url"

@@ -2,6 +2,8 @@ import { useState, useCallback, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Sparkles, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { CVUploader } from "./CVUploader";
 import { JobDetailsForm } from "./JobDetailsForm";
 import { UserDetailsForm } from "./UserDetailsForm";
@@ -62,6 +64,7 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
   const { user } = useAuth();
   const [buildMode, setBuildMode] = useState<CVBuildMode | null>(null);
   const [cvData, setCvData] = useState<CVData | null>(null);
+  const [jobInputMethod, setJobInputMethod] = useState<"manual" | "linkedin">("manual");
   const [jobDetails, setJobDetails] = useState<JobDescription>({ 
     title: '', 
     description: '', 
@@ -85,6 +88,7 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
   const [subscriptionInfo, setSubscriptionInfo] = useState<SubscriptionInfo | null>(null);
   const [isSubscriptionLoading, setIsSubscriptionLoading] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeMessage, setUpgradeMessage] = useState<string | undefined>(undefined);
   const [hasOneOffPayment, setHasOneOffPayment] = useState(false);
   const [hasUnlimitedGrant, setHasUnlimitedGrant] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
@@ -93,6 +97,12 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
     return (sessionStorage.getItem("cv-chat-mode") as ChatMode) || "instant";
   });
   const [pendingAction, setPendingAction] = useState<PendingChatAction | null>(null);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  const [authPassword, setAuthPassword] = useState("");
+  const [isAuthSubmitting, setIsAuthSubmitting] = useState(false);
+  const [publicUsageSnapshot, setPublicUsageSnapshot] = useState<{ registered: boolean; usedToday: number; remaining: number | null; limit: number | null } | null>(null);
+  const [usageSummary, setUsageSummary] = useState<{ used: number; limit: number | null; remaining: number | null } | null>(null);
+
   const [chatSuggestions, setChatSuggestions] = useState<string[]>([
     "Make the CV more concise",
     "Add more action verbs",
@@ -100,10 +110,11 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
     "Make the cover letter more personal",
   ]);
 
-  const isLinkedInMethod = !!jobDetails.linkedinUrl && jobDetails.linkedinUrl.includes('linkedin.com');
+  const isLinkedInMethod = jobInputMethod === "linkedin";
+  const hasLinkedInUrl = Boolean(jobDetails.linkedinUrl?.trim());
   const isReadyToProcess = cvData && 
     jobDetails.title && 
-    (jobDetails.description || isLinkedInMethod) && 
+    (jobDetails.description || hasLinkedInUrl) && 
     userDetails.fullName && 
     userDetails.email;
 
@@ -131,6 +142,33 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
     }
     fetchSubscription(userDetails.email);
   }, [userDetails.email, fetchSubscription]);
+
+  useEffect(() => {
+    const fetchLoggedInUsage = async () => {
+      if (!user) {
+        setUsageSummary(null);
+        return;
+      }
+      try {
+        const { data } = await supabase.functions.invoke("track-usage", { body: { mode: "check" } });
+        if (data) {
+          if (data.remaining === null || data.planType) {
+            setUsageSummary({ used: Number(data.usedToday ?? 0), remaining: null, limit: null });
+          } else {
+            setUsageSummary({
+              used: Number(data.usedToday ?? 0),
+              remaining: Number(data.remaining ?? 0),
+              limit: 1,
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Usage summary error:", err);
+      }
+    };
+
+    fetchLoggedInUsage();
+  }, [user, output]);
 
   // Check payment status and admin-granted access for logged-in users
   const fetchPaymentStatus = useCallback(async () => {
@@ -225,6 +263,7 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
           description: "Upgrade to unlock unlimited CV revamps.",
           variant: "destructive",
         });
+        setUpgradeMessage("You've used your free daily limit. Upgrade to unlock unlimited CV revamps.");
         setShowUpgradeModal(true);
         return false;
       }
@@ -233,6 +272,7 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
       console.error("Usage check error:", err);
       const parsedError = await parseFunctionError(err);
       if (parsedError.code === "ERR_2001_USAGE_LIMIT_REACHED") {
+        setUpgradeMessage(parsedError.customerMessage);
         setShowUpgradeModal(true);
       }
       toast({
@@ -306,7 +346,54 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
     }
   };
 
-  const simulateProcessing = useCallback(async () => {
+  const simulateProcessing = useCallback(async (skipAuthPrompt = false) => {
+    if (isLinkedInMethod && !hasLinkedInUrl) {
+      toast({ title: "LinkedIn URL required", description: "Please paste a LinkedIn job URL to continue.", variant: "destructive" });
+      return;
+    }
+
+    if (!user && !skipAuthPrompt) {
+      const email = userDetails.email.trim().toLowerCase();
+      const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      if (!validEmail) {
+        toast({ title: "Valid email required", description: "Please enter a valid email before generating your CV.", variant: "destructive" });
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("check-public-usage", {
+        body: { email },
+      });
+      if (error) {
+        const parsedError = await parseFunctionError(error);
+        toast({ title: "Usage check failed", description: parsedError.customerMessage, variant: "destructive" });
+        return;
+      }
+
+      const usageText = data?.limit === null
+        ? `Used today: ${data?.usedToday ?? 0} / Unlimited`
+        : `Used today: ${data?.usedToday ?? 0} / ${data?.limit ?? 1}`;
+
+      if (data?.allowed === false) {
+        toast({
+          title: "Daily limit reached",
+          description: `${usageText}. Upgrade to continue today.`,
+          variant: "destructive",
+        });
+        setUpgradeMessage(`${usageText}. Upgrade to continue today.`);
+        setShowUpgradeModal(true);
+        return;
+      }
+
+      setPublicUsageSnapshot({
+        registered: Boolean(data?.registered),
+        usedToday: Number(data?.usedToday ?? 0),
+        remaining: data?.remaining === null ? null : Number(data?.remaining ?? 0),
+        limit: data?.limit === null ? null : Number(data?.limit ?? 1),
+      });
+      setShowAuthPrompt(true);
+      return;
+    }
+
     const canProceed = await checkUsageLimit();
     if (!canProceed) return;
 
@@ -356,6 +443,7 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
       if (error) {
         const parsedError = await parseFunctionError(error);
         if (parsedError.code === "ERR_2001_USAGE_LIMIT_REACHED") {
+          setUpgradeMessage(parsedError.customerMessage);
           setShowUpgradeModal(true);
           toast({
             title: "Daily free trial limit reached",
@@ -427,6 +515,7 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
       console.error("CV generation error:", err);
       const parsedError = await parseFunctionError(err);
       if (parsedError.code === "ERR_2001_USAGE_LIMIT_REACHED") {
+        setUpgradeMessage(parsedError.customerMessage);
         setShowUpgradeModal(true);
         toast({ title: "Daily free trial limit reached", description: parsedError.customerMessage, variant: "destructive" });
       } else {
@@ -440,7 +529,7 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
       setIsProcessing(false);
       setProgress(0);
     }
-  }, [jobDetails.title, jobDetails.description, jobDetails.personSpec, jobDetails.linkedinUrl, userDetails, cvData, outputType, checkUsageLimit, consumeUsage]);
+  }, [jobDetails.title, jobDetails.description, jobDetails.personSpec, jobDetails.linkedinUrl, userDetails, cvData, outputType, checkUsageLimit, consumeUsage, user, isLinkedInMethod, hasLinkedInUrl]);
 
   const applyChatChangesViaAI = async (message: string) => {
     if (!output) return;
@@ -531,6 +620,7 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
     setBuildMode(null);
     setCvData(null);
     setJobDetails({ title: '', description: '', personSpec: '', linkedinUrl: '' });
+    setJobInputMethod("manual");
     setUserDetails({ fullName: '', email: '', phone: '', city: '', linkedin: '' });
     setOutput(null);
     setMessages([]);
@@ -746,6 +836,13 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
                 <p className="text-muted-foreground">
                   Fill in your details and job information, then choose how to build your CV.
                 </p>
+                {user && usageSummary && (
+                  <div className="mt-3 inline-flex items-center rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
+                    {usageSummary.limit === null
+                      ? `Usage today: ${usageSummary.used} / Unlimited`
+                      : `Usage today: ${usageSummary.used}/${usageSummary.limit} • ${usageSummary.remaining} left`}
+                  </div>
+                )}
               </div>
 
               <div className="space-y-8">
@@ -764,6 +861,8 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
                   <JobDetailsForm
                     jobDetails={jobDetails}
                     onChange={setJobDetails}
+                    inputMethod={jobInputMethod}
+                    onInputMethodChange={setJobInputMethod}
                   />
                 </div>
 
@@ -810,6 +909,13 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
                 <p className="text-muted-foreground">
                   Upload your CV and choose your output type. AI will tailor everything for you.
                 </p>
+                {user && usageSummary && (
+                  <div className="mt-3 inline-flex items-center rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
+                    {usageSummary.limit === null
+                      ? `Usage today: ${usageSummary.used} / Unlimited`
+                      : `Usage today: ${usageSummary.used}/${usageSummary.limit} • ${usageSummary.remaining} left`}
+                  </div>
+                )}
               </div>
 
               <div className="space-y-8">
@@ -856,9 +962,80 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
             </motion.div>
           ) : null}
         </AnimatePresence>
+
+        <Dialog open={showAuthPrompt} onOpenChange={setShowAuthPrompt}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{publicUsageSnapshot?.registered ? "Sign in to continue" : "Create your account to continue"}</DialogTitle>
+              <DialogDescription>
+                Email: {userDetails.email}
+
+                {publicUsageSnapshot && (
+                  <span className="block mt-2">
+                    {publicUsageSnapshot.limit === null
+                      ? `Usage today: ${publicUsageSnapshot.usedToday} / Unlimited`
+                      : `Usage today: ${publicUsageSnapshot.usedToday}/${publicUsageSnapshot.limit} • ${publicUsageSnapshot.remaining} left`}
+                  </span>
+                )}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-2">
+              <Label htmlFor="quick-password">Password</Label>
+              <Input
+                id="quick-password"
+                type="password"
+                value={authPassword}
+                onChange={(e) => setAuthPassword(e.target.value)}
+                placeholder="Enter a password"
+              />
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowAuthPrompt(false)} disabled={isAuthSubmitting}>Cancel</Button>
+              <Button
+                disabled={isAuthSubmitting || authPassword.length < 6}
+                onClick={async () => {
+                  setIsAuthSubmitting(true);
+                  const email = userDetails.email.trim().toLowerCase();
+                  try {
+                    if (publicUsageSnapshot?.registered) {
+                      const { error } = await supabase.auth.signInWithPassword({ email, password: authPassword });
+                      if (error) throw error;
+                    } else {
+                      const { data, error } = await supabase.auth.signUp({
+                        email,
+                        password: authPassword,
+                        options: { data: { full_name: userDetails.fullName || email.split("@")[0] } },
+                      });
+                      if (error) throw error;
+                      if (!data.session) {
+                        toast({ title: "Check your email", description: "Please verify your email, then sign in to continue.", variant: "destructive" });
+                        setIsAuthSubmitting(false);
+                        return;
+                      }
+                    }
+
+                    setShowAuthPrompt(false);
+                    setAuthPassword("");
+                    await simulateProcessing(true);
+                  } catch (err: any) {
+                    toast({ title: "Authentication failed", description: err.message || "Please check your password and try again.", variant: "destructive" });
+                  } finally {
+                    setIsAuthSubmitting(false);
+                  }
+                }}
+              >
+                {isAuthSubmitting ? "Please wait..." : publicUsageSnapshot?.registered ? "Sign in & generate" : "Create account & generate"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         <UpgradeModal
           open={showUpgradeModal}
           onOpenChange={setShowUpgradeModal}
+          usageMessage={upgradeMessage}
         />
       </div>
     </div>

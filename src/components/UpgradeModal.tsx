@@ -14,9 +14,10 @@ import { toast } from "@/hooks/use-toast";
 interface UpgradeModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  usageMessage?: string;
 }
 
-export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
+export const UpgradeModal = ({ open, onOpenChange, usageMessage }: UpgradeModalProps) => {
   const [isLoading, setIsLoading] = useState<"subscription" | null>(null);
 
   const handleCheckout = async () => {
@@ -50,7 +51,7 @@ export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
           </div>
           <DialogTitle className="text-4xl leading-tight text-white">Daily limit reached</DialogTitle>
           <DialogDescription className="text-lg text-white/80 pt-2">
-            You&apos;ve used today&apos;s free credits. Upgrade to keep building.
+            {usageMessage || "You've used today's free credits. Upgrade to keep building."}
           </DialogDescription>
         </DialogHeader>
 
