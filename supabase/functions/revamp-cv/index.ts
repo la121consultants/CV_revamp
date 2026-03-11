@@ -5,6 +5,7 @@ import {
   getUsageDate,
   isActiveSubscription,
   normalizeIdentifier,
+  getGlobalAppSettings,
 } from "../_shared/usage.ts";
 import { requireAuth } from "../_shared/auth.ts";
 import { errorResponse } from "../_shared/errors.ts";
@@ -69,7 +70,8 @@ serve(async (req) => {
       .maybeSingle();
 
     const hasActiveSub = isActiveSubscription(subscriptionData);
-    const skipUsageLimit = isAdmin || hasUnlimitedGrant || hasActiveSub;
+    const globalSettings = await getGlobalAppSettings(supabaseAdmin);
+    const skipUsageLimit = isAdmin || hasUnlimitedGrant || hasActiveSub || globalSettings.free_mode_enabled;
 
     let currentUsage = 0;
     if (!skipUsageLimit) {

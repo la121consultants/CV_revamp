@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { corsHeaders, getSupabaseAdmin, getUsageDate, isActiveSubscription, normalizeIdentifier } from "../_shared/usage.ts";
+import { corsHeaders, getGlobalAppSettings, getSupabaseAdmin, getUsageDate, isActiveSubscription, normalizeIdentifier } from "../_shared/usage.ts";
 import { requireAuth } from "../_shared/auth.ts";
 import { errorResponse } from "../_shared/errors.ts";
 
@@ -40,6 +40,22 @@ serve(async (req) => {
     }
 
     const currentUsage = usageData?.cv_revamp_count ?? 0;
+
+    const globalSettings = await getGlobalAppSettings(supabaseAdmin);
+    if (globalSettings.free_mode_enabled) {
+      return new Response(
+        JSON.stringify({
+          allowed: true,
+          planType: "global_free_mode",
+          status: "active",
+          usedToday: currentUsage,
+          remaining: null,
+          freeModeEnabled: true,
+          freeModeBanner: globalSettings.free_mode_banner,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     if (isActiveSubscription(subscriptionData)) {
       return new Response(

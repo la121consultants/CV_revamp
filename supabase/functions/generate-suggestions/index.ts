@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { getSupabaseAdmin, getUsageDate, isActiveSubscription, normalizeIdentifier, corsHeaders } from "../_shared/usage.ts";
+import { getGlobalAppSettings, getSupabaseAdmin, getUsageDate, isActiveSubscription, normalizeIdentifier, corsHeaders } from "../_shared/usage.ts";
 import { requireAuth } from "../_shared/auth.ts";
 import { errorResponse } from "../_shared/errors.ts";
 
@@ -78,9 +78,10 @@ serve(async (req) => {
     }
 
     const hasActiveSubscription = isActiveSubscription(subscriptionData);
+    const globalSettings = await getGlobalAppSettings(supabaseAdmin);
 
     let currentUsageCount = 0;
-    if (!hasActiveSubscription) {
+    if (!hasActiveSubscription && !globalSettings.free_mode_enabled) {
       const { data: usageData, error: usageError } = await supabaseAdmin
         .from("user_usage")
         .select("cv_revamp_count")
@@ -154,7 +155,7 @@ ${sectionPrompts[section]}`;
         .slice(0, 3);
     }
 
-    if (!hasActiveSubscription) {
+    if (!hasActiveSubscription && !globalSettings.free_mode_enabled) {
       if (currentUsageCount === 0) {
         const { error: insertError } = await supabaseAdmin
           .from("user_usage")

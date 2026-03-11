@@ -22,6 +22,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminUserManagement } from "@/components/AdminUserManagement";
 import { UnlimitedAccessManagement } from "@/components/UnlimitedAccessManagement";
+import { GlobalFreeModeSettings } from "@/components/GlobalFreeModeSettings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -432,7 +433,7 @@ const AdminDashboard = () => {
         {/* Tabbed Content - Show to all admins */}
         {isAdmin && (
           <Tabs defaultValue="submissions" className="space-y-6">
-            <TabsList className={`grid w-full max-w-lg ${isSuperAdmin ? 'grid-cols-3' : 'grid-cols-1'}`}>
+            <TabsList className={`grid w-full max-w-2xl ${isSuperAdmin ? 'grid-cols-4' : 'grid-cols-1'}`}>
               <TabsTrigger value="submissions" className="gap-2">
                 <Users className="w-4 h-4" />
                 Submissions
@@ -446,6 +447,10 @@ const AdminDashboard = () => {
                   <TabsTrigger value="admins" className="gap-2">
                     <UserCog className="w-4 h-4" />
                     Manage Admins
+                  </TabsTrigger>
+                  <TabsTrigger value="platform" className="gap-2">
+                    <Settings className="w-4 h-4" />
+                    Platform
                   </TabsTrigger>
                 </>
               )}
@@ -660,6 +665,13 @@ const AdminDashboard = () => {
             {isSuperAdmin && (
               <TabsContent value="unlimited">
                 <UnlimitedAccessManagement />
+              </TabsContent>
+            )}
+
+
+            {isSuperAdmin && (
+              <TabsContent value="platform">
+                <GlobalFreeModeSettings />
               </TabsContent>
             )}
 
