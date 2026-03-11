@@ -29,9 +29,15 @@ export const Header = () => {
         </a>
         
         <nav className="hidden md:flex items-center gap-6">
-          <a href="/#features" className={navLinkClass}>Features</a>
-          <a href="/#who-its-for" className={navLinkClass}>Who It's For</a>
-          <a href="/#how-it-works" className={navLinkClass}>How It Works</a>
+          {user ? (
+            <a href="/" className={navLinkClass}>Home</a>
+          ) : (
+            <>
+              <a href="/#features" className={navLinkClass}>Features</a>
+              <a href="/#who-its-for" className={navLinkClass}>Who It's For</a>
+              <a href="/#how-it-works" className={navLinkClass}>How It Works</a>
+            </>
+          )}
           {user ? (
             <>
               <Button
@@ -91,9 +97,15 @@ export const Header = () => {
           animate={{ opacity: 1, height: "auto" }}
           className="md:hidden border-t border-border/50 mt-3 pt-4 pb-2 space-y-3"
         >
-          <a href="/#features" className="block text-sm text-muted-foreground px-2 py-1" onClick={() => setMobileOpen(false)}>Features</a>
-          <a href="/#who-its-for" className="block text-sm text-muted-foreground px-2 py-1" onClick={() => setMobileOpen(false)}>Who It's For</a>
-          <a href="/#how-it-works" className="block text-sm text-muted-foreground px-2 py-1" onClick={() => setMobileOpen(false)}>How It Works</a>
+          {user ? (
+            <a href="/" className="block text-sm text-muted-foreground px-2 py-1" onClick={() => setMobileOpen(false)}>Home</a>
+          ) : (
+            <>
+              <a href="/#features" className="block text-sm text-muted-foreground px-2 py-1" onClick={() => setMobileOpen(false)}>Features</a>
+              <a href="/#who-its-for" className="block text-sm text-muted-foreground px-2 py-1" onClick={() => setMobileOpen(false)}>Who It's For</a>
+              <a href="/#how-it-works" className="block text-sm text-muted-foreground px-2 py-1" onClick={() => setMobileOpen(false)}>How It Works</a>
+            </>
+          )}
           {user ? (
             <>
               <Button variant="default" size="sm" className="mx-2 gap-1.5" onClick={() => { navigate("/?view=app"); setMobileOpen(false); }}>
