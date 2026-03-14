@@ -14,30 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      app_settings: {
-        Row: {
-          free_mode_banner: string | null
-          free_mode_enabled: boolean
-          id: string
-          updated_at: string
-          updated_by: string | null
-        }
-        Insert: {
-          free_mode_banner?: string | null
-          free_mode_enabled?: boolean
-          id: string
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Update: {
-          free_mode_banner?: string | null
-          free_mode_enabled?: boolean
-          id?: string
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           created_at: string
