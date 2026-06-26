@@ -43,6 +43,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface MainAppViewProps {
   onBack: () => void;
@@ -945,7 +953,7 @@ export const MainAppView = ({ onBack }: MainAppViewProps) => {
                 >
                   <Button
                     size="lg"
-                    onClick={simulateProcessing}
+                    onClick={() => simulateProcessing()}
                     disabled={!isReadyToProcess}
                     className="w-full gradient-primary shadow-primary hover:opacity-90 transition-opacity h-14 text-lg"
                   >
