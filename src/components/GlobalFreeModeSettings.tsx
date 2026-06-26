@@ -14,7 +14,7 @@ export const GlobalFreeModeSettings = () => {
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("app_settings")
       .select("free_mode_enabled, free_mode_banner")
       .eq("id", "global")
@@ -35,7 +35,7 @@ export const GlobalFreeModeSettings = () => {
 
   const save = async () => {
     setSaving(true);
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from("app_settings")
       .update({
         free_mode_enabled: enabled,

@@ -99,7 +99,7 @@ const Index = () => {
 
   useEffect(() => {
     const fetchBanner = async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("app_settings")
         .select("free_mode_enabled, free_mode_banner")
         .eq("id", "global")
